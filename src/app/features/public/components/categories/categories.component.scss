@@ -1,0 +1,34 @@
+.categories-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  white-space: nowrap;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.categories-inner {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 25px;
+  padding: 0 20px;
+}
+
+.category-box {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.category-icon {
+  display: block;
+  width: auto;
+  border-radius: 40px;
+  height: auto;
+  max-height: 140px;
+  max-width: none;
+}
