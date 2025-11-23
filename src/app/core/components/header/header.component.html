@@ -2,29 +2,16 @@
   <img src="assets/logo/header-logo.png" alt="Polska Amazonka" class="header-logo"/>
 
   <div class="social-icons">
-    <div class="icon-with-drawer">
-      <a href="https://www.tiktok.com/@polskaamazonka" aria-label="TikTok">
-        <img src="assets/icons/tiktok.png" alt="TikTok" />
+    <div class="icon-with-drawer" *ngFor="let link of links">
+      
+      <a [href]="link.url" target="_blank" rel="noopener noreferrer">
+        <img [src]="getIconPath(link.url)" alt="social-icon" />
       </a>
-      <div class="drawer">tiktok.com/&#64;polskaamazonka</div>
-    </div>
 
-    <div class="icon-with-drawer">
-      <a href="https://www.facebook.com/PolskaAmazonka/" aria-label="Facebook">
-        <img src="assets/icons/facebook.png" alt="Facebook" />
-      </a>
-      <div class="drawer">facebook.com/PolskaAmazonka</div>
-    </div>
+      <div class="drawer">
+        {{ link.url.replace('https://','').replace('http://','') }}
+      </div>
 
-    <div class="icon-with-drawer">
-      <a href="https://www.instagram.com/polska.amazonka/" aria-label="Instagram">
-        <img src="assets/icons/instagram.png" alt="Instagram" />
-      </a>
-      <div class="drawer">instagram.com/polska.amazonka</div>
     </div>
-
-    <a href="#" aria-label="YouTube">
-      <img src="assets/icons/youtube.png" alt="YouTube"/>
-    </a>
   </div>
 </header>

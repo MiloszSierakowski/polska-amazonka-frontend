@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 
@@ -15,11 +15,16 @@ export interface LinkDTO {
 })
 export class LinkService {
 
-  private apiUrl = '/api/links';
+  private apiUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    @Inject('BACKEND_URL') backendUrl: string
+  ) {
+    this.apiUrl = backendUrl + '/api/links';
+  }
 
   getSocialLinks(): Observable<LinkDTO[]> {
-    return this.http.get<LinkDTO[]>(`${this.apiUrl}?type=social`);
+    return this.http.get<LinkDTO[]>(this.apiUrl + '?type=social');
   }
 }
