@@ -1,7 +1,14 @@
 <div class="categories-scroll" (wheel)="onWheel($event)">
   <div class="categories-inner">
-    <div class="category-box" *ngFor="let c of categories">
-      <img [src]="c.imageUrl" alt="{{ c.name }}" class="category-icon" />
+    <div class="category-box"
+         *ngFor="let c of categories"
+         [class.active]="c.id === selectedCategoryId"
+         (click)="selectCategory(c.id)">
+
+      <div class="category-icon-wrapper">
+        <img [src]="c.imageUrl" alt="{{ c.name }}" class="category-icon" />
+      </div>
+
     </div>
   </div>
 </div>

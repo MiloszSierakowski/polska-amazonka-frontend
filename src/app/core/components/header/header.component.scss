@@ -1,19 +1,37 @@
+@import "../../../../styles/breakpoints";
+
 .header {
   position: relative;
   width: 100%;
-  height: 140px; /* stała wysokość */
+  min-height: 140px;
   background-color: #309fe5;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 10px 0;
   overflow: hidden;
+
+  @media (max-width: $tablet) {
+    min-height: 110px;
+  }
+
+  @media (max-width: $mobile) {
+    min-height: 95px;
+  }
 }
 
 .header-logo {
-  height: 140px; /* dopasowane do wysokości headera */
+  height: 120px;
   width: auto;
-  object-fit: cover;
-  display: block;
+  object-fit: contain;
+
+  @media (max-width: $tablet) {
+    height: 90px;
+  }
+
+  @media (max-width: $mobile) {
+    height: 70px;
+  }
 }
 
 .social-icons {
@@ -23,62 +41,72 @@
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 6px;
+  max-width: 60px;
+  overflow: visible;
+
+  @media (max-width: $mobile) {
+    right: 5px;
+  }
 
   a img {
     width: 20px;
     height: 20px;
     border-radius: 6px;
     padding: 3px;
-    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
-    transition: transform 0.2s ease, opacity 0.2s ease;
 
-    &:hover {
-      transform: scale(1.1);
-      opacity: 0.9;
+    @media (max-width: $tablet) {
+      width: 18px;
+      height: 18px;
+    }
+
+    @media (max-width: $mobile) {
+      width: 16px;
+      height: 16px;
     }
   }
 }
 
+.social-icons a {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 0;
+  padding: 0;
+}
 
 .icon-with-drawer {
   position: relative;
-  display: inline-block;
-
-  a img {
-    z-index: 2;
-    position: relative;
-  }
 
   .drawer {
-    position: absolute;
-    right: 110%;
-    top: 50%;
-    transform: translateY(-50%) translateX(10px);
-    background: rgba(0, 0, 0, 0.65);
-    color: #fff;
-    padding: 4px 12px;
-    border-radius: 6px;
-    font-size: 0.8rem;
-    font-weight: 500;
-    white-space: nowrap;
+    display: none;
     opacity: 0;
     pointer-events: none;
-    transition: transform 0.25s ease, opacity 0.25s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.25);
-    font-family: "Segoe UI", sans-serif;
-    text-decoration: none;
+    position: absolute;
+    top: 50%;
+    left: -10px;
+    transform: translate(-100%, -50%);
+    padding: 4px 12px;
+    background: rgba(0,0,0,0.65);
+    color: white;
+    border-radius: 6px;
+    white-space: nowrap;
+    transition: opacity 0.2s ease;
+    z-index: 9999;
   }
+}
+
+@media (max-width: $tablet) {
+  .icon-with-drawer .drawer {
+    display: none !important;
+  }
+}
 
 
-  &:hover .drawer {
+@media (min-width: $desktop) {
+  .icon-with-drawer:hover .drawer {
+    display: block;
     opacity: 1;
-    transform: translateY(-50%) translateX(0);
     pointer-events: auto;
-    transition-delay: 0s;
-  }
-
-  &:not(:hover) .drawer {
-    transition-delay: 0.15s;
   }
 }

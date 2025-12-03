@@ -1,0 +1,8 @@
+// GLOBALNE BREAKPOINTY
+$desktop: 1024px;
+$tablet: 768px;
+$mobile: 480px;
+$small-mobile: 360px;
+
+// Użycie:
+// @media (max-width: $tablet) { ... }

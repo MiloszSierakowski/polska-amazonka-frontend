@@ -3,7 +3,6 @@
 
   <div class="social-icons">
     <div class="icon-with-drawer" *ngFor="let link of links">
-      
       <a [href]="link.url" target="_blank" rel="noopener noreferrer">
         <img [src]="getIconPath(link.url)" alt="social-icon" />
       </a>

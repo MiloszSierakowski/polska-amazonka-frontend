@@ -22,13 +22,22 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  cursor: pointer;
+}
+
+.category-icon-wrapper {
+  border-radius: 40px;
+  border: 6px solid transparent;
+}
+
+.category-box.active .category-icon-wrapper {
+  border-color: #ffcc00;
 }
 
 .category-icon {
   display: block;
-  width: auto;
   border-radius: 40px;
-  height: auto;
   max-height: 140px;
-  max-width: none;
+  height: auto;
+  width: auto;
 }
