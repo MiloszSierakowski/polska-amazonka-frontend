@@ -1,3 +1,5 @@
+@import "../../../../../styles/breakpoints";
+
 .search-container {
   width: 100%;
   max-width: 500px;
@@ -9,6 +11,20 @@
   border-radius: 40px;
   border: 2px solid #1e90ff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
+
+  @media (max-width: $tablet) {
+    max-width: 420px;
+    padding: 8px 16px;
+    border-radius: 34px;
+  }
+
+  @media (max-width: $mobile) {
+    width: 100%;
+    max-width: 270px;
+    padding: 6px 10px;
+    border-radius: 26px;
+    margin: 18px auto 10px auto;
+  }
 }
 
 .search-input {
@@ -21,6 +37,14 @@
 
   &::placeholder {
     color: #717171;
+  }
+
+  @media (max-width: $tablet) {
+    font-size: 18px;
+  }
+
+  @media (max-width: $mobile) {
+    font-size: 15px;
   }
 }
 
@@ -40,11 +64,31 @@
   &:hover {
     background: #1277d5;
   }
+
+  @media (max-width: $tablet) {
+    width: 40px;
+    height: 40px;
+  }
+
+  @media (max-width: $mobile) {
+    width: 30px;
+    height: 30px;
+  }
 }
 
 .search-icon {
   width: 26px;
   height: 26px;
+
+  @media (max-width: $tablet) {
+    width: 22px;
+    height: 22px;
+  }
+
+  @media (max-width: $mobile) {
+    width: 16px;
+    height: 16px;
+  }
 }
 
 .welcome-text {
@@ -53,12 +97,24 @@
   text-align: center;
   font-weight: 500;
   color: #222;
+
+  @media (max-width: $tablet) {
+    font-size: 18px;
+  }
+
+  @media (max-width: $mobile) {
+    font-size: 15px;
+    margin-top: 12px;
+  }
 }
 
 .separator-line {
   width: 100%;
-  max-width: 100%;
   height: 1px;
   background-color: #d7d7d7;
   margin: 20px 0;
+
+  @media (max-width: $mobile) {
+    margin: 15px 0;
+  }
 }

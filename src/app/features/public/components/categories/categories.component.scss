@@ -1,3 +1,5 @@
+@import "../../../../../styles/breakpoints";
+
 .categories-scroll {
   width: 100%;
   overflow-x: auto;
@@ -8,13 +10,25 @@
   &::-webkit-scrollbar {
     display: none;
   }
+
+  padding: 8px 0;
 }
 
 .categories-inner {
   display: flex;
   flex-wrap: nowrap;
-  gap: 25px;
+  gap: 22px;
   padding: 0 20px;
+
+  @media (max-width: $tablet) {
+    gap: 8px;
+    padding: 0 16px;
+  }
+
+  @media (max-width: $mobile) {
+    gap: 5px;
+    padding: 0 12px;
+  }
 }
 
 .category-box {
@@ -23,11 +37,30 @@
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: transform 0.2s ease;
+
+  &:active {
+    transform: scale(0.92);
+  }
 }
 
 .category-icon-wrapper {
   border-radius: 40px;
-  border: 6px solid transparent;
+  border: 5px solid transparent;
+  padding: 3px;
+  transition: border-color 0.2s;
+
+  @media (max-width: $tablet) {
+    border-width: 4px;
+    padding: 2px;
+    border-radius: 28px;
+  }
+
+  @media (max-width: $mobile) {
+    border-width: 3px;
+    padding: 2px;
+    border-radius: 20px;
+  }
 }
 
 .category-box.active .category-icon-wrapper {
@@ -37,7 +70,17 @@
 .category-icon {
   display: block;
   border-radius: 40px;
-  max-height: 140px;
-  height: auto;
   width: auto;
+  height: auto;
+  max-height: 140px;
+
+  @media (max-width: $tablet) {
+    max-height: 80px;
+    border-radius: 26px;
+  }
+
+  @media (max-width: $mobile) {
+    max-height: 50px;
+    border-radius: 20px;
+  }
 }
