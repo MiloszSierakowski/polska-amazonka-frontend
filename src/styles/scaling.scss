@@ -19,13 +19,13 @@ $font-xl: clamp(1.125rem, 1rem + 0.8vw, 1.5rem);
 
 $header-min-height: clamp(5.875rem, 4.5rem + 4vw, 8.75rem);
 $header-logo-height: clamp(4.375rem, 3.25rem + 3.2vw, 7.5rem);
-$social-icon-size: clamp(1.125rem, 0.95rem + 0.65vw, 1.5rem);
+$social-icon-size: clamp(1rem, 0.9rem + 0.45vw, 1.25rem);
 
 $search-max-width: clamp(16.875rem, 72vw, 31.25rem);
-$search-button-size: clamp(2rem, 1.75rem + 0.9vw, 2.875rem);
-$search-icon-size: clamp(1rem, 0.88rem + 0.55vw, 1.375rem);
+$search-button-size: clamp(1.875rem, 1.6rem + 1vw, 2.875rem);
+$search-icon-size: clamp(1rem, 0.85rem + 0.7vw, 1.625rem);
 
-$discount-toggle-max-width: clamp(16.5rem, 78vw, 32.5rem);
+$discount-toggle-max-width: clamp(17.5rem, 80vw, 32.5rem);
 $discount-card-max-width: clamp(16.875rem, 72vw, 18.75rem);
 $discount-card-max-height: clamp(8.375rem, 7.5rem + 2.2vw, 9.375rem);
 

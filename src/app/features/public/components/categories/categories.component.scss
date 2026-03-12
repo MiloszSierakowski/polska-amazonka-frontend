@@ -13,15 +13,15 @@
   &::-webkit-scrollbar {
     display: none;
   }
+
+  padding: $space-sm 0;
 }
 
 .categories-inner {
   display: flex;
   flex-wrap: nowrap;
-  width: max-content;
   gap: $categories-gap;
-  padding: 0;
-  align-items: center;
+  padding: 0 $categories-padding-x;
 }
 
 .category-box {
