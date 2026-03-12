@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { SearchBarComponent } from '../../components/search-bar/search-bar.component';
 import { CategoriesComponent } from '../../components/categories/categories.component';
+import { DiscountSectionComponent } from '../../components/discount-section/discount-section.component';
 
 @Component({
   selector: 'app-home',
@@ -9,6 +10,7 @@ import { CategoriesComponent } from '../../components/categories/categories.comp
   styleUrls: ['./home.component.scss'],
   imports: [
     SearchBarComponent,
+    DiscountSectionComponent,
     CategoriesComponent
   ]
 })

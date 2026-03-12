@@ -1,0 +1,77 @@
+<div class="discount-wrapper">
+
+  <!-- PILL TOGGLE -->
+  <div
+    class="toggle-button"
+    role="button"
+    tabindex="0"
+    (click)="toggle()"
+    [class.open]="isOpen"
+  >
+    <!-- METKA -->
+    <img
+      src="assets/discount/discount.png"
+      alt="Promocja"
+      class="discount-tag"
+    />
+
+    <!-- TEKST -->
+    <span class="text">
+      {{ isOpen ? 'Ukryj zniżki' : 'Pokaż zniżki' }}
+    </span>
+
+    <!-- STRZAŁKA -->
+    <span class="arrow">
+      {{ isOpen ? '▲' : '▼' }}
+    </span>
+  </div>
+
+  <!-- ANIMOWANA SEKCJA -->
+  <div class="discount-cards" [class.open]="isOpen">
+
+    <!-- ALIEXPRESS -->
+    <div class="discount-card aliexpress">
+      <div class="card-left">
+        <img src="assets/discount/aliexpressmini.png" alt="AliExpress" />
+      </div>
+
+      <div class="card-right">
+        <div class="promo-text">
+          ⭐ 20zł zniżki przy zakupach za 200 zł ⭐
+        </div>
+
+        <div class="code-box">
+          <span class="code">IFP9MDH</span>
+          <img src="assets/discount/kopiuj.png" class="copy-icon" />
+        </div>
+
+        <button class="go-shop">
+          Przejdź do sklepu!
+        </button>
+      </div>
+    </div>
+
+    <!-- TEMU -->
+    <div class="discount-card temu">
+      <div class="card-left">
+        <img src="assets/discount/temu.png" alt="Temu" />
+      </div>
+
+      <div class="card-right">
+        <div class="promo-text">
+          ⭐ Nowi użytkownicy – 400zł kuponów ⭐
+        </div>
+
+        <div class="code-box">
+          <span class="code">apk84760</span>
+          <img src="assets/discount/kopiuj.png" class="copy-icon" />
+        </div>
+
+        <button class="go-shop">
+          Przejdź do sklepu!
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
