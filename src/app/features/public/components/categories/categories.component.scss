@@ -7,6 +7,8 @@
   overflow-y: hidden;
   white-space: nowrap;
   scrollbar-width: none;
+  padding: $space-sm $categories-padding-x;
+  scroll-padding-inline: $categories-padding-x;
 
   &::-webkit-scrollbar {
     display: none;

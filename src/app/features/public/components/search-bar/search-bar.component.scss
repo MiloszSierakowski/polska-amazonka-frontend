@@ -7,6 +7,7 @@
   margin: $space-xl auto $space-md auto;
   display: flex;
   align-items: center;
+  gap: $space-sm;
   background: #ffffff;
   padding: $space-sm $space-lg;
   border-radius: $radius-pill;
@@ -16,6 +17,7 @@
 
 .search-input {
   flex: 1;
+  min-width: 0;
   border: none;
   font-size: $font-xl;
   font-weight: 600;
@@ -28,6 +30,7 @@
 }
 
 .search-btn {
+  flex: 0 0 auto;
   background: #1e90ff;
   border: none;
   border-radius: 50%;
