@@ -1,3 +1,5 @@
+@import "../../../../../styles/scaling";
+
 :host {
   display: block;
   width: 100%;
@@ -9,7 +11,7 @@
 
 .separator-line {
   width: 100%;
-  height: 3px;
+  height: 2px;
   background: #dcdcdc;
-  margin: 40px 0 25px 0;
+  margin: $space-xl 0 $space-lg 0;
 }

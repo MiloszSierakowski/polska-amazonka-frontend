@@ -1,4 +1,5 @@
 @import "../../../../../styles/breakpoints";
+@import "../../../../../styles/scaling";
 
 /* desktop – ukrywamy */
 @media (min-width: $desktop) {
@@ -8,40 +9,29 @@
 }
 
 .discount-wrapper {
-  padding: 10px;
+  padding: $space-sm;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 10px;
+  gap: $space-sm;
 }
-
-/* ===== TOGGLE ===== */
 
 .toggle-button {
   position: relative;
-
   width: 100%;
-  max-width: 520px; /* ⬅️ REALNIE KRÓTSZY NA TABLECIE */
-  height: 48px;
-
+  max-width: $discount-toggle-max-width;
+  min-height: clamp(2.75rem, 2.5rem + 0.8vw, 3rem);
   background: #2da2df;
   color: #fff;
-  font-size: 16px;
-  border-radius: 999px;
-
+  font-size: $font-md;
+  border-radius: $radius-pill;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  padding: 0 44px;
+  padding: 0 clamp(2rem, 1.6rem + 1.8vw, 2.75rem);
   cursor: pointer;
   user-select: none;
-
-  transition:
-    background 0.25s ease,
-    transform 0.15s ease,
-    box-shadow 0.2s ease;
-
+  transition: background 0.25s ease, transform 0.15s ease, box-shadow 0.2s ease;
   -webkit-tap-highlight-color: transparent;
 }
 
@@ -61,11 +51,10 @@
   pointer-events: none;
 }
 
-/* STRZAŁKA */
 .toggle-button .arrow {
   position: absolute;
-  right: 20px;
-  font-size: 14px;
+  right: $space-lg;
+  font-size: $font-sm;
   transition: transform 0.25s ease;
 }
 
@@ -73,35 +62,26 @@
   transform: translateY(1px);
 }
 
-/* ===== METKA ===== */
-
 .discount-tag {
   position: absolute;
-  left: -18px;
-  bottom: 0;              /* ⬅️ PRZY DOLNEJ KRAWĘDZI */
+  left: clamp(-1.125rem, -0.9rem - 0.4vw, -0.875rem);
+  bottom: 0;
   transform: translateY(50%) rotate(-12deg);
-  width: 38px;
+  width: clamp(2rem, 1.8rem + 0.8vw, 2.375rem);
   pointer-events: none;
 }
 
-/* ===== ANIMOWANE KAFELKI ===== */
-
 .discount-cards {
-  margin-top: 10px;
+  margin-top: $space-sm;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: $space-md;
   align-items: center;
-
   max-height: 0;
   opacity: 0;
   overflow: hidden;
   transform: translateY(-6px);
-
-  transition:
-    max-height 0.85s cubic-bezier(0.25, 0.1, 0.25, 1),
-    opacity 0.45s ease,
-    transform 0.45s ease;
+  transition: max-height 0.85s cubic-bezier(0.25, 0.1, 0.25, 1), opacity 0.45s ease, transform 0.45s ease;
 }
 
 .discount-cards.open {
@@ -110,15 +90,13 @@
   transform: translateY(0);
 }
 
-/* ===== KAFELKI ===== */
-
 .discount-card {
   display: flex;
-  border-radius: 16px;
+  border-radius: $radius-md;
   overflow: hidden;
   color: #fff;
-  max-height: 150px;
-  max-width: 300px;
+  max-height: $discount-card-max-height;
+  max-width: $discount-card-max-width;
 }
 
 .aliexpress {
@@ -134,7 +112,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 8px;
+  padding: $space-sm;
 
   img {
     max-width: 90%;
@@ -145,23 +123,23 @@
 
 .card-right {
   width: 74%;
-  padding: 8px 12px;
+  padding: $space-sm $space-md;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  gap: $space-2xs;
 }
 
 .promo-text {
-  font-size: 13px;
+  font-size: $font-sm;
   text-align: center;
 }
 
 .code-box {
   background: rgba(255, 255, 255, 0.9);
   color: #000;
-  border-radius: 12px;
-  padding: 5px 10px;
-
+  border-radius: $radius-sm;
+  padding: $space-2xs $space-sm;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -169,12 +147,12 @@
 
 .code {
   font-weight: bold;
-  font-size: 16px;
+  font-size: $font-md;
 }
 
 .copy-icon {
-  width: 16px;
-  height: 16px;
+  width: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
+  height: clamp(0.875rem, 0.8rem + 0.4vw, 1rem);
 }
 
 .go-shop {
@@ -182,30 +160,12 @@
   background: transparent;
   border: 2px dashed rgba(255, 255, 255, 0.8);
   color: #fff;
-  padding: 4px 14px;
-  border-radius: 18px;
-  font-size: 13px;
+  padding: $space-2xs $space-md;
+  border-radius: $radius-lg;
+  font-size: $font-sm;
 }
 
-/* MOBILE */
-@media (max-width: $mobile) {
-  .toggle-button {
-    max-width: 60%;
-  }
-
-  .discount-tag {
-    width: 32px;
-    left: -14px;
-  }
-}
-
-/* SMALL MOBILE */
 @media (max-width: $small-mobile) {
-  .toggle-button {
-    height: 44px;
-    font-size: 15px;
-  }
-
   .card-left {
     width: 28%;
   }

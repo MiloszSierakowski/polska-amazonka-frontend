@@ -1,36 +1,23 @@
 @import "../../../../../styles/breakpoints";
+@import "../../../../../styles/scaling";
 
 .search-container {
   width: 100%;
-  max-width: 500px;
-  margin: 25px auto 12px auto;
+  max-width: $search-max-width;
+  margin: $space-xl auto $space-md auto;
   display: flex;
   align-items: center;
   background: #ffffff;
-  padding: 10px 18px;
-  border-radius: 40px;
+  padding: $space-sm $space-lg;
+  border-radius: $radius-pill;
   border: 2px solid #1e90ff;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
-
-  @media (max-width: $tablet) {
-    max-width: 420px;
-    padding: 8px 16px;
-    border-radius: 34px;
-  }
-
-  @media (max-width: $mobile) {
-    width: 100%;
-    max-width: 270px;
-    padding: 6px 10px;
-    border-radius: 26px;
-    margin: 18px auto 10px auto;
-  }
 }
 
 .search-input {
   flex: 1;
   border: none;
-  font-size: 20px;
+  font-size: $font-xl;
   font-weight: 600;
   outline: none;
   color: #333;
@@ -38,22 +25,14 @@
   &::placeholder {
     color: #717171;
   }
-
-  @media (max-width: $tablet) {
-    font-size: 18px;
-  }
-
-  @media (max-width: $mobile) {
-    font-size: 15px;
-  }
 }
 
 .search-btn {
   background: #1e90ff;
   border: none;
   border-radius: 50%;
-  width: 46px;
-  height: 46px;
+  width: $search-button-size;
+  height: $search-button-size;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -64,57 +43,25 @@
   &:hover {
     background: #1277d5;
   }
-
-  @media (max-width: $tablet) {
-    width: 40px;
-    height: 40px;
-  }
-
-  @media (max-width: $mobile) {
-    width: 30px;
-    height: 30px;
-  }
 }
 
 .search-icon {
-  width: 26px;
-  height: 26px;
-
-  @media (max-width: $tablet) {
-    width: 22px;
-    height: 22px;
-  }
-
-  @media (max-width: $mobile) {
-    width: 16px;
-    height: 16px;
-  }
+  width: $search-icon-size;
+  height: $search-icon-size;
 }
 
 .welcome-text {
-  font-size: 20px;
-  margin-top: 15px;
+  font-size: $font-xl;
+  margin-top: $space-md;
   text-align: center;
   font-weight: 500;
   color: #222;
-
-  @media (max-width: $tablet) {
-    font-size: 18px;
-  }
-
-  @media (max-width: $mobile) {
-    font-size: 15px;
-    margin-top: 12px;
-  }
+  padding: 0 $space-md;
 }
 
 .separator-line {
   width: 100%;
   height: 1px;
   background-color: #d7d7d7;
-  margin: 20px 0;
-
-  @media (max-width: $mobile) {
-    margin: 15px 0;
-  }
+  margin: $space-lg 0;
 }
