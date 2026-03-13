@@ -1,69 +1,44 @@
 @import "../../../../styles/breakpoints";
+@import "../../../../styles/scaling";
 
 .header {
   position: relative;
   width: 100%;
-  min-height: 140px;
+  min-height: $header-min-height;
   background-color: #309fe5;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
+  padding: $space-sm 0;
   overflow: hidden;
-
-  @media (max-width: $tablet) {
-    min-height: 110px;
-  }
-
-  @media (max-width: $mobile) {
-    min-height: 95px;
-  }
 }
 
 .header-logo {
-  height: 120px;
+  height: $header-logo-height;
   width: auto;
   object-fit: contain;
-
-  @media (max-width: $tablet) {
-    height: 90px;
-  }
-
-  @media (max-width: $mobile) {
-    height: 70px;
-  }
 }
 
 .social-icons {
   position: absolute;
-  right: 10px;
+  right: $space-xs;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 60px;
-  overflow: visible;
-
-  @media (max-width: $mobile) {
-    right: 5px;
-  }
+  justify-content: center;
+  gap: clamp(2px, 0.2vw, 6px);
+  max-width: 84px;
+  max-height: calc(100% - (2 * $space-xs));
+  overflow: hidden;
 
   a img {
-    width: 20px;
-    height: 20px;
-    border-radius: 6px;
-    padding: 3px;
-
-    @media (max-width: $tablet) {
-      width: 18px;
-      height: 18px;
-    }
-
-    @media (max-width: $mobile) {
-      width: 16px;
-      height: 16px;
-    }
+    width: $social-icon-size;
+    height: $social-icon-size;
+    border-radius: $radius-sm;
+    padding: 0;
+    display: block;
+    object-fit: contain;
   }
 }
 
@@ -71,8 +46,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  width: clamp(1.25rem, 1.1rem + 0.6vw, 1.85rem);
+  height: clamp(1.25rem, 1.1rem + 0.6vw, 1.85rem);
   line-height: 0;
   padding: 0;
+  flex: 0 0 auto;
 }
 
 .icon-with-drawer {
@@ -86,24 +64,35 @@
     top: 50%;
     left: -10px;
     transform: translate(-100%, -50%);
-    padding: 4px 12px;
-    background: rgba(0,0,0,0.65);
+    padding: $space-2xs $space-md;
+    background: rgba(0, 0, 0, 0.65);
     color: white;
-    border-radius: 6px;
+    border-radius: $radius-sm;
     white-space: nowrap;
     transition: opacity 0.2s ease;
     z-index: 9999;
+    font-size: $font-sm;
   }
 }
 
 @media (max-width: $tablet) {
+  .social-icons {
+    right: $space-2xs;
+    gap: 2px;
+    max-height: calc(100% - (2 * $space-2xs));
+  }
+
+  .social-icons a {
+    width: clamp(1rem, 0.9rem + 0.5vw, 1.45rem);
+    height: clamp(1rem, 0.9rem + 0.5vw, 1.45rem);
+  }
+
   .icon-with-drawer .drawer {
     display: none !important;
   }
 }
 
-
-@media (min-width: $desktop) {
+@media (min-width: 770px) and (hover: hover) and (pointer: fine) {
   .icon-with-drawer:hover .drawer {
     display: block;
     opacity: 1;
