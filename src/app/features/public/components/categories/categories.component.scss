@@ -7,21 +7,20 @@
   overflow-y: hidden;
   white-space: nowrap;
   scrollbar-width: none;
-  padding: $space-sm $categories-padding-x;
-  scroll-padding-inline: $categories-padding-x;
+  padding: $space-sm 0;
 
   &::-webkit-scrollbar {
     display: none;
   }
-
-  padding: $space-sm 0;
 }
 
 .categories-inner {
   display: flex;
   flex-wrap: nowrap;
+  width: max-content;
   gap: $categories-gap;
   padding: 0 $categories-padding-x;
+  align-items: center;
 }
 
 .category-box {
@@ -40,7 +39,7 @@
 .category-icon-wrapper {
   border-radius: $category-radius;
   border: $category-border-width solid transparent;
-  padding: $space-2xs;
+  padding: 1px;
   transition: border-color 0.2s;
 }
 

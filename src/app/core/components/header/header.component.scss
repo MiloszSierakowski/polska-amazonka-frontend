@@ -27,14 +27,14 @@
   display: flex;
   flex-direction: column;
   gap: $space-xs;
-  max-width: 60px;
+  max-width: 88px;
   overflow: visible;
 
   a img {
     width: $social-icon-size;
     height: $social-icon-size;
     border-radius: $radius-sm;
-    padding: $space-2xs;
+    padding: $space-xs;
   }
 }
 
