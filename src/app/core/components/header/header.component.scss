@@ -21,14 +21,16 @@
 
 .social-icons {
   position: absolute;
-  right: $space-sm;
+  right: $space-xs;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: $space-xs;
-  max-width: 96px;
-  overflow: visible;
+  justify-content: center;
+  gap: clamp(2px, 0.2vw, 6px);
+  max-width: 84px;
+  max-height: calc(100% - (2 * $space-xs));
+  overflow: hidden;
 
   a img {
     width: $social-icon-size;
@@ -45,10 +47,11 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  width: clamp(1.75rem, 1.5rem + 0.8vw, 2.25rem);
-  height: clamp(1.75rem, 1.5rem + 0.8vw, 2.25rem);
+  width: clamp(1.25rem, 1.1rem + 0.6vw, 1.85rem);
+  height: clamp(1.25rem, 1.1rem + 0.6vw, 1.85rem);
   line-height: 0;
   padding: 0;
+  flex: 0 0 auto;
 }
 
 .icon-with-drawer {
@@ -74,6 +77,17 @@
 }
 
 @media (max-width: $tablet) {
+  .social-icons {
+    right: $space-2xs;
+    gap: 2px;
+    max-height: calc(100% - (2 * $space-2xs));
+  }
+
+  .social-icons a {
+    width: clamp(1rem, 0.9rem + 0.5vw, 1.45rem);
+    height: clamp(1rem, 0.9rem + 0.5vw, 1.45rem);
+  }
+
   .icon-with-drawer .drawer {
     display: none !important;
   }
