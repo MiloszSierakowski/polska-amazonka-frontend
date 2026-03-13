@@ -1,69 +1,40 @@
 @import "../../../../styles/breakpoints";
+@import "../../../../styles/scaling";
 
 .header {
   position: relative;
   width: 100%;
-  min-height: 140px;
+  min-height: $header-min-height;
   background-color: #309fe5;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 10px 0;
+  padding: $space-sm 0;
   overflow: hidden;
-
-  @media (max-width: $tablet) {
-    min-height: 110px;
-  }
-
-  @media (max-width: $mobile) {
-    min-height: 95px;
-  }
 }
 
 .header-logo {
-  height: 120px;
+  height: $header-logo-height;
   width: auto;
   object-fit: contain;
-
-  @media (max-width: $tablet) {
-    height: 90px;
-  }
-
-  @media (max-width: $mobile) {
-    height: 70px;
-  }
 }
 
 .social-icons {
   position: absolute;
-  right: 10px;
+  right: $space-sm;
   top: 50%;
   transform: translateY(-50%);
   display: flex;
   flex-direction: column;
-  gap: 6px;
-  max-width: 60px;
+  gap: $space-xs;
+  max-width: 88px;
   overflow: visible;
 
-  @media (max-width: $mobile) {
-    right: 5px;
-  }
-
   a img {
-    width: 20px;
-    height: 20px;
-    border-radius: 6px;
-    padding: 3px;
-
-    @media (max-width: $tablet) {
-      width: 18px;
-      height: 18px;
-    }
-
-    @media (max-width: $mobile) {
-      width: 16px;
-      height: 16px;
-    }
+    width: $social-icon-size;
+    height: $social-icon-size;
+    border-radius: $radius-sm;
+    padding: $space-xs;
   }
 }
 
@@ -86,13 +57,14 @@
     top: 50%;
     left: -10px;
     transform: translate(-100%, -50%);
-    padding: 4px 12px;
-    background: rgba(0,0,0,0.65);
+    padding: $space-2xs $space-md;
+    background: rgba(0, 0, 0, 0.65);
     color: white;
-    border-radius: 6px;
+    border-radius: $radius-sm;
     white-space: nowrap;
     transition: opacity 0.2s ease;
     z-index: 9999;
+    font-size: $font-sm;
   }
 }
 
@@ -101,7 +73,6 @@
     display: none !important;
   }
 }
-
 
 @media (min-width: $desktop) {
   .icon-with-drawer:hover .drawer {
