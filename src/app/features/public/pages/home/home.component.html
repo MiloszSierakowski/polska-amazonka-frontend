@@ -6,6 +6,8 @@
 
   <div class="separator-line"></div>
 
-  <app-categories></app-categories>
+  <app-categories (categorySelected)="onCategorySelected($event)"></app-categories>
+
+  <app-videos-grid [selectedCategoryId]="selectedCategoryId"></app-videos-grid>
 
 </div>
