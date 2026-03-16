@@ -1,4 +1,4 @@
-import {Component, OnInit, Inject} from '@angular/core';
+import {Component, OnInit, Inject, Output, EventEmitter} from '@angular/core';
 import {CategoryService} from '../../../../services/category.service';
 import {Category} from '../../models/category.model';
 import {CommonModule} from "@angular/common";
@@ -13,12 +13,13 @@ import {CommonModule} from "@angular/common";
 export class CategoriesComponent implements OnInit {
 
   categories: Category[] = [];
-  activeCategoryId: number | null = null;
 
   constructor(
     private categoryService: CategoryService,
     @Inject('BACKEND_URL') private backendUrl: string
   ) {}
+
+  @Output() categorySelected = new EventEmitter<number | null>();
 
   ngOnInit(): void {
     this.categoryService.getCategories().subscribe({
@@ -43,8 +44,8 @@ export class CategoriesComponent implements OnInit {
   selectedCategoryId: number | null = null;
 
   selectCategory(id: number) {
-    this.selectedCategoryId = id;
-    console.log('Wybrana kategoria:', id);
+    this.selectedCategoryId = this.selectedCategoryId === id ? null : id;
+    this.categorySelected.emit(this.selectedCategoryId);
   }
 
 }

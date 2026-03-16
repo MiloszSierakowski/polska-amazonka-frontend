@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { SearchBarComponent } from '../../components/search-bar/search-bar.component';
 import { CategoriesComponent } from '../../components/categories/categories.component';
 import { DiscountSectionComponent } from '../../components/discount-section/discount-section.component';
+import { VideosGridComponent } from '../../components/videos-grid/videos-grid.component';
 
 @Component({
   selector: 'app-home',
@@ -11,7 +12,14 @@ import { DiscountSectionComponent } from '../../components/discount-section/disc
   imports: [
     SearchBarComponent,
     DiscountSectionComponent,
-    CategoriesComponent
+    CategoriesComponent,
+    VideosGridComponent
   ]
 })
-export class HomeComponent {}
+export class HomeComponent {
+  selectedCategoryId: number | null = null;
+
+  onCategorySelected(categoryId: number | null): void {
+    this.selectedCategoryId = categoryId;
+  }
+}

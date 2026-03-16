@@ -1,0 +1,41 @@
+<section class="videos-section">
+  <div class="videos-grid" *ngIf="videos.length; else noVideos">
+    <button class="video-tile" *ngFor="let video of videos" (click)="openModal(video)">
+      <img [src]="video.previewImageUrl" [alt]="video.title" />
+    </button>
+  </div>
+
+  <ng-template #noVideos>
+    <div class="no-videos">Brak filmów dla tej kategorii.</div>
+  </ng-template>
+</section>
+
+<div class="video-modal-overlay" *ngIf="selectedVideo" (click)="closeModal()">
+  <div class="video-modal" (click)="$event.stopPropagation()">
+    <button class="close-button" (click)="closeModal()">✕</button>
+
+    <div class="video-pane">
+      <iframe
+        [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
+        title="TikTok video"
+        allow="encrypted-media"
+        allowfullscreen
+      ></iframe>
+    </div>
+
+    <aside class="products-pane">
+      <h3 class="video-modal-title">{{ selectedVideo.title }}</h3>
+      <h4>Produkty z filmu</h4>
+      <a
+        class="product-item"
+        *ngFor="let product of selectedVideo.products"
+        [href]="product.productLink.url"
+        target="_blank"
+        rel="noopener noreferrer"
+      >
+        <img [src]="product.imageUrl" [alt]="product.name" />
+        <span>{{ product.name }}</span>
+      </a>
+    </aside>
+  </div>
+</div>
