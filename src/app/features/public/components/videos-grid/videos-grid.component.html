@@ -1,7 +1,7 @@
 <section class="videos-section">
   <div class="videos-grid" *ngIf="videos.length; else noVideos">
     <button class="video-tile" *ngFor="let video of videos" (click)="openModal(video)">
-      <img [src]="video.previewImageUrl" [alt]="video.title" />
+      <img [src]="video.previewImageUrl" [alt]="video.title" (error)="onPreviewImageError($event)" />
     </button>
   </div>
 

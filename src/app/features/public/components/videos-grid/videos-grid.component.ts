@@ -46,6 +46,12 @@ export class VideosGridComponent implements OnChanges {
     document.body.style.overflow = '';
   }
 
+
+  onPreviewImageError(event: Event): void {
+    const img = event.target as HTMLImageElement;
+    img.src = 'https://placehold.co/720x1280/111827/ffffff?text=Miniatura+TikTok';
+  }
+
   toTikTokEmbedUrl(url: string): SafeResourceUrl {
     const match = url.match(/\/video\/(\d+)/);
     const videoId = match?.[1];

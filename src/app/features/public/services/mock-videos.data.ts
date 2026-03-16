@@ -157,5 +157,45 @@ export const MOCK_VIDEOS: Video[] = [
         productLink: { id: 9012, url: PRODUCT_LINKS.hooks, type: 'product' }
       }
     ]
+  },
+  {
+    id: 108,
+    title: 'PA publiczny film #1',
+    tiktokUrl: 'https://www.tiktok.com/@polskaamazonka/video/7566964823578266902',
+    previewImageUrl: '',
+    isActive: true,
+    createdAt: '2026-03-16T10:00:00.000Z',
+    categoryIds: [1],
+    products: [
+      {
+        id: 513,
+        name: 'Regulowane haczyki na kubki',
+        imageUrl: 'https://img.kwcdn.com/product/fancy/60f70492-8d28-4688-9cac-567e5e5a6724.jpg',
+        productLink: { id: 9013, url: PRODUCT_LINKS.hooks, type: 'product' }
+      },
+      {
+        id: 514,
+        name: 'Obrotowa dysza do kranu',
+        imageUrl: 'https://img.kwcdn.com/product/fancy/97f50a72-626f-48d8-aac2-7c5ae631fc51.jpg',
+        productLink: { id: 9014, url: PRODUCT_LINKS.faucetHead, type: 'product' }
+      }
+    ]
+  },
+  {
+    id: 109,
+    title: 'PA publiczny film #2',
+    tiktokUrl: 'https://www.tiktok.com/@polskaamazonka/video/7551410528862702870',
+    previewImageUrl: '',
+    isActive: true,
+    createdAt: '2026-03-16T09:30:00.000Z',
+    categoryIds: [2],
+    products: [
+      {
+        id: 515,
+        name: 'Lampki akumulatorowe LED',
+        imageUrl: 'https://img.kwcdn.com/product/fancy/7634f292-754c-47fa-84ae-b6ec3ce49b25.jpg',
+        productLink: { id: 9015, url: PRODUCT_LINKS.ledLights, type: 'product' }
+      }
+    ]
   }
 ];
