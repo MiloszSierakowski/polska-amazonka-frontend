@@ -56,8 +56,22 @@ export class VideosGridComponent implements OnChanges {
     const match = url.match(/\/video\/(\d+)/);
     const videoId = match?.[1];
 
+    const params = new URLSearchParams({
+      controls: '0',
+      progress_bar: '0',
+      play_button: '0',
+      volume_control: '0',
+      fullscreen_button: '0',
+      timestamp: '0',
+      music_info: '0',
+      description: '0',
+      closed_caption: '0',
+      rel: '0',
+      native_context_menu: '0'
+    });
+
     return this.sanitizer.bypassSecurityTrustResourceUrl(
-      videoId ? `https://www.tiktok.com/embed/v2/${videoId}` : ''
+      videoId ? `https://www.tiktok.com/player/v1/${videoId}?${params.toString()}` : ''
     );
   }
 }
