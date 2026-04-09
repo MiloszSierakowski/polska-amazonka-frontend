@@ -72,10 +72,20 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
+
+  .tiktok-frame {
+    width: min(430px, 100%);
+    aspect-ratio: 9 / 16;
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+  }
 
   iframe {
     width: 100%;
-    height: min(85vh, 760px);
+    height: 100%;
     border: 0;
   }
 }
@@ -126,7 +136,11 @@
     grid-template-columns: 1fr;
   }
 
-  .video-pane iframe {
-    height: 60vh;
+  .video-pane {
+    padding: 12px;
+  }
+
+  .video-pane .tiktok-frame {
+    width: min(360px, 100%);
   }
 }
