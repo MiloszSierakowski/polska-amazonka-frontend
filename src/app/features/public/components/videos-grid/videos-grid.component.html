@@ -11,27 +11,19 @@
 </section>
 
 <div class="video-modal-overlay" *ngIf="selectedVideo" (click)="closeModal()">
-  <div class="video-modal" (click)="$event.stopPropagation()" [class.mobile-products-open]="showProductsOnMobile">
+  <div class="video-modal" (click)="$event.stopPropagation()">
     <button class="close-button" (click)="closeModal()">✕</button>
 
-    <div class="video-pane" [class.mobile-hidden]="showProductsOnMobile">
-      <div class="video-frame-crop">
-        <iframe
-          [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
-          title="TikTok video"
-          allow="encrypted-media"
-          allowfullscreen
-          scrolling="no"
-        ></iframe>
-      </div>
-
-      <button class="mobile-products-toggle" type="button" (click)="showProductsPanel()">
-        Pokaż produkty 🔗
-      </button>
+    <div class="video-pane">
+      <iframe
+        [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
+        title="TikTok video"
+        allow="encrypted-media"
+        allowfullscreen
+      ></iframe>
     </div>
 
-    <aside class="products-pane" [class.mobile-visible]="showProductsOnMobile">
-      <button class="mobile-video-toggle" type="button" (click)="showVideoPanel()">⬇ Pokaż film</button>
+    <aside class="products-pane">
       <h3 class="video-modal-title">{{ selectedVideo.title }}</h3>
       <h4>Produkty z filmu</h4>
       <a
@@ -40,23 +32,10 @@
         [href]="product.productLink.url"
         target="_blank"
         rel="noopener noreferrer"
-        (click)="onProductClick($event, product)"
       >
         <img [src]="product.imageUrl" [alt]="product.name" />
         <span>{{ product.name }}</span>
       </a>
     </aside>
-  </div>
-</div>
-
-<div class="platform-modal-overlay" *ngIf="selectedProductForRedirect" (click)="closePlatformChooser()">
-  <div class="platform-modal" (click)="$event.stopPropagation()">
-    <h4>Do jakiego sklepu przejść?</h4>
-    <p>{{ selectedProductForRedirect.name }}</p>
-    <div class="platform-buttons">
-      <button class="platform-button aliexpress" type="button" (click)="choosePlatform('aliexpress')">AliExpress</button>
-      <button class="platform-button temu" type="button" (click)="choosePlatform('temu')">Temu</button>
-    </div>
-    <button class="platform-cancel" type="button" (click)="closePlatformChooser()">Anuluj</button>
   </div>
 </div>
