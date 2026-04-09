@@ -75,10 +75,8 @@
   padding: 20px;
 
   .tiktok-frame {
-    --embed-scale: 0.8;
-    width: min(100%, 340px);
+    width: min(430px, 100%);
     aspect-ratio: 9 / 16;
-    max-height: calc(72vh - 40px);
     border-radius: 12px;
     overflow: hidden;
     background: #000;
@@ -86,8 +84,8 @@
   }
 
   iframe {
-    width: calc(100% / var(--embed-scale));
-    height: calc(100% / var(--embed-scale));
+    width: 100%;
+    height: calc(100% + 220px);
     border: 0;
     transform: scale(var(--embed-scale));
     transform-origin: top left;
@@ -145,8 +143,6 @@
   }
 
   .video-pane .tiktok-frame {
-    --embed-scale: 0.78;
-    width: min(100%, 300px);
-    max-height: calc(66vh - 24px);
+    width: min(360px, 100%);
   }
 }
