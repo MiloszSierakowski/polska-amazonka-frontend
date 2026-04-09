@@ -15,12 +15,14 @@
     <button class="close-button" (click)="closeModal()">✕</button>
 
     <div class="video-pane">
-      <iframe
-        [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
-        title="TikTok video"
-        allow="encrypted-media"
-        allowfullscreen
-      ></iframe>
+      <div class="tiktok-frame">
+        <iframe
+          [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
+          title="TikTok video"
+          allow="encrypted-media"
+          allowfullscreen
+        ></iframe>
+      </div>
     </div>
 
     <aside class="products-pane">
