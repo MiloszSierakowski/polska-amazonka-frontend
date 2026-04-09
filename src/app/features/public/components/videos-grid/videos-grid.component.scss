@@ -1,0 +1,262 @@
+.videos-section {
+  margin-top: 20px;
+}
+
+.videos-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.video-tile {
+  border: 0;
+  background: #fff;
+  padding: 0;
+  cursor: pointer;
+  border-radius: 10px;
+  overflow: hidden;
+  text-align: left;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+
+  img {
+    width: 100%;
+    aspect-ratio: 9 / 16;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.no-videos {
+  text-align: center;
+  color: #6b7280;
+  padding: 30px 0;
+}
+
+.video-modal-overlay,
+.platform-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
+}
+
+.video-modal {
+  background: #fff;
+  width: min(1150px, 100%);
+  height: min(90vh, 860px);
+  border-radius: 16px;
+  display: grid;
+  grid-template-columns: minmax(280px, 2fr) minmax(280px, 1fr);
+  overflow: hidden;
+  position: relative;
+}
+
+.close-button {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  border: none;
+  background: rgba(0, 0, 0, 0.65);
+  color: #fff;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+  z-index: 3;
+}
+
+.video-pane {
+  background: #111;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+}
+
+.video-frame-crop {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+
+  iframe {
+    width: 100%;
+    height: calc(100% + 130px);
+    margin-top: -30px;
+    border: 0;
+    display: block;
+  }
+}
+
+.products-pane {
+  padding: 24px 20px;
+  overflow-y: auto;
+  background: #f9fafb;
+
+  .video-modal-title {
+    margin: 0 0 12px;
+    font-size: 2rem;
+    font-weight: 700;
+    color: #111827;
+  }
+
+  h4 {
+    margin: 0 0 16px;
+    font-size: 2.2rem;
+    font-weight: 700;
+  }
+}
+
+.product-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #111827;
+  text-decoration: none;
+  padding: 10px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+  margin-bottom: 8px;
+
+  &:hover {
+    background: #eef2f7;
+  }
+
+  img {
+    width: 70px;
+    height: 70px;
+    border-radius: 10px;
+    object-fit: cover;
+    flex-shrink: 0;
+  }
+
+  span {
+    font-size: 1.05rem;
+    font-weight: 600;
+  }
+}
+
+.mobile-products-toggle,
+.mobile-video-toggle {
+  display: none;
+}
+
+.platform-modal {
+  width: min(440px, 100%);
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+
+  h4 {
+    margin: 0 0 8px;
+    font-size: 1.3rem;
+  }
+
+  p {
+    margin: 0 0 16px;
+    color: #4b5563;
+  }
+}
+
+.platform-buttons {
+  display: grid;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.platform-button {
+  border: 0;
+  border-radius: 12px;
+  color: #fff;
+  font-weight: 700;
+  padding: 12px;
+  cursor: pointer;
+  font-size: 1.1rem;
+
+  &.aliexpress {
+    background: #ea2b0f;
+  }
+
+  &.temu {
+    background: #ff7a00;
+  }
+}
+
+.platform-cancel {
+  border: 1px solid #d1d5db;
+  background: #fff;
+  border-radius: 12px;
+  padding: 10px;
+  width: 100%;
+  cursor: pointer;
+}
+
+@media (max-width: 900px) {
+  .video-modal {
+    height: min(90vh, 820px);
+    grid-template-columns: 1fr;
+  }
+
+  .video-pane {
+    height: 100%;
+  }
+
+  .video-pane.mobile-hidden {
+    display: none;
+  }
+
+  .products-pane {
+    display: none;
+    height: 100%;
+
+    h4 {
+      font-size: 1.8rem;
+    }
+
+    .video-modal-title {
+      font-size: 1.8rem;
+    }
+  }
+
+  .products-pane.mobile-visible {
+    display: block;
+  }
+
+  .mobile-products-toggle,
+  .mobile-video-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 16px;
+    background: #2b9ad6;
+    color: #fff;
+    font-weight: 700;
+    font-size: 1.5rem;
+    cursor: pointer;
+  }
+
+  .mobile-products-toggle {
+    position: absolute;
+    left: 16px;
+    right: 16px;
+    bottom: 16px;
+    min-height: 64px;
+    z-index: 2;
+  }
+
+  .mobile-video-toggle {
+    width: 100%;
+    min-height: 52px;
+    margin-bottom: 14px;
+    background: #4b5563;
+    font-size: 1.2rem;
+  }
+}
