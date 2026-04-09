@@ -87,6 +87,8 @@
     width: 100%;
     height: calc(100% + 220px);
     border: 0;
+    transform: scale(var(--embed-scale));
+    transform-origin: top left;
   }
 }
 
