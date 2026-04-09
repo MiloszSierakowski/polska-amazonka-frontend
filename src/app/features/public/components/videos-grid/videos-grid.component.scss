@@ -72,11 +72,25 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 20px;
+
+  .tiktok-frame {
+    --embed-scale: 0.88;
+    width: min(100%, 420px);
+    aspect-ratio: 9 / 16;
+    max-height: calc(90vh - 80px);
+    border-radius: 12px;
+    overflow: hidden;
+    background: #000;
+    position: relative;
+  }
 
   iframe {
-    width: 100%;
-    height: min(85vh, 760px);
+    width: calc(100% / var(--embed-scale));
+    height: calc(100% / var(--embed-scale));
     border: 0;
+    transform: scale(var(--embed-scale));
+    transform-origin: top left;
   }
 }
 
@@ -126,7 +140,13 @@
     grid-template-columns: 1fr;
   }
 
-  .video-pane iframe {
-    height: 60vh;
+  .video-pane {
+    padding: 12px;
+  }
+
+  .video-pane .tiktok-frame {
+    --embed-scale: 0.84;
+    width: min(100%, 360px);
+    max-height: calc(78vh - 24px);
   }
 }
