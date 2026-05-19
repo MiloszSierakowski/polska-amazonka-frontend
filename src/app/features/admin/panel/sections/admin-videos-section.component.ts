@@ -162,25 +162,31 @@ export class AdminVideosSectionComponent implements OnInit {
             }
           : product
       );
-    } else {
-      video.products = [
-        ...video.products,
-        {
-          id: this.nextProductId(),
-          name: value.name!,
-          imageUrl: value.imageUrl ?? '',
-          shopUrl: value.shopUrl!
-        }
-      ];
+      this.cancelProductForm();
+      return;
     }
-    this.cancelProductForm();
+    this.videoService
+      .addProduct(video.id, {
+        name: value.name!,
+        imageUrl: value.imageUrl?.trim() || null,
+        productLink: {
+          url: value.shopUrl!,
+          type: 'product'
+        }
+      })
+      .subscribe(() => {
+        this.cancelProductForm();
+        this.refreshVideo(video.id);
+      });
   }
 
   detachProduct(video: AdminVideoMock, productId: number): void {
-    video.products = video.products.filter((product) => product.id !== productId);
-    if (this.editingProductId === productId) {
-      this.cancelProductForm();
-    }
+    this.videoService.detachProduct(video.id, productId).subscribe(() => {
+      if (this.editingProductId === productId) {
+        this.cancelProductForm();
+      }
+      this.refreshVideo(video.id);
+    });
   }
 
   toggleNewVideoCategory(categoryId: number): void {
@@ -218,11 +224,23 @@ export class AdminVideosSectionComponent implements OnInit {
       return;
     }
     const value = this.newVideoForm.getRawValue();
+    const products = this.newVideoProducts.controls.map((group) => {
+      const product = group.getRawValue();
+      return {
+        name: product['name'] as string,
+        imageUrl: (product['imageUrl'] as string | undefined)?.trim() || null,
+        productLink: {
+          url: product['shopUrl'] as string,
+          type: 'product' as const
+        }
+      };
+    });
     this.videoService
       .create({
         title: value.title!,
         tiktokUrl: value.tiktokUrl!,
-        isActive: value.isActive ?? true
+        isActive: value.isActive ?? true,
+        products
       })
       .subscribe(() => {
         this.resetNewVideoForm();
@@ -237,8 +255,18 @@ export class AdminVideosSectionComponent implements OnInit {
     this.showNewProductForm = false;
   }
 
-  private nextProductId(): number {
-    return Math.max(0, ...this.videos.flatMap((video) => video.products.map((product) => product.id))) + 1;
+  private refreshVideo(videoId: number): void {
+    this.videoService.getById(videoId).subscribe((video) => {
+      const updated = this.toAdminVideo(video);
+      this.videos = this.videos.map((item) => (item.id === videoId ? updated : item));
+      if (this.openedVideoId === videoId) {
+        this.videoForm.reset({
+          title: updated.title,
+          tiktokUrl: updated.tiktokUrl,
+          isActive: updated.isActive
+        });
+      }
+    });
   }
 
   private loadVideos(): void {

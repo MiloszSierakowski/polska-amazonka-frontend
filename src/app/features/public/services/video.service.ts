@@ -29,11 +29,30 @@ interface ProductLinkApiResponse {
   isActive: boolean | null;
 }
 
+export interface CreateVideoProductPayload {
+  name: string;
+  imageUrl?: string | null;
+  productLink: {
+    url: string;
+    type: 'product';
+  };
+}
+
 export interface CreateVideoPayload {
   title: string;
   tiktokUrl: string;
   isActive: boolean;
   localMp4Url?: string | null;
+  products?: CreateVideoProductPayload[];
+}
+
+export interface AddVideoProductPayload {
+  name: string;
+  imageUrl?: string | null;
+  productLink: {
+    url: string;
+    type: 'product';
+  };
 }
 
 @Injectable({
@@ -58,9 +77,27 @@ export class VideoService {
       );
   }
 
+  getById(id: number): Observable<Video> {
+    return this.http
+      .get<VideoApiResponse>(`${this.backendUrl}/api/videos/${id}`)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
   create(payload: CreateVideoPayload): Observable<Video> {
     return this.http
       .post<VideoApiResponse>(`${this.backendUrl}/api/videos`, payload)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  addProduct(videoId: number, payload: AddVideoProductPayload): Observable<Video> {
+    return this.http
+      .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products`, payload)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  detachProduct(videoId: number, productId: number): Observable<Video> {
+    return this.http
+      .delete<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}`)
       .pipe(map((row) => this.mapRow(row)));
   }
 
