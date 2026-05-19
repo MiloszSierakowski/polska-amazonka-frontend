@@ -51,6 +51,10 @@ export class VideoService {
       );
   }
 
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.backendUrl}/api/videos/${id}`);
+  }
+
   private mapRow(row: VideoApiResponse): Video {
     return {
       id: row.id,

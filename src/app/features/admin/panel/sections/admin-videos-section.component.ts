@@ -91,6 +91,22 @@ export class AdminVideosSectionComponent implements OnInit {
     video.isActive = value.isActive ?? true;
   }
 
+  deleteVideo(video: AdminVideoMock): void {
+    const confirmed = window.confirm(
+      'Czy na pewno usunąć ten film? Produkty używane tylko w tym filmie zostaną trwale usunięte.'
+    );
+    if (!confirmed) {
+      return;
+    }
+    this.videoService.delete(video.id).subscribe(() => {
+      if (this.openedVideoId === video.id) {
+        this.openedVideoId = null;
+        this.cancelProductForm();
+      }
+      this.loadVideos();
+    });
+  }
+
   toggleVideoCategory(video: AdminVideoMock, categoryId: number): void {
     video.categoryIds = video.categoryIds.includes(categoryId)
       ? video.categoryIds.filter((id) => id !== categoryId)
