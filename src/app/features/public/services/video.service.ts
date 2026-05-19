@@ -29,6 +29,13 @@ interface ProductLinkApiResponse {
   isActive: boolean | null;
 }
 
+export interface CreateVideoPayload {
+  title: string;
+  tiktokUrl: string;
+  isActive: boolean;
+  localMp4Url?: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -49,6 +56,12 @@ export class VideoService {
         map((rows) => rows.map((row) => this.mapRow(row))),
         catchError(() => of(this.fallbackVideos(categoryId)))
       );
+  }
+
+  create(payload: CreateVideoPayload): Observable<Video> {
+    return this.http
+      .post<VideoApiResponse>(`${this.backendUrl}/api/videos`, payload)
+      .pipe(map((row) => this.mapRow(row)));
   }
 
   delete(id: number): Observable<void> {

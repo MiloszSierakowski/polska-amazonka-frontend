@@ -17,6 +17,8 @@ import { Video } from '../../../public/models/video.model';
   styleUrl: './admin-videos-section.component.scss'
 })
 export class AdminVideosSectionComponent implements OnInit {
+  readonly defaultPreviewUrl = 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok';
+
   videos: AdminVideoMock[] = [];
   categories = [...MOCK_ADMIN_CATEGORIES];
   openedVideoId: number | null = null;
@@ -59,6 +61,11 @@ export class AdminVideosSectionComponent implements OnInit {
 
   get newVideoProducts(): FormArray<FormGroup> {
     return this.newVideoForm.get('products') as FormArray<FormGroup>;
+  }
+
+  previewImageSrc(video: AdminVideoMock): string {
+    const url = video.previewImageUrl?.trim();
+    return url ? url : this.defaultPreviewUrl;
   }
 
   toggleVideo(video: AdminVideoMock): void {
@@ -211,22 +218,16 @@ export class AdminVideosSectionComponent implements OnInit {
       return;
     }
     const value = this.newVideoForm.getRawValue();
-    const video: AdminVideoMock = {
-      id: this.nextVideoId(),
-      title: value.title!,
-      tiktokUrl: value.tiktokUrl!,
-      previewImageUrl: 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok',
-      isActive: value.isActive ?? true,
-      categoryIds: value.categoryIds.filter((id): id is number => id !== null),
-      products: value.products.map((product) => ({
-        id: this.nextProductId(),
-        name: product['name'],
-        imageUrl: product['imageUrl'] ?? '',
-        shopUrl: product['shopUrl']
-      }))
-    };
-    this.videos = [...this.videos, video];
-    this.resetNewVideoForm();
+    this.videoService
+      .create({
+        title: value.title!,
+        tiktokUrl: value.tiktokUrl!,
+        isActive: value.isActive ?? true
+      })
+      .subscribe(() => {
+        this.resetNewVideoForm();
+        this.loadVideos();
+      });
   }
 
   resetNewVideoForm(): void {
@@ -234,10 +235,6 @@ export class AdminVideosSectionComponent implements OnInit {
     this.newVideoCategoryIds.clear();
     this.newVideoProducts.clear();
     this.showNewProductForm = false;
-  }
-
-  private nextVideoId(): number {
-    return Math.max(0, ...this.videos.map((video) => video.id)) + 1;
   }
 
   private nextProductId(): number {
@@ -255,7 +252,7 @@ export class AdminVideosSectionComponent implements OnInit {
       id: video.id,
       title: video.title,
       tiktokUrl: video.tiktokUrl,
-      previewImageUrl: video.previewImageUrl || 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok',
+      previewImageUrl: video.previewImageUrl,
       isActive: video.isActive,
       categoryIds: [...video.categoryIds],
       products: video.products.map((product) => ({

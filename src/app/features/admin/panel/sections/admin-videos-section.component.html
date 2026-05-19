@@ -2,7 +2,7 @@
   <div class="video-list">
     <article class="video-card" *ngFor="let video of videos" [class.is-open]="isVideoOpen(video)">
       <button type="button" class="video-card-header" (click)="toggleVideo(video)">
-        <img class="video-thumb" [src]="video.previewImageUrl" [alt]="video.title" />
+        <img class="video-thumb" [src]="previewImageSrc(video)" [alt]="video.title" />
         <span class="video-headline">
           <span class="video-title">{{ video.title }}</span>
           <span class="video-status" [class.inactive]="!video.isActive">
@@ -13,6 +13,10 @@
       </button>
 
       <div class="video-editor" *ngIf="isVideoOpen(video)">
+        <div class="video-headline">
+          <img class="video-thumb" [src]="previewImageSrc(video)" [alt]="video.title" />
+          <span class="video-title">{{ video.title }}</span>
+        </div>
         <form class="mobile-form" [formGroup]="videoForm" (ngSubmit)="saveVideo(video)">
           <h3>Film</h3>
           <label>
