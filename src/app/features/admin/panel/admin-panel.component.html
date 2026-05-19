@@ -1,0 +1,36 @@
+<div class="admin-panel-page">
+  <header class="admin-panel-header">
+    <div>
+      <p class="eyebrow">Panel zarządzania</p>
+      <h1>Polska Amazonka</h1>
+      <p class="subtitle" *ngIf="authService.getLogin() as login">Zalogowano: {{ login }}</p>
+    </div>
+    <button type="button" class="logout-btn" (click)="logout()">Wyloguj</button>
+  </header>
+
+  <div class="accordion">
+    <article
+      class="accordion-card"
+      *ngFor="let section of visibleSections()"
+      [class.is-open]="isOpen(section.id)"
+    >
+      <button
+        type="button"
+        class="accordion-header"
+        (click)="toggleSection(section.id)"
+        [attr.aria-expanded]="isOpen(section.id)"
+      >
+        <span class="accordion-title">{{ section.title }}</span>
+        <span class="accordion-chevron" [class.is-open]="isOpen(section.id)"></span>
+      </button>
+
+      <div class="accordion-panel" *ngIf="isOpen(section.id)">
+        <app-admin-videos-section *ngIf="section.id === 'videos'"></app-admin-videos-section>
+        <app-admin-categories-section *ngIf="section.id === 'categories'"></app-admin-categories-section>
+        <app-admin-discounts-section *ngIf="section.id === 'discounts'"></app-admin-discounts-section>
+        <app-admin-users-section *ngIf="section.id === 'users'"></app-admin-users-section>
+        <app-admin-changelog-section *ngIf="section.id === 'changelog'"></app-admin-changelog-section>
+      </div>
+    </article>
+  </div>
+</div>

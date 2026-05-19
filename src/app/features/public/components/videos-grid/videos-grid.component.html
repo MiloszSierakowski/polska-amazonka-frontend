@@ -1,8 +1,13 @@
 <section class="videos-section">
   <div class="videos-grid" *ngIf="videos.length; else noVideos">
-    <button class="video-tile" *ngFor="let video of videos" (click)="openModal(video)">
-      <img [src]="video.previewImageUrl" [alt]="video.title" (error)="onPreviewImageError($event)" />
-    </button>
+    <button
+      type="button"
+      class="video-tile"
+      *ngFor="let video of videos"
+      (click)="openModal(video)"
+      [ngStyle]="{ 'background-image': tileBackgroundImage(video) }"
+      [attr.aria-label]="video.title"
+    ></button>
   </div>
 
   <ng-template #noVideos>
@@ -15,9 +20,15 @@
     <button class="close-button" (click)="closeModal()">✕</button>
 
     <div class="video-pane">
-      <div class="tiktok-frame">
+      <div class="video-loader" *ngIf="isLoadingVideo">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="tiktok-frame" [class.is-loading]="isLoadingVideo">
         <iframe
-          [src]="toTikTokEmbedUrl(selectedVideo.tiktokUrl)"
+          *ngIf="safeVideoUrl"
+          [src]="safeVideoUrl"
+          (load)="isLoadingVideo = false"
           title="TikTok video"
           allow="encrypted-media"
           allowfullscreen
@@ -26,18 +37,26 @@
     </div>
 
     <aside class="products-pane">
-      <h3 class="video-modal-title">{{ selectedVideo.title }}</h3>
-      <h4>Produkty z filmu</h4>
-      <a
-        class="product-item"
-        *ngFor="let product of selectedVideo.products"
-        [href]="product.productLink.url"
-        target="_blank"
-        rel="noopener noreferrer"
-      >
-        <img [src]="product.imageUrl" [alt]="product.name" />
-        <span>{{ product.name }}</span>
-      </a>
+      <div class="products-grid" *ngIf="selectedVideo.products.length; else noProducts">
+        <a
+          class="product-card"
+          *ngFor="let product of selectedVideo.products"
+          [href]="product.productLink.url"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          <div class="product-image-wrapper">
+            <img [src]="product.imageUrl" [alt]="product.name" width="400" height="400" />
+          </div>
+          <div class="product-info">
+            <span class="product-name">{{ product.name }}</span>
+          </div>
+        </a>
+      </div>
+
+      <ng-template #noProducts>
+        <div class="no-products">Brak produktów przypisanych do filmu.</div>
+      </ng-template>
     </aside>
   </div>
 </div>

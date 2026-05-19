@@ -1,10 +1,10 @@
 <header class="header">
-  <img src="assets/logo/header-logo.png" alt="Polska Amazonka" class="header-logo"/>
+  <img src="assets/logo/header-logo.png" alt="Polska Amazonka" class="header-logo" width="600" height="160" />
 
   <div class="social-icons">
     <div class="icon-with-drawer" *ngFor="let link of links">
       <a [href]="link.url" target="_blank" rel="noopener noreferrer">
-        <img [src]="getIconPath(link.url)" alt="social-icon" />
+        <img [src]="getIconPath(link.url)" alt="social-icon" width="64" height="64" />
       </a>
 
       <div class="drawer">

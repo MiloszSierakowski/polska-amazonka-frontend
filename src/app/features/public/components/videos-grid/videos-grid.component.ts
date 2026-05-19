@@ -1,7 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { VideoMockService } from '../../services/video-mock.service';
+import { VideoService } from '../../services/video.service';
 import { Video } from '../../models/video.model';
 
 @Component({
@@ -16,9 +16,14 @@ export class VideosGridComponent implements OnChanges {
 
   videos: Video[] = [];
   selectedVideo: Video | null = null;
+  safeVideoUrl: SafeResourceUrl | null = null;
+  isLoadingVideo = false;
+
+  readonly fallbackPreviewUrl =
+    'https://placehold.co/720x1280/111827/ffffff?text=Miniatura+TikTok';
 
   constructor(
-    private videoMockService: VideoMockService,
+    private videoService: VideoService,
     private sanitizer: DomSanitizer
   ) {
     this.loadVideos();
@@ -31,36 +36,39 @@ export class VideosGridComponent implements OnChanges {
   }
 
   loadVideos(): void {
-    this.videoMockService.getVideos(this.selectedCategoryId).subscribe((videos) => {
-      this.videos = videos;
+    this.videoService.getVideos(this.selectedCategoryId).subscribe((videos) => {
+      this.videos = videos.filter((v) => v.isActive);
     });
   }
 
+  tileBackgroundImage(video: Video): string {
+    const url = video.previewImageUrl || this.fallbackPreviewUrl;
+    return `url(${JSON.stringify(url)})`;
+  }
+
   openModal(video: Video): void {
+    this.isLoadingVideo = true;
     this.selectedVideo = video;
+    this.safeVideoUrl = this.getTikTokSafeUrl(video.tiktokUrl);
     document.body.style.overflow = 'hidden';
   }
 
   closeModal(): void {
     this.selectedVideo = null;
+    this.safeVideoUrl = null;
+    this.isLoadingVideo = false;
     document.body.style.overflow = '';
   }
 
-
-  onPreviewImageError(event: Event): void {
-    const img = event.target as HTMLImageElement;
-    img.src = 'https://placehold.co/720x1280/111827/ffffff?text=Miniatura+TikTok';
-  }
-
-  toTikTokEmbedUrl(url: string): SafeResourceUrl {
+  private getTikTokSafeUrl(url: string): SafeResourceUrl {
     const match = url.match(/\/video\/(\d+)/);
     const videoId = match?.[1];
 
     const params = new URLSearchParams({
-      controls: '0',
-      progress_bar: '0',
-      play_button: '0',
-      volume_control: '0',
+      controls: '1',
+      progress_bar: '1',
+      play_button: '1',
+      volume_control: '1',
       fullscreen_button: '0',
       timestamp: '0',
       music_info: '0',
@@ -70,8 +78,10 @@ export class VideosGridComponent implements OnChanges {
       native_context_menu: '0'
     });
 
-    return this.sanitizer.bypassSecurityTrustResourceUrl(
-      videoId ? `https://www.tiktok.com/player/v1/${videoId}?${params.toString()}` : ''
-    );
+    const finalUrl = videoId
+      ? `https://www.tiktok.com/player/v1/${videoId}?${params.toString()}`
+      : '';
+
+    return this.sanitizer.bypassSecurityTrustResourceUrl(finalUrl);
   }
 }

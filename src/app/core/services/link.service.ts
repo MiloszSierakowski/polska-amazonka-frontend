@@ -1,6 +1,6 @@
 import { Inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, catchError, of } from 'rxjs';
 
 export interface LinkDTO {
   id: number;
@@ -9,6 +9,37 @@ export interface LinkDTO {
   isActive: boolean;
   lastCheckedAt: string | null;
 }
+
+const FALLBACK_SOCIAL_LINKS: LinkDTO[] = [
+  {
+    id: 1,
+    url: 'https://www.tiktok.com/@polskaamazonka',
+    type: 'social',
+    isActive: true,
+    lastCheckedAt: null
+  },
+  {
+    id: 2,
+    url: 'https://www.instagram.com/polskaamazonka',
+    type: 'social',
+    isActive: true,
+    lastCheckedAt: null
+  },
+  {
+    id: 3,
+    url: 'https://www.facebook.com/polskaamazonka',
+    type: 'social',
+    isActive: true,
+    lastCheckedAt: null
+  },
+  {
+    id: 4,
+    url: 'https://www.youtube.com/@polskaamazonka',
+    type: 'social',
+    isActive: false,
+    lastCheckedAt: null
+  }
+];
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +56,8 @@ export class LinkService {
   }
 
   getSocialLinks(): Observable<LinkDTO[]> {
-    return this.http.get<LinkDTO[]>(this.apiUrl + '?type=social');
+    return this.http.get<LinkDTO[]>(this.apiUrl + '?type=social').pipe(
+      catchError(() => of(FALLBACK_SOCIAL_LINKS))
+    );
   }
 }

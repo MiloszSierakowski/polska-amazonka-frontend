@@ -1,0 +1,155 @@
+<div class="videos-admin">
+  <div class="video-list">
+    <article class="video-card" *ngFor="let video of videos" [class.is-open]="isVideoOpen(video)">
+      <button type="button" class="video-card-header" (click)="toggleVideo(video)">
+        <img class="video-thumb" [src]="video.previewImageUrl" [alt]="video.title" />
+        <span class="video-headline">
+          <span class="video-title">{{ video.title }}</span>
+          <span class="video-status" [class.inactive]="!video.isActive">
+            {{ video.isActive ? 'Aktywny' : 'Nieaktywny' }}
+          </span>
+        </span>
+        <span class="video-chevron" [class.is-open]="isVideoOpen(video)"></span>
+      </button>
+
+      <div class="video-editor" *ngIf="isVideoOpen(video)">
+        <form class="mobile-form" [formGroup]="videoForm" (ngSubmit)="saveVideo(video)">
+          <h3>Film</h3>
+          <label>
+            <span>Tytuł filmu</span>
+            <input type="text" formControlName="title" />
+          </label>
+          <label>
+            <span>URL TikTok</span>
+            <input type="url" formControlName="tiktokUrl" />
+          </label>
+          <label class="toggle-row">
+            <span>Aktywny</span>
+            <input type="checkbox" formControlName="isActive" />
+          </label>
+          <button type="submit" class="primary-action">Zapisz film</button>
+        </form>
+
+        <section class="editor-block">
+          <h3>Kategorie</h3>
+          <div class="category-tags">
+            <button
+              type="button"
+              class="category-tag"
+              *ngFor="let category of categories"
+              [class.active]="video.categoryIds.includes(category.id)"
+              (click)="toggleVideoCategory(video, category.id)"
+            >
+              {{ category.name }}
+            </button>
+          </div>
+        </section>
+
+        <section class="editor-block">
+          <h3>Produkty przypisane do filmu</h3>
+          <ul class="product-list" *ngIf="video.products.length; else noProducts">
+            <li class="product-row" *ngFor="let product of video.products">
+              <img class="product-thumb" [src]="product.imageUrl || 'https://placehold.co/80x80/e8f4fc/1a7bb8?text=Produkt'" [alt]="product.name" />
+              <div class="product-info">
+                <span class="product-name">{{ product.name }}</span>
+                <span class="product-link">{{ product.shopUrl }}</span>
+              </div>
+              <div class="product-actions">
+                <button type="button" class="icon-action" (click)="startEditProduct(product)">Edytuj</button>
+                <button type="button" class="icon-action danger" (click)="detachProduct(video, product.id)">Usuń</button>
+              </div>
+            </li>
+          </ul>
+          <ng-template #noProducts>
+            <p class="empty-state">Brak produktów dla tego filmu.</p>
+          </ng-template>
+
+          <form class="mobile-form compact" *ngIf="showExistingProductForm" [formGroup]="productForm" (ngSubmit)="saveProduct(video)">
+            <h3>{{ editingProductId ? 'Edycja produktu' : 'Nowy produkt' }}</h3>
+            <label>
+              <span>Nazwa</span>
+              <input type="text" formControlName="name" />
+            </label>
+            <label>
+              <span>URL obrazka</span>
+              <input type="url" formControlName="imageUrl" />
+            </label>
+            <label>
+              <span>URL do sklepu</span>
+              <input type="url" formControlName="shopUrl" />
+            </label>
+            <div class="form-actions">
+              <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
+              <button type="submit" class="primary-action">Zapisz</button>
+            </div>
+          </form>
+
+          <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
+        </section>
+      </div>
+    </article>
+  </div>
+
+  <section class="new-video-card">
+    <h3>Dodaj nowy film</h3>
+    <form class="mobile-form" [formGroup]="newVideoForm" (ngSubmit)="saveNewVideo()">
+      <label>
+        <span>Tytuł filmu</span>
+        <input type="text" formControlName="title" />
+      </label>
+      <label>
+        <span>URL TikTok</span>
+        <input type="url" formControlName="tiktokUrl" />
+      </label>
+      <label class="toggle-row">
+        <span>Aktywny</span>
+        <input type="checkbox" formControlName="isActive" />
+      </label>
+
+      <section class="editor-block embedded">
+        <h3>Kategorie</h3>
+        <div class="category-tags">
+          <button
+            type="button"
+            class="category-tag"
+            *ngFor="let category of categories"
+            [class.active]="isNewVideoCategoryActive(category.id)"
+            (click)="toggleNewVideoCategory(category.id)"
+          >
+            {{ category.name }}
+          </button>
+        </div>
+      </section>
+
+      <section class="editor-block embedded">
+        <h3>Produkty przed zapisem filmu</h3>
+        <div class="new-product-stack" formArrayName="products" *ngIf="showNewProductForm">
+          <div class="mobile-form compact nested" *ngFor="let group of newVideoProducts.controls; let i = index" [formGroupName]="i">
+            <div class="nested-head">
+              <h3>Produkt {{ i + 1 }}</h3>
+              <button type="button" class="remove-inline" (click)="removeNewVideoProduct(i)">Usuń</button>
+            </div>
+            <label>
+              <span>Nazwa</span>
+              <input type="text" formControlName="name" />
+            </label>
+            <label>
+              <span>URL obrazka</span>
+              <input type="url" formControlName="imageUrl" />
+            </label>
+            <label>
+              <span>URL do sklepu</span>
+              <input type="url" formControlName="shopUrl" />
+            </label>
+          </div>
+        </div>
+        <button type="button" class="add-product-btn" (click)="addNewVideoProduct()">+ Dodaj produkt</button>
+      </section>
+
+      <div class="form-actions">
+        <button type="button" class="secondary-action" (click)="resetNewVideoForm()">Wyczyść</button>
+        <button type="submit" class="primary-action">Zapisz film</button>
+      </div>
+    </form>
+  </section>
+</div>

@@ -1,0 +1,12 @@
+<div class="section-body changelog-body">
+  <ul class="changelog-list">
+    <li class="changelog-row" *ngFor="let log of logs">
+      <div class="changelog-head">
+        <span class="changelog-action">{{ log.action }}</span>
+        <span class="changelog-date">{{ formatDate(log.createdAt) }}</span>
+      </div>
+      <p class="changelog-details">{{ log.details }}</p>
+      <span class="changelog-user">{{ log.userLogin }} (ID: {{ log.userId }})</span>
+    </li>
+  </ul>
+</div>

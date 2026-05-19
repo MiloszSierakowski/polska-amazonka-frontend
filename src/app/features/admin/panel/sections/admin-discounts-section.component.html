@@ -1,0 +1,40 @@
+<div class="section-body">
+  <ul class="item-list">
+    <li class="item-row" *ngFor="let item of items">
+      <div class="item-main">
+        <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
+        <span class="item-meta">{{ item.type }}</span>
+        <span class="item-badge" [class.inactive]="!item.isActive">
+          {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+        </span>
+      </div>
+      <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
+    </li>
+  </ul>
+  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
+    <h3>{{ editingId ? 'Edycja kodu' : 'Nowy kod' }}</h3>
+    <label>
+      <span>Platforma</span>
+      <input type="text" formControlName="platform" />
+    </label>
+    <label>
+      <span>Kod</span>
+      <input type="text" formControlName="codeValue" />
+    </label>
+    <label>
+      <span>Typ</span>
+      <select formControlName="type">
+        <option value="DISCOUNT">DISCOUNT</option>
+        <option value="AFFILIATE">AFFILIATE</option>
+      </select>
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" formControlName="isActive" />
+      <span>Aktywny</span>
+    </label>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
+      <button type="submit" class="btn-primary">Zapisz</button>
+    </div>
+  </form>
+</div>

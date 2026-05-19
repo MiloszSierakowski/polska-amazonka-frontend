@@ -1,0 +1,34 @@
+<div class="admin-users-page">
+  <header class="admin-topbar">
+    <div class="admin-topbar-inner">
+      <div>
+        <p class="eyebrow">Panel administratora</p>
+        <h1>Użytkownicy</h1>
+        <p class="subtitle" *ngIf="authService.getLogin() as login">Zalogowano: {{ login }}</p>
+      </div>
+      <button type="button" class="logout-btn" (click)="logout()">Wyloguj</button>
+    </div>
+  </header>
+
+  <main class="admin-content">
+    <div class="loader" *ngIf="isLoading">
+      <div class="spinner"></div>
+    </div>
+
+    <p class="error" *ngIf="loadError">{{ loadError }}</p>
+
+    <ul class="users-list" *ngIf="!isLoading && !loadError && users.length">
+      <li class="user-card" *ngFor="let user of users">
+        <div class="user-card-body">
+          <span class="user-login">{{ user.login }}</span>
+          <span class="user-role" [class.is-admin]="user.role === 'ADMIN'">
+            {{ roleLabel(user.role) }}
+          </span>
+        </div>
+        <span class="user-id">ID: {{ user.id }}</span>
+      </li>
+    </ul>
+
+    <p class="empty" *ngIf="!isLoading && !loadError && !users.length">Brak użytkowników.</p>
+  </main>
+</div>
