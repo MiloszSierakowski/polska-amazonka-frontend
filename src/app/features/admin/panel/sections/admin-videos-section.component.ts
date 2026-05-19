@@ -32,7 +32,11 @@ export class AdminVideosSectionComponent implements OnInit {
     isActive: [true]
   });
 
-  productForm = this.fb.group({
+  productAddForm = this.fb.group({
+    shopUrl: ['', Validators.required]
+  });
+
+  productEditForm = this.fb.group({
     name: ['', Validators.required],
     imageUrl: [''],
     shopUrl: ['', Validators.required]
@@ -124,7 +128,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.editingProductId = product.id;
     this.showExistingProductForm = true;
     this.showNewProductForm = false;
-    this.productForm.reset({
+    this.productEditForm.reset({
       name: product.name,
       imageUrl: product.imageUrl,
       shopUrl: product.shopUrl
@@ -135,23 +139,24 @@ export class AdminVideosSectionComponent implements OnInit {
     this.editingProductId = null;
     this.showExistingProductForm = true;
     this.showNewProductForm = false;
-    this.productForm.reset({ name: '', imageUrl: '', shopUrl: '' });
+    this.productAddForm.reset({ shopUrl: '' });
   }
 
   cancelProductForm(): void {
     this.editingProductId = null;
     this.showExistingProductForm = false;
     this.showNewProductForm = false;
-    this.productForm.reset({ name: '', imageUrl: '', shopUrl: '' });
+    this.productAddForm.reset({ shopUrl: '' });
+    this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '' });
   }
 
   saveProduct(video: AdminVideoMock): void {
-    if (this.productForm.invalid) {
-      this.productForm.markAllAsTouched();
-      return;
-    }
-    const value = this.productForm.getRawValue();
     if (this.editingProductId) {
+      if (this.productEditForm.invalid) {
+        this.productEditForm.markAllAsTouched();
+        return;
+      }
+      const value = this.productEditForm.getRawValue();
       video.products = video.products.map((product) =>
         product.id === this.editingProductId
           ? {
@@ -165,10 +170,13 @@ export class AdminVideosSectionComponent implements OnInit {
       this.cancelProductForm();
       return;
     }
+    if (this.productAddForm.invalid) {
+      this.productAddForm.markAllAsTouched();
+      return;
+    }
+    const value = this.productAddForm.getRawValue();
     this.videoService
       .addProduct(video.id, {
-        name: value.name!,
-        imageUrl: value.imageUrl?.trim() || null,
         productLink: {
           url: value.shopUrl!,
           type: 'product'
@@ -206,8 +214,6 @@ export class AdminVideosSectionComponent implements OnInit {
     this.showNewProductForm = true;
     this.newVideoProducts.push(
       this.fb.group({
-        name: ['', Validators.required],
-        imageUrl: [''],
         shopUrl: ['', Validators.required]
       })
     );
@@ -227,8 +233,6 @@ export class AdminVideosSectionComponent implements OnInit {
     const products = this.newVideoProducts.controls.map((group) => {
       const product = group.getRawValue();
       return {
-        name: product['name'] as string,
-        imageUrl: (product['imageUrl'] as string | undefined)?.trim() || null,
         productLink: {
           url: product['shopUrl'] as string,
           type: 'product' as const

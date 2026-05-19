@@ -69,8 +69,13 @@
             <p class="empty-state">Brak produktów dla tego filmu.</p>
           </ng-template>
 
-          <form class="mobile-form compact" *ngIf="showExistingProductForm" [formGroup]="productForm" (ngSubmit)="saveProduct(video)">
-            <h3>{{ editingProductId ? 'Edycja produktu' : 'Nowy produkt' }}</h3>
+          <form
+            class="mobile-form compact"
+            *ngIf="showExistingProductForm && editingProductId"
+            [formGroup]="productEditForm"
+            (ngSubmit)="saveProduct(video)"
+          >
+            <h3>Edycja produktu</h3>
             <label>
               <span>Nazwa</span>
               <input type="text" formControlName="name" />
@@ -79,6 +84,23 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
+            <label>
+              <span>URL do sklepu</span>
+              <input type="url" formControlName="shopUrl" />
+            </label>
+            <div class="form-actions">
+              <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
+              <button type="submit" class="primary-action">Zapisz</button>
+            </div>
+          </form>
+
+          <form
+            class="mobile-form compact"
+            *ngIf="showExistingProductForm && !editingProductId"
+            [formGroup]="productAddForm"
+            (ngSubmit)="saveProduct(video)"
+          >
+            <h3>Nowy produkt</h3>
             <label>
               <span>URL do sklepu</span>
               <input type="url" formControlName="shopUrl" />
@@ -134,14 +156,6 @@
               <h3>Produkt {{ i + 1 }}</h3>
               <button type="button" class="remove-inline" (click)="removeNewVideoProduct(i)">Usuń</button>
             </div>
-            <label>
-              <span>Nazwa</span>
-              <input type="text" formControlName="name" />
-            </label>
-            <label>
-              <span>URL obrazka</span>
-              <input type="url" formControlName="imageUrl" />
-            </label>
             <label>
               <span>URL do sklepu</span>
               <input type="url" formControlName="shopUrl" />

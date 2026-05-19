@@ -30,7 +30,7 @@ interface ProductLinkApiResponse {
 }
 
 export interface CreateVideoProductPayload {
-  name: string;
+  name?: string | null;
   imageUrl?: string | null;
   productLink: {
     url: string;
@@ -47,7 +47,7 @@ export interface CreateVideoPayload {
 }
 
 export interface AddVideoProductPayload {
-  name: string;
+  name?: string | null;
   imageUrl?: string | null;
   productLink: {
     url: string;
