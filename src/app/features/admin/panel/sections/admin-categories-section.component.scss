@@ -1,1 +1,64 @@
 @import 'section-shared';
+
+.category-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 1px solid #e2e8f0;
+}
+
+.item-row-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.item-action.danger {
+  border-color: #fecaca;
+  color: #b91c1c;
+  background: #fef2f2;
+}
+
+.image-upload-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.file-input-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  border: 0;
+}
+
+.upload-image-btn {
+  min-height: 2.75rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 0.65rem;
+  background: #f8fafc;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a7bb8;
+  cursor: pointer;
+}
+
+.image-preview {
+  width: 100%;
+  max-width: 12rem;
+  max-height: 8rem;
+  object-fit: contain;
+  border-radius: 0.65rem;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+}
+
+@media (min-width: 640px) {
+  .item-row-actions {
+    flex-shrink: 0;
+  }
+}

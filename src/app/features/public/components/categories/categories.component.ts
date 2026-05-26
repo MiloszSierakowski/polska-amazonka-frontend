@@ -3,6 +3,10 @@ import { CommonModule } from '@angular/common';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../models/category.model';
 
+interface CategoryView extends Category {
+  displayImageUrl: string;
+}
+
 @Component({
   selector: 'app-categories',
   standalone: true,
@@ -11,7 +15,7 @@ import { Category } from '../../models/category.model';
   styleUrl: './categories.component.scss'
 })
 export class CategoriesComponent implements OnInit {
-  categories: Category[] = [];
+  categories: CategoryView[] = [];
   selectedCategoryId: number | null = null;
 
   @Output() categorySelected = new EventEmitter<number | null>();
@@ -22,20 +26,14 @@ export class CategoriesComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    this.categoryService.getCategories().subscribe({
-      next: (data) => {
-        this.categories = data.map((category) => ({
-          ...category,
-          imageUrl: this.resolveImageUrl(category)
-        }));
-      },
-      error: (err) => console.error('Błąd pobierania kategorii', err)
-    });
+    this.loadCategories();
   }
 
   onWheel(event: WheelEvent): void {
     const scrollContainer = event.currentTarget as HTMLElement;
-    if (!scrollContainer) return;
+    if (!scrollContainer) {
+      return;
+    }
     event.preventDefault();
     scrollContainer.scrollLeft += event.deltaY;
   }
@@ -45,26 +43,31 @@ export class CategoriesComponent implements OnInit {
     this.categorySelected.emit(this.selectedCategoryId);
   }
 
-  private resolveImageUrl(category: Category): string {
-    if (!category.imageUrl) {
-      return `${this.backendUrl}/categories/${this.categoryAssetName(category.name)}.png`;
-    }
-    if (category.imageUrl.startsWith('http://') || category.imageUrl.startsWith('https://')) {
-      return category.imageUrl;
-    }
-    return `${this.backendUrl}${category.imageUrl.startsWith('/') ? '' : '/'}${category.imageUrl}`;
+  trackByCategoryId(_index: number, category: CategoryView): number {
+    return category.id;
   }
 
-  private categoryAssetName(name: string): string {
-    return name.toLowerCase()
-      .replace('ę', 'e')
-      .replace('ą', 'a')
-      .replace('ł', 'l')
-      .replace('ó', 'o')
-      .replace('ś', 's')
-      .replace('ć', 'c')
-      .replace('ń', 'n')
-      .replace('ż', 'z')
-      .replace('ź', 'z');
+  onImageError(event: Event, category: CategoryView): void {
+    const img = event.target as HTMLImageElement;
+    img.onerror = null;
+    img.src = this.categoryService.resolveDisplayImageUrl(
+      { id: category.id, name: category.name, imageUrl: null },
+      this.backendUrl
+    );
+  }
+
+  private loadCategories(): void {
+    this.categoryService.getCategories().subscribe({
+      next: (data) => {
+        this.categories = (data ?? []).map((category) => this.toCategoryView(category));
+      }
+    });
+  }
+
+  private toCategoryView(category: Category): CategoryView {
+    return {
+      ...category,
+      displayImageUrl: this.categoryService.resolveDisplayImageUrl(category, this.backendUrl)
+    };
   }
 }

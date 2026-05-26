@@ -1,13 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import {
-  AdminVideoMock,
-  AdminVideoProductMock,
-  MOCK_ADMIN_CATEGORIES
-} from '../../mocks/admin-mock.data';
+import { AdminVideoMock, AdminVideoProductMock } from '../../mocks/admin-mock.data';
 import { VideoService } from '../../../public/services/video.service';
 import { Video } from '../../../public/models/video.model';
+import { CategoryService } from '../../../../services/category.service';
+import { Category } from '../../../public/models/category.model';
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -20,7 +18,7 @@ export class AdminVideosSectionComponent implements OnInit {
   readonly defaultPreviewUrl = 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok';
 
   videos: AdminVideoMock[] = [];
-  categories = [...MOCK_ADMIN_CATEGORIES];
+  categories: Category[] = [];
   openedVideoId: number | null = null;
   editingProductId: number | null = null;
   showExistingProductForm = false;
@@ -52,11 +50,15 @@ export class AdminVideosSectionComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private videoService: VideoService
+    private videoService: VideoService,
+    private categoryService: CategoryService
   ) {}
 
   ngOnInit(): void {
     this.loadVideos();
+    this.categoryService.getCategories().subscribe((categories) => {
+      this.categories = categories;
+    });
   }
 
   get newVideoCategoryIds(): FormArray {

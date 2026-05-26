@@ -3,12 +3,19 @@
     <button
       type="button"
       class="category-box"
-      *ngFor="let c of categories"
+      *ngFor="let c of categories; trackBy: trackByCategoryId"
       [class.active]="c.id === selectedCategoryId"
       (click)="selectCategory(c.id)"
     >
       <span class="category-icon-wrapper">
-        <img [src]="c.imageUrl" [alt]="c.name" class="category-icon" width="220" height="72" />
+        <img
+          [src]="c.displayImageUrl"
+          [alt]="c.name"
+          class="category-icon"
+          width="220"
+          height="72"
+          (error)="onImageError($event, c)"
+        />
       </span>
     </button>
   </div>

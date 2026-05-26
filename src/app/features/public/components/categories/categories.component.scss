@@ -25,6 +25,7 @@
 
 .category-box {
   flex: 0 0 auto;
+  min-width: 4.5rem;
   border: 0;
   background: transparent;
   padding: 0;
@@ -56,5 +57,8 @@
   border-radius: $category-radius;
   width: auto;
   height: auto;
+  min-width: 4rem;
+  min-height: 2.25rem;
   max-height: $category-icon-max-height;
+  object-fit: contain;
 }

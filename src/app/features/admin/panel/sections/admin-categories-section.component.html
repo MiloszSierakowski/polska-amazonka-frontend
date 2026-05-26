@@ -2,9 +2,13 @@
   <ul class="item-list">
     <li class="item-row" *ngFor="let item of items">
       <div class="item-main">
+        <img class="category-thumb" [src]="imageSrc(item)" [alt]="item.name" />
         <span class="item-title">{{ item.name }}</span>
       </div>
-      <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
+      <div class="item-row-actions">
+        <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
+        <button type="button" class="item-action danger" (click)="deleteCategory(item)" aria-label="Usuń kategorię">🗑</button>
+      </div>
     </li>
   </ul>
   <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
@@ -13,6 +17,17 @@
       <span>Nazwa</span>
       <input type="text" formControlName="name" />
     </label>
+    <div class="image-upload-block">
+      <input
+        #fileInput
+        type="file"
+        accept="image/*"
+        class="file-input-hidden"
+        (change)="onFileSelected($event)"
+      />
+      <button type="button" class="upload-image-btn" (click)="openFilePicker(fileInput)">Prześlij obrazek</button>
+      <img *ngIf="previewUrl" class="image-preview" [src]="previewUrl" alt="Podgląd obrazka kategorii" />
+    </div>
     <div class="form-actions">
       <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
       <button type="submit" class="btn-primary">Zapisz</button>
