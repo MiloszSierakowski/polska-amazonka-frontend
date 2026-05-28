@@ -1,0 +1,43 @@
+<div class="profile-modal-overlay" (click)="close()">
+  <div class="profile-modal" (click)="$event.stopPropagation()">
+    <button type="button" class="profile-modal-close" (click)="close()">✕</button>
+    <h2>Profil użytkownika</h2>
+
+    <div class="profile-loader" *ngIf="isLoading">
+      <div class="spinner"></div>
+    </div>
+
+    <p class="profile-error" *ngIf="loadError">{{ loadError }}</p>
+
+    <form
+      class="profile-form"
+      *ngIf="!isLoading && !loadError"
+      [formGroup]="profileForm"
+      (ngSubmit)="save()"
+    >
+      <label>
+        <span>Login</span>
+        <input type="text" formControlName="login" />
+      </label>
+      <label>
+        <span>Imię</span>
+        <input type="text" formControlName="firstName" />
+      </label>
+      <label>
+        <span>Nazwisko</span>
+        <input type="text" formControlName="lastName" />
+      </label>
+      <label>
+        <span>E-mail</span>
+        <input type="email" formControlName="email" />
+      </label>
+      <p class="profile-error" *ngIf="saveError">{{ saveError }}</p>
+      <div class="profile-form-actions">
+        <button type="button" class="profile-btn-secondary" (click)="close()">Anuluj</button>
+        <button type="submit" class="profile-btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Zapisywanie...' : 'Zapisz' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

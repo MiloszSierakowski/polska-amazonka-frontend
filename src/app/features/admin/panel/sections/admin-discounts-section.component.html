@@ -1,40 +1,83 @@
 <div class="section-body">
-  <ul class="item-list">
-    <li class="item-row" *ngFor="let item of items">
-      <div class="item-main">
-        <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
-        <span class="item-meta">{{ item.type }}</span>
-        <span class="item-badge" [class.inactive]="!item.isActive">
-          {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
-        </span>
+  <section class="code-block">
+    <h2 class="block-title">Kody rabatowe</h2>
+    <p class="success-banner" *ngIf="discountSuccessMessage">{{ discountSuccessMessage }}</p>
+    <ul class="item-list">
+      <li class="item-row" *ngFor="let item of discountItems">
+        <div class="item-main">
+          <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
+          <span class="item-meta">{{ item.description }}</span>
+          <span class="item-badge" [class.inactive]="!item.isActive">
+            {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+          </span>
+        </div>
+        <button type="button" class="item-action" (click)="startEditDiscount(item)">Edytuj</button>
+      </li>
+    </ul>
+    <form class="item-form" [formGroup]="discountForm" (ngSubmit)="saveDiscount()">
+      <h3>{{ editingDiscountId ? 'Edycja kodu rabatowego' : 'Nowy kod rabatowy' }}</h3>
+      <label>
+        <span>Platforma</span>
+        <select formControlName="platform">
+          <option value="" disabled>Wybierz platformę</option>
+          <option *ngFor="let platform of platforms" [value]="platform">{{ platform }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Wartość kodu</span>
+        <input type="text" formControlName="codeValue" />
+      </label>
+      <label>
+        <span>Opis promocji</span>
+        <textarea formControlName="description" rows="3"></textarea>
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" formControlName="isActive" />
+        <span>Aktywny</span>
+      </label>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="startAddDiscount()">Wyczyść</button>
+        <button type="submit" class="btn-primary">Zapisz</button>
       </div>
-      <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
-    </li>
-  </ul>
-  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
-    <h3>{{ editingId ? 'Edycja kodu' : 'Nowy kod' }}</h3>
-    <label>
-      <span>Platforma</span>
-      <input type="text" formControlName="platform" />
-    </label>
-    <label>
-      <span>Kod</span>
-      <input type="text" formControlName="codeValue" />
-    </label>
-    <label>
-      <span>Typ</span>
-      <select formControlName="type">
-        <option value="DISCOUNT">DISCOUNT</option>
-        <option value="AFFILIATE">AFFILIATE</option>
-      </select>
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" formControlName="isActive" />
-      <span>Aktywny</span>
-    </label>
-    <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
-      <button type="submit" class="btn-primary">Zapisz</button>
-    </div>
-  </form>
+    </form>
+  </section>
+
+  <section class="code-block affiliate-block">
+    <h2 class="block-title">Kody afiliacyjne</h2>
+    <p class="success-banner" *ngIf="affiliateSuccessMessage">{{ affiliateSuccessMessage }}</p>
+    <ul class="item-list">
+      <li class="item-row" *ngFor="let item of affiliateItems">
+        <div class="item-main">
+          <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
+          <span class="item-meta">Kod afiliacyjny</span>
+          <span class="item-badge" [class.inactive]="!item.isActive">
+            {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+          </span>
+        </div>
+        <button type="button" class="item-action" (click)="startEditAffiliate(item)">Edytuj</button>
+      </li>
+    </ul>
+    <form class="item-form" [formGroup]="affiliateForm" (ngSubmit)="saveAffiliate()">
+      <h3>{{ editingAffiliateId ? 'Edycja kodu afiliacyjnego' : 'Nowy kod afiliacyjny' }}</h3>
+      <label>
+        <span>Platforma</span>
+        <select formControlName="platform">
+          <option value="" disabled>Wybierz platformę</option>
+          <option *ngFor="let platform of platforms" [value]="platform">{{ platform }}</option>
+        </select>
+      </label>
+      <label>
+        <span>Wartość kodu / linku</span>
+        <input type="text" formControlName="codeValue" />
+      </label>
+      <label class="checkbox-row">
+        <input type="checkbox" formControlName="isActive" />
+        <span>Aktywny</span>
+      </label>
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="startAddAffiliate()">Wyczyść</button>
+        <button type="submit" class="btn-primary">Zapisz</button>
+      </div>
+    </form>
+  </section>
 </div>

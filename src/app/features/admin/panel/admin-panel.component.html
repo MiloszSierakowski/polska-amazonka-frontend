@@ -3,9 +3,12 @@
     <div>
       <p class="eyebrow">Panel zarządzania</p>
       <h1>Polska Amazonka</h1>
-      <p class="subtitle" *ngIf="authService.getLogin() as login">Zalogowano: {{ login }}</p>
+      <p class="subtitle" *ngIf="sessionLabel">Zalogowano: {{ sessionLabel }}</p>
     </div>
-    <button type="button" class="logout-btn" (click)="logout()">Wyloguj</button>
+    <div class="header-actions">
+      <button type="button" class="logout-btn" (click)="openProfileModal()">Użytkownik</button>
+      <button type="button" class="logout-btn" (click)="logout()">Wyloguj</button>
+    </div>
   </header>
 
   <div class="accordion">
@@ -34,3 +37,9 @@
     </article>
   </div>
 </div>
+
+<app-admin-user-profile-modal
+  *ngIf="profileModalOpen"
+  (closed)="closeProfileModal()"
+  (saved)="onProfileSaved($event)"
+></app-admin-user-profile-modal>

@@ -7,6 +7,8 @@ import { AdminCategoriesSectionComponent } from './sections/admin-categories-sec
 import { AdminDiscountsSectionComponent } from './sections/admin-discounts-section.component';
 import { AdminUsersSectionComponent } from './sections/admin-users-section.component';
 import { AdminChangelogSectionComponent } from './sections/admin-changelog-section.component';
+import { AdminUserProfileModalComponent } from './admin-user-profile-modal.component';
+import { UserProfile } from '../models/admin-user.model';
 
 interface AccordionSection {
   id: string;
@@ -23,18 +25,21 @@ interface AccordionSection {
     AdminCategoriesSectionComponent,
     AdminDiscountsSectionComponent,
     AdminUsersSectionComponent,
-    AdminChangelogSectionComponent
+    AdminChangelogSectionComponent,
+    AdminUserProfileModalComponent
   ],
   templateUrl: './admin-panel.component.html',
   styleUrl: './admin-panel.component.scss'
 })
 export class AdminPanelComponent {
   activeSectionId: string | null = null;
+  profileModalOpen = false;
+  sessionLabel = '';
 
   readonly sections: AccordionSection[] = [
     { id: 'videos', title: 'Filmy', adminOnly: false },
     { id: 'categories', title: 'Kategorie', adminOnly: false },
-    { id: 'discounts', title: 'Kody rabatowe', adminOnly: false },
+    { id: 'discounts', title: 'Kody rabatowe i afiliacyjne', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
     { id: 'changelog', title: 'Historia zmian', adminOnly: false }
   ];
@@ -42,7 +47,9 @@ export class AdminPanelComponent {
   constructor(
     public authService: AuthService,
     private router: Router
-  ) {}
+  ) {
+    this.refreshSessionLabel();
+  }
 
   visibleSections(): AccordionSection[] {
     return this.sections.filter(
@@ -58,8 +65,34 @@ export class AdminPanelComponent {
     return this.activeSectionId === sectionId;
   }
 
+  openProfileModal(): void {
+    this.profileModalOpen = true;
+  }
+
+  closeProfileModal(): void {
+    this.profileModalOpen = false;
+  }
+
+  onProfileSaved(profile: UserProfile): void {
+    this.authService.updateProfileState(profile);
+    this.refreshSessionLabel();
+    this.profileModalOpen = false;
+  }
+
   logout(): void {
     this.authService.logout();
     this.router.navigate(['/admin/login']);
+  }
+
+  private refreshSessionLabel(): void {
+    const login = this.authService.getLogin();
+    if (!login) {
+      this.sessionLabel = '';
+      return;
+    }
+    const firstName = this.authService.getFirstName()?.trim();
+    const lastName = this.authService.getLastName()?.trim();
+    const fullName = [firstName, lastName].filter(Boolean).join(' ').trim();
+    this.sessionLabel = fullName ? `${fullName} (${login})` : login;
   }
 }

@@ -34,6 +34,12 @@
   opacity: 0.9;
 }
 
+.header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+}
+
 .logout-btn {
   align-self: flex-start;
   min-height: 2.85rem;
@@ -113,6 +119,10 @@
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
+  }
+
+  .header-actions {
+    align-self: center;
   }
 
   .logout-btn {

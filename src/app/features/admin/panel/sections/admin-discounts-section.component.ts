@@ -1,7 +1,10 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MOCK_ADMIN_DISCOUNTS, AdminDiscountMock } from '../../mocks/admin-mock.data';
+import { DiscountCode } from '../../models/discount-code.model';
+import { AffiliateCode } from '../../models/affiliate-code.model';
+import { DiscountCodeService } from '../../services/discount-code.service';
+import { AffiliateCodeService } from '../../services/affiliate-code.service';
 
 @Component({
   selector: 'app-admin-discounts-section',
@@ -10,65 +13,153 @@ import { MOCK_ADMIN_DISCOUNTS, AdminDiscountMock } from '../../mocks/admin-mock.
   templateUrl: './admin-discounts-section.component.html',
   styleUrl: './admin-discounts-section.component.scss'
 })
-export class AdminDiscountsSectionComponent {
-  items: AdminDiscountMock[] = [...MOCK_ADMIN_DISCOUNTS];
-  editingId: number | null = null;
+export class AdminDiscountsSectionComponent implements OnInit {
+  discountItems: DiscountCode[] = [];
+  affiliateItems: AffiliateCode[] = [];
+  editingDiscountId: number | null = null;
+  editingAffiliateId: number | null = null;
+  discountSuccessMessage: string | null = null;
+  affiliateSuccessMessage: string | null = null;
 
-  form = this.fb.group({
+  readonly platforms = ['ALIEXPRESS', 'TEMU'];
+
+  discountForm = this.fb.group({
     platform: ['', Validators.required],
     codeValue: ['', Validators.required],
-    type: ['DISCOUNT' as 'AFFILIATE' | 'DISCOUNT', Validators.required],
+    description: ['', Validators.required],
     isActive: [true]
   });
 
-  constructor(private fb: FormBuilder) {}
+  affiliateForm = this.fb.group({
+    platform: ['', Validators.required],
+    codeValue: ['', Validators.required],
+    isActive: [true]
+  });
 
-  startAdd(): void {
-    this.editingId = null;
-    this.form.reset({ platform: '', codeValue: '', type: 'DISCOUNT', isActive: true });
+  constructor(
+    private fb: FormBuilder,
+    private discountCodeService: DiscountCodeService,
+    private affiliateCodeService: AffiliateCodeService
+  ) {}
+
+  ngOnInit(): void {
+    this.loadDiscountCodes();
+    this.loadAffiliateCodes();
   }
 
-  startEdit(item: AdminDiscountMock): void {
-    this.editingId = item.id;
-    this.form.patchValue({
+  startAddDiscount(): void {
+    this.editingDiscountId = null;
+    this.discountForm.reset({ platform: '', codeValue: '', description: '', isActive: true });
+    this.discountSuccessMessage = null;
+  }
+
+  startEditDiscount(item: DiscountCode): void {
+    this.editingDiscountId = item.id;
+    this.discountSuccessMessage = null;
+    this.discountForm.patchValue({
       platform: item.platform,
       codeValue: item.codeValue,
-      type: item.type,
+      description: item.description,
       isActive: item.isActive
     });
   }
 
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  saveDiscount(): void {
+    if (this.discountForm.invalid) {
+      this.discountForm.markAllAsTouched();
       return;
     }
-    const value = this.form.getRawValue();
-    if (this.editingId) {
-      this.items = this.items.map((item) =>
-        item.id === this.editingId
-          ? {
-              ...item,
-              platform: value.platform!,
-              codeValue: value.codeValue!,
-              type: value.type!,
-              isActive: value.isActive ?? true
-            }
-          : item
-      );
-    } else {
-      const nextId = Math.max(0, ...this.items.map((i) => i.id)) + 1;
-      this.items = [
-        ...this.items,
-        {
-          id: nextId,
-          platform: value.platform!,
-          codeValue: value.codeValue!,
-          type: value.type!,
-          isActive: value.isActive ?? true
-        }
-      ];
+    const value = this.discountForm.getRawValue();
+    const payload = {
+      platform: value.platform!,
+      codeValue: value.codeValue!,
+      description: value.description!,
+      isActive: value.isActive ?? true
+    };
+    if (this.editingDiscountId) {
+      this.discountCodeService.update(this.editingDiscountId, payload).subscribe(() => {
+        this.showDiscountSuccess('Kod rabatowy został zaktualizowany.');
+        this.startAddDiscount();
+        this.loadDiscountCodes();
+      });
+      return;
     }
-    this.startAdd();
+    this.discountCodeService.create(payload).subscribe(() => {
+      this.showDiscountSuccess('Kod rabatowy został zapisany.');
+      this.startAddDiscount();
+      this.loadDiscountCodes();
+    });
+  }
+
+  startAddAffiliate(): void {
+    this.editingAffiliateId = null;
+    this.affiliateForm.reset({ platform: '', codeValue: '', isActive: true });
+    this.affiliateSuccessMessage = null;
+  }
+
+  startEditAffiliate(item: AffiliateCode): void {
+    this.editingAffiliateId = item.id;
+    this.affiliateSuccessMessage = null;
+    this.affiliateForm.patchValue({
+      platform: item.platform,
+      codeValue: item.codeValue,
+      isActive: item.isActive
+    });
+  }
+
+  saveAffiliate(): void {
+    if (this.affiliateForm.invalid) {
+      this.affiliateForm.markAllAsTouched();
+      return;
+    }
+    const value = this.affiliateForm.getRawValue();
+    const payload = {
+      platform: value.platform!,
+      codeValue: value.codeValue!,
+      isActive: value.isActive ?? true
+    };
+    if (this.editingAffiliateId) {
+      this.affiliateCodeService.update(this.editingAffiliateId, payload).subscribe(() => {
+        this.showAffiliateSuccess('Kod afiliacyjny został zaktualizowany.');
+        this.startAddAffiliate();
+        this.loadAffiliateCodes();
+      });
+      return;
+    }
+    this.affiliateCodeService.create(payload).subscribe(() => {
+      this.showAffiliateSuccess('Kod afiliacyjny został zapisany.');
+      this.startAddAffiliate();
+      this.loadAffiliateCodes();
+    });
+  }
+
+  private loadDiscountCodes(): void {
+    this.discountCodeService.getAll().subscribe((items) => {
+      this.discountItems = items;
+    });
+  }
+
+  private loadAffiliateCodes(): void {
+    this.affiliateCodeService.getAll().subscribe((items) => {
+      this.affiliateItems = items;
+    });
+  }
+
+  private showDiscountSuccess(message: string): void {
+    this.discountSuccessMessage = message;
+    window.setTimeout(() => {
+      if (this.discountSuccessMessage === message) {
+        this.discountSuccessMessage = null;
+      }
+    }, 4000);
+  }
+
+  private showAffiliateSuccess(message: string): void {
+    this.affiliateSuccessMessage = message;
+    window.setTimeout(() => {
+      if (this.affiliateSuccessMessage === message) {
+        this.affiliateSuccessMessage = null;
+      }
+    }, 4000);
   }
 }

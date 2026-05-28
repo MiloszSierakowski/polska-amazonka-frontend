@@ -1,6 +1,5 @@
 <div class="discount-wrapper">
 
-  <!-- PILL TOGGLE -->
   <div
     class="toggle-button"
     role="button"
@@ -8,70 +7,47 @@
     (click)="toggle()"
     [class.open]="isOpen"
   >
-    <!-- METKA -->
     <img
       src="assets/discount/discount.png"
       alt="Promocja"
       class="discount-tag"
     />
 
-    <!-- TEKST -->
     <span class="text">
       {{ isOpen ? 'Ukryj zniżki' : 'Pokaż zniżki' }}
     </span>
 
-    <!-- STRZAŁKA -->
     <span class="arrow">
       {{ isOpen ? '▲' : '▼' }}
     </span>
   </div>
 
-  <!-- ANIMOWANA SEKCJA -->
   <div class="discount-cards" [class.open]="isOpen">
-
-    <!-- ALIEXPRESS -->
-    <div class="discount-card aliexpress">
+    <div
+      class="discount-card"
+      *ngFor="let code of discountCodes"
+      [ngClass]="cardClass(code.platform)"
+    >
       <div class="card-left">
-        <img src="assets/discount/aliexpressmini.png" alt="AliExpress" />
+        <img [src]="logoSrc(code.platform)" [alt]="code.platform" />
       </div>
 
       <div class="card-right">
         <div class="promo-text">
-          ⭐ 20zł zniżki przy zakupach za 200 zł ⭐
+          {{ code.description }}
         </div>
 
         <div class="code-box">
-          <span class="code">IFP9MDH</span>
-          <img src="assets/discount/kopiuj.png" class="copy-icon" />
+          <span class="code">{{ code.codeValue }}</span>
+          <button type="button" class="copy-button" (click)="copyCode(code.codeValue)" aria-label="Kopiuj kod">
+            <img src="assets/discount/kopiuj.png" class="copy-icon" alt="" />
+          </button>
         </div>
 
-        <button class="go-shop">
+        <button type="button" class="go-shop" (click)="openShop(code.platform)">
           Przejdź do sklepu!
         </button>
       </div>
     </div>
-
-    <!-- TEMU -->
-    <div class="discount-card temu">
-      <div class="card-left">
-        <img src="assets/discount/temu.png" alt="Temu" />
-      </div>
-
-      <div class="card-right">
-        <div class="promo-text">
-          ⭐ Nowi użytkownicy – 400zł kuponów ⭐
-        </div>
-
-        <div class="code-box">
-          <span class="code">apk84760</span>
-          <img src="assets/discount/kopiuj.png" class="copy-icon" />
-        </div>
-
-        <button class="go-shop">
-          Przejdź do sklepu!
-        </button>
-      </div>
-    </div>
-
   </div>
 </div>

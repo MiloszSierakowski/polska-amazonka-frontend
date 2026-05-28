@@ -18,9 +18,7 @@ export class VideosGridComponent implements OnChanges {
   selectedVideo: Video | null = null;
   safeVideoUrl: SafeResourceUrl | null = null;
   isLoadingVideo = false;
-
-  readonly fallbackPreviewUrl =
-    'https://placehold.co/720x1280/111827/ffffff?text=Miniatura+TikTok';
+  private readonly brokenPreviewUrls = new Set<string>();
 
   constructor(
     private videoService: VideoService,
@@ -38,12 +36,20 @@ export class VideosGridComponent implements OnChanges {
   loadVideos(): void {
     this.videoService.getVideos(this.selectedCategoryId).subscribe((videos) => {
       this.videos = videos.filter((v) => v.isActive);
+      this.brokenPreviewUrls.clear();
     });
   }
 
-  tileBackgroundImage(video: Video): string {
-    const url = video.previewImageUrl || this.fallbackPreviewUrl;
-    return `url(${JSON.stringify(url)})`;
+  previewSrc(video: Video): string {
+    const url = video.previewImageUrl;
+    if (this.brokenPreviewUrls.has(url)) {
+      return this.videoService.resolvePreviewImageUrl('/uploads/videos/default.png');
+    }
+    return url;
+  }
+
+  onPreviewError(video: Video): void {
+    this.brokenPreviewUrls.add(video.previewImageUrl);
   }
 
   openModal(video: Video): void {

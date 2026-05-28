@@ -5,9 +5,16 @@
       class="video-tile"
       *ngFor="let video of videos"
       (click)="openModal(video)"
-      [ngStyle]="{ 'background-image': tileBackgroundImage(video) }"
       [attr.aria-label]="video.title"
-    ></button>
+    >
+      <img
+        class="video-tile-thumb"
+        [src]="previewSrc(video)"
+        [alt]="video.title"
+        loading="lazy"
+        (error)="onPreviewError(video)"
+      />
+    </button>
   </div>
 
   <ng-template #noVideos>

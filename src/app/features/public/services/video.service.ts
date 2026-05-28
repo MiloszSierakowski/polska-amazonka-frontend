@@ -105,12 +105,23 @@ export class VideoService {
     return this.http.delete<void>(`${this.backendUrl}/api/videos/${id}`);
   }
 
+  resolvePreviewImageUrl(previewImageUrl: string | null | undefined): string {
+    const trimmed = previewImageUrl?.trim();
+    if (trimmed) {
+      if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+        return trimmed;
+      }
+      return `${this.backendUrl}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+    }
+    return `${this.backendUrl}/uploads/videos/default.png`;
+  }
+
   private mapRow(row: VideoApiResponse): Video {
     return {
       id: row.id,
       title: row.title ?? '',
       tiktokUrl: row.tiktokUrl ?? '',
-      previewImageUrl: row.previewImageUrl ?? '',
+      previewImageUrl: this.resolvePreviewImageUrl(row.previewImageUrl),
       isActive: row.isActive ?? true,
       createdAt: '',
       categoryIds: [],
@@ -153,6 +164,10 @@ export class VideoService {
   private fallbackVideos(categoryId: number | null): Video[] {
     return MOCK_VIDEOS
       .filter((video) => !categoryId || video.categoryIds.includes(categoryId))
-      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+      .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+      .map((video) => ({
+        ...video,
+        previewImageUrl: this.resolvePreviewImageUrl(video.previewImageUrl)
+      }));
   }
 }

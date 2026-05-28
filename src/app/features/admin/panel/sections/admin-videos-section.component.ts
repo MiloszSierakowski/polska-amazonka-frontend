@@ -15,8 +15,6 @@ import { Category } from '../../../public/models/category.model';
   styleUrl: './admin-videos-section.component.scss'
 })
 export class AdminVideosSectionComponent implements OnInit {
-  readonly defaultPreviewUrl = 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok';
-
   videos: AdminVideoMock[] = [];
   categories: Category[] = [];
   openedVideoId: number | null = null;
@@ -70,8 +68,7 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   previewImageSrc(video: AdminVideoMock): string {
-    const url = video.previewImageUrl?.trim();
-    return url ? url : this.defaultPreviewUrl;
+    return this.videoService.resolvePreviewImageUrl(video.previewImageUrl);
   }
 
   toggleVideo(video: AdminVideoMock): void {
