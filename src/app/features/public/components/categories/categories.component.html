@@ -1,4 +1,4 @@
-<div class="categories-scroll" (wheel)="onWheel($event)">
+<div class="categories-scroll" *ngIf="!hasLoadError" (wheel)="onWheel($event)">
   <div class="categories-inner">
     <button
       type="button"

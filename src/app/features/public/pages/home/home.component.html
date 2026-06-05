@@ -2,12 +2,20 @@
 
   <app-search-bar></app-search-bar>
 
-  <app-discount-section></app-discount-section>
+  <p class="outage-notice" *ngIf="showOutageNotice">{{ outageMessage }}</p>
+
+  <app-discount-section (loadFailed)="onSectionLoadFailed()"></app-discount-section>
 
   <div class="separator-line"></div>
 
-  <app-categories (categorySelected)="onCategorySelected($event)"></app-categories>
+  <app-categories
+    (categorySelected)="onCategorySelected($event)"
+    (loadFailed)="onSectionLoadFailed()"
+  ></app-categories>
 
-  <app-videos-grid [selectedCategoryId]="selectedCategoryId"></app-videos-grid>
+  <app-videos-grid
+    [selectedCategoryId]="selectedCategoryId"
+    (loadFailed)="onSectionLoadFailed()"
+  ></app-videos-grid>
 
 </div>

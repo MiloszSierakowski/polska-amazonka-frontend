@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, catchError, map, of } from 'rxjs';
+import { Observable, map } from 'rxjs';
 import { Category } from '../features/public/models/category.model';
 
 interface CategoryApiRow {
@@ -26,8 +26,7 @@ export class CategoryService {
 
   getCategories(): Observable<Category[]> {
     return this.http.get<CategoryApiRow[]>(this.apiUrl).pipe(
-      map((rows) => this.mapRows(rows)),
-      catchError(() => of([]))
+      map((rows) => this.mapRows(rows))
     );
   }
 

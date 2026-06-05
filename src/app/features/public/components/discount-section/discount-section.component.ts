@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PublicDiscountCode } from '../../models/public-discount-code.model';
 import { PublicDiscountService } from '../../services/public-discount.service';
@@ -11,8 +11,11 @@ import { PublicDiscountService } from '../../services/public-discount.service';
   styleUrl: './discount-section.component.scss'
 })
 export class DiscountSectionComponent implements OnInit {
+  @Output() loadFailed = new EventEmitter<void>();
+
   discountCodes: PublicDiscountCode[] = [];
   isOpen = false;
+  hasLoadError = false;
 
   constructor(private publicDiscountService: PublicDiscountService) {}
 
@@ -25,8 +28,16 @@ export class DiscountSectionComponent implements OnInit {
   }
 
   private loadDiscountCodes(): void {
-    this.publicDiscountService.getActiveDiscountCodes().subscribe((codes) => {
-      this.discountCodes = codes;
+    this.publicDiscountService.getActiveDiscountCodes().subscribe({
+      next: (codes) => {
+        this.hasLoadError = false;
+        this.discountCodes = codes;
+      },
+      error: () => {
+        this.hasLoadError = true;
+        this.discountCodes = [];
+        this.loadFailed.emit();
+      }
     });
   }
 

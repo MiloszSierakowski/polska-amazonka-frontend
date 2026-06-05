@@ -1,4 +1,4 @@
-<section class="videos-section">
+<section class="videos-section" *ngIf="!hasLoadError">
   <div class="videos-grid" *ngIf="videos.length; else noVideos">
     <button
       type="button"

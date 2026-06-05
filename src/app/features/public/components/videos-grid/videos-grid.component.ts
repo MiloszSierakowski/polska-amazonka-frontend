@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { VideoService } from '../../services/video.service';
@@ -13,11 +13,13 @@ import { Video } from '../../models/video.model';
 })
 export class VideosGridComponent implements OnChanges {
   @Input() selectedCategoryId: number | null = null;
+  @Output() loadFailed = new EventEmitter<void>();
 
   videos: Video[] = [];
   selectedVideo: Video | null = null;
   safeVideoUrl: SafeResourceUrl | null = null;
   isLoadingVideo = false;
+  hasLoadError = false;
   private readonly brokenPreviewUrls = new Set<string>();
 
   constructor(
@@ -34,9 +36,17 @@ export class VideosGridComponent implements OnChanges {
   }
 
   loadVideos(): void {
-    this.videoService.getVideos(this.selectedCategoryId).subscribe((videos) => {
-      this.videos = videos.filter((v) => v.isActive);
-      this.brokenPreviewUrls.clear();
+    this.videoService.getVideos(this.selectedCategoryId).subscribe({
+      next: (videos) => {
+        this.hasLoadError = false;
+        this.videos = videos.filter((v) => v.isActive);
+        this.brokenPreviewUrls.clear();
+      },
+      error: () => {
+        this.hasLoadError = true;
+        this.videos = [];
+        this.loadFailed.emit();
+      }
     });
   }
 

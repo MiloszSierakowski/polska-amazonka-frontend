@@ -17,8 +17,10 @@ interface CategoryView extends Category {
 export class CategoriesComponent implements OnInit {
   categories: CategoryView[] = [];
   selectedCategoryId: number | null = null;
+  hasLoadError = false;
 
   @Output() categorySelected = new EventEmitter<number | null>();
+  @Output() loadFailed = new EventEmitter<void>();
 
   constructor(
     private categoryService: CategoryService,
@@ -59,7 +61,13 @@ export class CategoriesComponent implements OnInit {
   private loadCategories(): void {
     this.categoryService.getCategories().subscribe({
       next: (data) => {
+        this.hasLoadError = false;
         this.categories = (data ?? []).map((category) => this.toCategoryView(category));
+      },
+      error: () => {
+        this.hasLoadError = true;
+        this.categories = [];
+        this.loadFailed.emit();
       }
     });
   }
