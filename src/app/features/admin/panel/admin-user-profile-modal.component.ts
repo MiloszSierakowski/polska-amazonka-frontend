@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AuthService } from '../services/auth.service';
 import { UserProfileService } from '../services/user-profile.service';
 import { UserProfile } from '../models/admin-user.model';
@@ -20,12 +21,16 @@ export class AdminUserProfileModalComponent implements OnInit {
   isSaving = false;
   loadError = '';
   saveError = '';
+  private originalLogin = '';
 
   profileForm = this.fb.group({
-    login: [{ value: '', disabled: true }],
+    login: ['', [Validators.required, Validators.minLength(3)]],
     firstName: [''],
     lastName: [''],
-    email: ['', Validators.email]
+    email: ['', Validators.email],
+    currentPassword: [''],
+    newPassword: ['', Validators.minLength(8)],
+    confirmNewPassword: ['']
   });
 
   constructor(
@@ -47,14 +52,47 @@ export class AdminUserProfileModalComponent implements OnInit {
       this.profileForm.markAllAsTouched();
       return;
     }
+    const value = this.profileForm.getRawValue();
+    const login = value.login?.trim() ?? '';
+    const newPassword = value.newPassword?.trim() ?? '';
+    const confirmNewPassword = value.confirmNewPassword?.trim() ?? '';
+    const currentPassword = value.currentPassword?.trim() ?? '';
+    const loginChanged = login !== this.originalLogin;
+    const passwordChanging = newPassword.length > 0;
+
+    if (loginChanged || passwordChanging) {
+      if (!currentPassword) {
+        this.saveError = 'Podaj aktualne hasło, aby zmienić login lub hasło.';
+        return;
+      }
+    }
+
+    if (passwordChanging) {
+      if (newPassword.length < 8) {
+        this.saveError = 'Nowe hasło musi mieć co najmniej 8 znaków.';
+        return;
+      }
+      if (newPassword !== confirmNewPassword) {
+        this.saveError = 'Nowe hasła nie są identyczne.';
+        return;
+      }
+    }
+
+    if (confirmNewPassword && !passwordChanging) {
+      this.saveError = 'Wypełnij pole nowego hasła.';
+      return;
+    }
+
     this.isSaving = true;
     this.saveError = '';
-    const value = this.profileForm.getRawValue();
     this.userProfileService
       .updateProfile({
+        login,
         firstName: value.firstName?.trim() || null,
         lastName: value.lastName?.trim() || null,
-        email: value.email?.trim() || null
+        email: value.email?.trim() || null,
+        currentPassword: currentPassword || null,
+        newPassword: passwordChanging ? newPassword : null
       })
       .subscribe({
         next: (profile) => {
@@ -63,9 +101,9 @@ export class AdminUserProfileModalComponent implements OnInit {
           this.saved.emit(profile);
           this.closed.emit();
         },
-        error: () => {
+        error: (error: HttpErrorResponse) => {
           this.isSaving = false;
-          this.saveError = 'Nie udało się zapisać profilu.';
+          this.saveError = this.resolveSaveError(error);
         }
       });
   }
@@ -92,11 +130,28 @@ export class AdminUserProfileModalComponent implements OnInit {
   }
 
   private patchForm(profile: UserProfile): void {
-    this.profileForm.patchValue({
+    this.originalLogin = profile.login;
+    this.profileForm.reset({
       login: profile.login,
       firstName: profile.firstName ?? '',
       lastName: profile.lastName ?? '',
-      email: profile.email ?? ''
+      email: profile.email ?? '',
+      currentPassword: '',
+      newPassword: '',
+      confirmNewPassword: ''
     });
+  }
+
+  private resolveSaveError(error: HttpErrorResponse): string {
+    if (error.status === 401) {
+      return 'Aktualne hasło jest nieprawidłowe.';
+    }
+    if (error.status === 409) {
+      return 'Ten login jest już zajęty.';
+    }
+    if (error.status === 400) {
+      return 'Sprawdź poprawność wprowadzonych danych.';
+    }
+    return 'Nie udało się zapisać profilu.';
   }
 }

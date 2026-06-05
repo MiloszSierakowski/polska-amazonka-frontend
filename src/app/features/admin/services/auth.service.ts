@@ -97,6 +97,9 @@ export class AuthService {
     this.setOptionalStorage(FIRST_NAME_KEY, profile.firstName);
     this.setOptionalStorage(LAST_NAME_KEY, profile.lastName);
     this.setOptionalStorage(EMAIL_KEY, profile.email);
+    if (profile.token) {
+      localStorage.setItem(TOKEN_KEY, profile.token);
+    }
   }
 
   isAdmin(): boolean {

@@ -11,7 +11,9 @@
 
 .profile-modal {
   position: relative;
-  width: min(100%, 28rem);
+  width: min(100%, 30rem);
+  max-height: min(92vh, 44rem);
+  overflow-y: auto;
   background: #fff;
   border-radius: 1rem;
   padding: 1.25rem;
@@ -90,9 +92,10 @@
   font-size: 1rem;
 }
 
-.profile-form input:disabled {
-  background: #f8fafc;
-  color: #64748b;
+.profile-section-divider {
+  height: 1px;
+  background: #e2e8f0;
+  margin: 0.15rem 0;
 }
 
 .profile-form-actions {

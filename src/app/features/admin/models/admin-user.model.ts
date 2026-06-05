@@ -17,12 +17,16 @@ export interface UserProfile {
   lastName: string | null;
   email: string | null;
   role: UserRole;
+  token?: string | null;
 }
 
 export interface UpdateUserProfilePayload {
+  login: string;
   firstName: string | null;
   lastName: string | null;
   email: string | null;
+  currentPassword: string | null;
+  newPassword: string | null;
 }
 
 export interface AdminUser {
