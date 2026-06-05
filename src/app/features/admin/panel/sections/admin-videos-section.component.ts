@@ -6,6 +6,7 @@ import { VideoService } from '../../../public/services/video.service';
 import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
+import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -49,7 +50,8 @@ export class AdminVideosSectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private videoService: VideoService,
-    private categoryService: CategoryService
+    private categoryService: CategoryService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -109,6 +111,7 @@ export class AdminVideosSectionComponent implements OnInit {
       return;
     }
     this.videoService.delete(video.id).subscribe(() => {
+      this.toastService.success('Film został usunięty.');
       if (this.openedVideoId === video.id) {
         this.openedVideoId = null;
         this.cancelProductForm();
@@ -153,6 +156,7 @@ export class AdminVideosSectionComponent implements OnInit {
     if (this.editingProductId) {
       if (this.productEditForm.invalid) {
         this.productEditForm.markAllAsTouched();
+        this.toastService.warning('Uzupełnij wymagane pola produktu.');
         return;
       }
       const value = this.productEditForm.getRawValue();
@@ -171,6 +175,7 @@ export class AdminVideosSectionComponent implements OnInit {
     }
     if (this.productAddForm.invalid) {
       this.productAddForm.markAllAsTouched();
+      this.toastService.warning('Podaj adres URL sklepu produktu.');
       return;
     }
     const value = this.productAddForm.getRawValue();
@@ -182,6 +187,7 @@ export class AdminVideosSectionComponent implements OnInit {
         }
       })
       .subscribe(() => {
+        this.toastService.success('Produkt został dodany do filmu.');
         this.cancelProductForm();
         this.refreshVideo(video.id);
       });
@@ -189,6 +195,7 @@ export class AdminVideosSectionComponent implements OnInit {
 
   detachProduct(video: AdminVideoMock, productId: number): void {
     this.videoService.detachProduct(video.id, productId).subscribe(() => {
+      this.toastService.success('Produkt został odpięty od filmu.');
       if (this.editingProductId === productId) {
         this.cancelProductForm();
       }
@@ -226,6 +233,7 @@ export class AdminVideosSectionComponent implements OnInit {
   saveNewVideo(): void {
     if (this.newVideoForm.invalid) {
       this.newVideoForm.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola nowego filmu.');
       return;
     }
     const value = this.newVideoForm.getRawValue();
@@ -246,6 +254,7 @@ export class AdminVideosSectionComponent implements OnInit {
         products
       })
       .subscribe(() => {
+        this.toastService.success('Film został dodany.');
         this.resetNewVideoForm();
         this.loadVideos();
       });

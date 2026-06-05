@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
+import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
   selector: 'app-admin-categories-section',
@@ -24,6 +25,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   constructor(
     private fb: FormBuilder,
     private categoryService: CategoryService,
+    private toastService: ToastService,
     @Inject('BACKEND_URL') private backendUrl: string
   ) {}
 
@@ -62,17 +64,20 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toastService.warning('Nazwa kategorii jest wymagana.');
       return;
     }
     const name = this.form.value.name!;
     if (this.editingId) {
       this.categoryService.update(this.editingId, name, this.selectedFile).subscribe(() => {
+        this.toastService.success('Kategoria została zaktualizowana.');
         this.startAdd();
         this.loadCategories();
       });
       return;
     }
     this.categoryService.create(name, this.selectedFile).subscribe(() => {
+      this.toastService.success('Kategoria została dodana.');
       this.startAdd();
       this.loadCategories();
     });
@@ -86,6 +91,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
       return;
     }
     this.categoryService.delete(item.id).subscribe(() => {
+      this.toastService.success('Kategoria została usunięta.');
       if (this.editingId === item.id) {
         this.startAdd();
       }
@@ -122,5 +128,4 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
       URL.revokeObjectURL(this.previewUrl);
     }
   }
-
 }

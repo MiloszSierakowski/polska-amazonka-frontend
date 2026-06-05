@@ -1,0 +1,12 @@
+<div class="toast-stack" aria-live="polite" aria-atomic="true">
+  <div
+    class="toast-item"
+    *ngFor="let toast of toasts"
+    [class.is-success]="toast.type === 'success'"
+    [class.is-error]="toast.type === 'error'"
+    [class.is-warning]="toast.type === 'warning'"
+  >
+    <p class="toast-text">{{ toast.text }}</p>
+    <button type="button" class="toast-close" (click)="dismiss(toast.id)">✕</button>
+  </div>
+</div>

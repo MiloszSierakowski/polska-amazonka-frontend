@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../../../core/admin/toast.service';
 
 @Component({
   selector: 'app-admin-login',
@@ -13,7 +14,6 @@ import { AuthService } from '../services/auth.service';
 })
 export class LoginComponent implements OnInit {
   isSubmitting = false;
-  errorMessage = '';
 
   form = this.fb.group({
     login: ['', [Validators.required]],
@@ -23,7 +23,8 @@ export class LoginComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -33,19 +34,21 @@ export class LoginComponent implements OnInit {
   submit(): void {
     if (this.form.invalid || this.isSubmitting) {
       this.form.markAllAsTouched();
+      if (this.form.invalid) {
+        this.toastService.warning('Wypełnij login i hasło.');
+      }
       return;
     }
     this.isSubmitting = true;
-    this.errorMessage = '';
     const { login, password } = this.form.getRawValue();
     this.authService.login(login!, password!).subscribe({
       next: () => {
         this.isSubmitting = false;
+        this.toastService.success('Zalogowano pomyślnie.');
         this.router.navigate(['/admin/panel']);
       },
       error: () => {
         this.isSubmitting = false;
-        this.errorMessage = 'Nieprawidłowy login lub hasło.';
       }
     });
   }

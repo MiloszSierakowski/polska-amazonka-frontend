@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MOCK_ADMIN_USERS } from '../../mocks/admin-mock.data';
 import { AdminUser } from '../../models/admin-user.model';
+import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
   selector: 'app-admin-users-section',
@@ -20,7 +21,10 @@ export class AdminUsersSectionComponent {
     role: ['WORKER' as 'ADMIN' | 'WORKER', Validators.required]
   });
 
-  constructor(private fb: FormBuilder) {}
+  constructor(
+    private fb: FormBuilder,
+    private toastService: ToastService
+  ) {}
 
   startAdd(): void {
     this.editingId = null;
@@ -35,6 +39,7 @@ export class AdminUsersSectionComponent {
   save(): void {
     if (this.form.invalid) {
       this.form.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola użytkownika.');
       return;
     }
     const value = this.form.getRawValue();
@@ -51,6 +56,7 @@ export class AdminUsersSectionComponent {
         { id: nextId, login: value.login!, role: value.role! }
       ];
     }
+    this.toastService.success('Dane użytkownika zostały zapisane lokalnie.');
     this.startAdd();
   }
 

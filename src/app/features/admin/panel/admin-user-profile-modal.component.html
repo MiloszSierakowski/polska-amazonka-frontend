@@ -47,7 +47,6 @@
         <input type="password" formControlName="confirmNewPassword" autocomplete="new-password" />
       </label>
 
-      <p class="profile-error" *ngIf="saveError">{{ saveError }}</p>
       <div class="profile-form-actions">
         <button type="button" class="profile-btn-secondary" (click)="close()">Anuluj</button>
         <button type="submit" class="profile-btn-primary" [disabled]="isSaving">

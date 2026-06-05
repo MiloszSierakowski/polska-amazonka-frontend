@@ -5,6 +5,7 @@ import { DiscountCode } from '../../models/discount-code.model';
 import { AffiliateCode } from '../../models/affiliate-code.model';
 import { DiscountCodeService } from '../../services/discount-code.service';
 import { AffiliateCodeService } from '../../services/affiliate-code.service';
+import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
   selector: 'app-admin-discounts-section',
@@ -18,8 +19,6 @@ export class AdminDiscountsSectionComponent implements OnInit {
   affiliateItems: AffiliateCode[] = [];
   editingDiscountId: number | null = null;
   editingAffiliateId: number | null = null;
-  discountSuccessMessage: string | null = null;
-  affiliateSuccessMessage: string | null = null;
 
   readonly platforms = ['ALIEXPRESS', 'TEMU'];
 
@@ -39,7 +38,8 @@ export class AdminDiscountsSectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private discountCodeService: DiscountCodeService,
-    private affiliateCodeService: AffiliateCodeService
+    private affiliateCodeService: AffiliateCodeService,
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
@@ -50,12 +50,10 @@ export class AdminDiscountsSectionComponent implements OnInit {
   startAddDiscount(): void {
     this.editingDiscountId = null;
     this.discountForm.reset({ platform: '', codeValue: '', description: '', isActive: true });
-    this.discountSuccessMessage = null;
   }
 
   startEditDiscount(item: DiscountCode): void {
     this.editingDiscountId = item.id;
-    this.discountSuccessMessage = null;
     this.discountForm.patchValue({
       platform: item.platform,
       codeValue: item.codeValue,
@@ -67,6 +65,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
   saveDiscount(): void {
     if (this.discountForm.invalid) {
       this.discountForm.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola formularza kodu rabatowego.');
       return;
     }
     const value = this.discountForm.getRawValue();
@@ -78,14 +77,14 @@ export class AdminDiscountsSectionComponent implements OnInit {
     };
     if (this.editingDiscountId) {
       this.discountCodeService.update(this.editingDiscountId, payload).subscribe(() => {
-        this.showDiscountSuccess('Kod rabatowy został zaktualizowany.');
+        this.toastService.success('Kod rabatowy został zaktualizowany.');
         this.startAddDiscount();
         this.loadDiscountCodes();
       });
       return;
     }
     this.discountCodeService.create(payload).subscribe(() => {
-      this.showDiscountSuccess('Kod rabatowy został zapisany.');
+      this.toastService.success('Kod rabatowy został zapisany.');
       this.startAddDiscount();
       this.loadDiscountCodes();
     });
@@ -94,12 +93,10 @@ export class AdminDiscountsSectionComponent implements OnInit {
   startAddAffiliate(): void {
     this.editingAffiliateId = null;
     this.affiliateForm.reset({ platform: '', codeValue: '', isActive: true });
-    this.affiliateSuccessMessage = null;
   }
 
   startEditAffiliate(item: AffiliateCode): void {
     this.editingAffiliateId = item.id;
-    this.affiliateSuccessMessage = null;
     this.affiliateForm.patchValue({
       platform: item.platform,
       codeValue: item.codeValue,
@@ -110,6 +107,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
   saveAffiliate(): void {
     if (this.affiliateForm.invalid) {
       this.affiliateForm.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola formularza kodu afiliacyjnego.');
       return;
     }
     const value = this.affiliateForm.getRawValue();
@@ -120,14 +118,14 @@ export class AdminDiscountsSectionComponent implements OnInit {
     };
     if (this.editingAffiliateId) {
       this.affiliateCodeService.update(this.editingAffiliateId, payload).subscribe(() => {
-        this.showAffiliateSuccess('Kod afiliacyjny został zaktualizowany.');
+        this.toastService.success('Kod afiliacyjny został zaktualizowany.');
         this.startAddAffiliate();
         this.loadAffiliateCodes();
       });
       return;
     }
     this.affiliateCodeService.create(payload).subscribe(() => {
-      this.showAffiliateSuccess('Kod afiliacyjny został zapisany.');
+      this.toastService.success('Kod afiliacyjny został zapisany.');
       this.startAddAffiliate();
       this.loadAffiliateCodes();
     });
@@ -143,23 +141,5 @@ export class AdminDiscountsSectionComponent implements OnInit {
     this.affiliateCodeService.getAll().subscribe((items) => {
       this.affiliateItems = items;
     });
-  }
-
-  private showDiscountSuccess(message: string): void {
-    this.discountSuccessMessage = message;
-    window.setTimeout(() => {
-      if (this.discountSuccessMessage === message) {
-        this.discountSuccessMessage = null;
-      }
-    }, 4000);
-  }
-
-  private showAffiliateSuccess(message: string): void {
-    this.affiliateSuccessMessage = message;
-    window.setTimeout(() => {
-      if (this.affiliateSuccessMessage === message) {
-        this.affiliateSuccessMessage = null;
-      }
-    }, 4000);
   }
 }

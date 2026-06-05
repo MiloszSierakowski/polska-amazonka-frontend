@@ -1,7 +1,6 @@
 <div class="section-body">
   <section class="code-block">
     <h2 class="block-title">Kody rabatowe</h2>
-    <p class="success-banner" *ngIf="discountSuccessMessage">{{ discountSuccessMessage }}</p>
     <ul class="item-list">
       <li class="item-row" *ngFor="let item of discountItems">
         <div class="item-main">
@@ -44,7 +43,6 @@
 
   <section class="code-block affiliate-block">
     <h2 class="block-title">Kody afiliacyjne</h2>
-    <p class="success-banner" *ngIf="affiliateSuccessMessage">{{ affiliateSuccessMessage }}</p>
     <ul class="item-list">
       <li class="item-row" *ngFor="let item of affiliateItems">
         <div class="item-main">
