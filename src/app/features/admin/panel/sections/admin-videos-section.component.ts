@@ -7,6 +7,8 @@ import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
 import { ToastService } from '../../../../core/admin/toast.service';
+import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
+import { ProductImageUploadService } from '../../services/product-image-upload.service';
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -22,6 +24,14 @@ export class AdminVideosSectionComponent implements OnInit {
   editingProductId: number | null = null;
   showExistingProductForm = false;
   showNewProductForm = false;
+  addProductPreviewLoading = false;
+  editProductPreviewLoading = false;
+  addProductPreview: ProductPreview | null = null;
+  editProductPreview: ProductPreview | null = null;
+  newProductPreviewLoading: Record<number, boolean> = {};
+  newProductPreview: Record<number, ProductPreview | null> = {};
+
+  private readonly previewTimers = new Map<string, ReturnType<typeof setTimeout>>();
 
   videoForm = this.fb.group({
     title: ['', Validators.required],
@@ -30,7 +40,9 @@ export class AdminVideosSectionComponent implements OnInit {
   });
 
   productAddForm = this.fb.group({
-    shopUrl: ['', Validators.required]
+    shopUrl: ['', Validators.required],
+    name: [''],
+    imageUrl: ['']
   });
 
   productEditForm = this.fb.group({
@@ -51,7 +63,9 @@ export class AdminVideosSectionComponent implements OnInit {
     private fb: FormBuilder,
     private videoService: VideoService,
     private categoryService: CategoryService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private productPreviewService: ProductPreviewService,
+    private productImageUploadService: ProductImageUploadService
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +85,10 @@ export class AdminVideosSectionComponent implements OnInit {
 
   previewImageSrc(video: AdminVideoMock): string {
     return this.videoService.resolvePreviewImageUrl(video.previewImageUrl);
+  }
+
+  productPreviewImageSrc(imageUrl: string | null | undefined): string {
+    return this.videoService.resolveProductImageUrl(imageUrl);
   }
 
   toggleVideo(video: AdminVideoMock): void {
@@ -130,6 +148,8 @@ export class AdminVideosSectionComponent implements OnInit {
     this.editingProductId = product.id;
     this.showExistingProductForm = true;
     this.showNewProductForm = false;
+    this.editProductPreview = null;
+    this.editProductPreviewLoading = false;
     this.productEditForm.reset({
       name: product.name,
       imageUrl: product.imageUrl,
@@ -141,15 +161,108 @@ export class AdminVideosSectionComponent implements OnInit {
     this.editingProductId = null;
     this.showExistingProductForm = true;
     this.showNewProductForm = false;
-    this.productAddForm.reset({ shopUrl: '' });
+    this.addProductPreview = null;
+    this.addProductPreviewLoading = false;
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
   }
 
   cancelProductForm(): void {
     this.editingProductId = null;
     this.showExistingProductForm = false;
     this.showNewProductForm = false;
-    this.productAddForm.reset({ shopUrl: '' });
+    this.addProductPreview = null;
+    this.editProductPreview = null;
+    this.addProductPreviewLoading = false;
+    this.editProductPreviewLoading = false;
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
     this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '' });
+  }
+
+  onAddProductUrlInput(): void {
+    const url = this.productAddForm.get('shopUrl')?.value ?? '';
+    this.scheduleProductPreview('add', url, (preview, loading) => {
+      this.addProductPreviewLoading = loading;
+      if (loading) {
+        return;
+      }
+      this.addProductPreview = preview;
+      if (preview) {
+        this.productAddForm.patchValue({
+          name: preview.name,
+          imageUrl: preview.imageUrl ?? ''
+        });
+        if (preview.requiresManualImage) {
+          this.toastService.warning(this.manualImageWarning(preview.platform));
+        }
+      }
+    });
+  }
+
+  onAddProductImageSelected(event: Event): void {
+    this.handleProductImageUpload(event, (imageUrl) => {
+      this.productAddForm.patchValue({ imageUrl });
+    });
+  }
+
+  onEditProductImageSelected(event: Event): void {
+    this.handleProductImageUpload(event, (imageUrl) => {
+      this.productEditForm.patchValue({ imageUrl });
+    });
+  }
+
+  onNewProductImageSelected(index: number, event: Event): void {
+    this.handleProductImageUpload(event, (imageUrl) => {
+      this.newVideoProducts.at(index).patchValue({ imageUrl });
+    });
+  }
+
+  onEditProductUrlInput(): void {
+    const url = this.productEditForm.get('shopUrl')?.value ?? '';
+    this.scheduleProductPreview('edit', url, (preview, loading) => {
+      this.editProductPreviewLoading = loading;
+      if (loading) {
+        return;
+      }
+      this.editProductPreview = preview;
+      if (preview) {
+        this.productEditForm.patchValue({
+          name: preview.name,
+          imageUrl: preview.imageUrl ?? ''
+        });
+        if (preview.requiresManualImage) {
+          this.toastService.warning(this.manualImageWarning(preview.platform));
+        }
+      }
+    });
+  }
+
+  onNewProductUrlInput(index: number): void {
+    const group = this.newVideoProducts.at(index);
+    const url = group.get('shopUrl')?.value ?? '';
+    this.scheduleProductPreview(`new-${index}`, url, (preview, loading) => {
+      this.newProductPreviewLoading[index] = loading;
+      if (loading) {
+        return;
+      }
+      this.newProductPreview[index] = preview;
+      if (preview) {
+        group.patchValue({
+          name: preview.name,
+          imageUrl: preview.imageUrl ?? ''
+        });
+        if (preview.requiresManualImage) {
+          this.toastService.warning(this.manualImageWarning(preview.platform));
+        }
+      }
+    });
+  }
+
+  isNewProductPreviewLoading(index: number): boolean {
+    return !!this.newProductPreviewLoading[index];
+  }
+
+  getNewProductPreview(index: number): ProductPreview | null {
+    return this.newProductPreview[index] ?? null;
   }
 
   saveProduct(video: AdminVideoMock): void {
@@ -179,8 +292,14 @@ export class AdminVideosSectionComponent implements OnInit {
       return;
     }
     const value = this.productAddForm.getRawValue();
+    if (this.isAllegroShopUrl(value.shopUrl!) && !value.imageUrl?.trim()) {
+      this.toastService.warning('Dla Allegro dodaj URL obrazka lub prześlij plik zdjęcia.');
+      return;
+    }
     this.videoService
       .addProduct(video.id, {
+        name: value.name || undefined,
+        imageUrl: value.imageUrl || undefined,
         productLink: {
           url: value.shopUrl!,
           type: 'product'
@@ -203,6 +322,13 @@ export class AdminVideosSectionComponent implements OnInit {
     });
   }
 
+  resyncProduct(video: AdminVideoMock, productId: number): void {
+    this.videoService.resyncProduct(video.id, productId).subscribe(() => {
+      this.toastService.success('Dane produktu zostały odświeżone.');
+      this.refreshVideo(video.id);
+    });
+  }
+
   toggleNewVideoCategory(categoryId: number): void {
     const index = this.newVideoCategoryIds.value.indexOf(categoryId);
     if (index >= 0) {
@@ -218,16 +344,24 @@ export class AdminVideosSectionComponent implements OnInit {
 
   addNewVideoProduct(): void {
     this.showNewProductForm = true;
+    const index = this.newVideoProducts.length;
     this.newVideoProducts.push(
       this.fb.group({
-        shopUrl: ['', Validators.required]
+        shopUrl: ['', Validators.required],
+        name: [''],
+        imageUrl: ['']
       })
     );
+    this.newProductPreviewLoading[index] = false;
+    this.newProductPreview[index] = null;
   }
 
   removeNewVideoProduct(index: number): void {
     this.newVideoProducts.removeAt(index);
     this.showNewProductForm = this.newVideoProducts.length > 0;
+    delete this.newProductPreviewLoading[index];
+    delete this.newProductPreview[index];
+    this.clearPreviewTimer(`new-${index}`);
   }
 
   saveNewVideo(): void {
@@ -240,6 +374,8 @@ export class AdminVideosSectionComponent implements OnInit {
     const products = this.newVideoProducts.controls.map((group) => {
       const product = group.getRawValue();
       return {
+        name: product['name'] as string | undefined,
+        imageUrl: product['imageUrl'] as string | undefined,
         productLink: {
           url: product['shopUrl'] as string,
           type: 'product' as const
@@ -265,6 +401,87 @@ export class AdminVideosSectionComponent implements OnInit {
     this.newVideoCategoryIds.clear();
     this.newVideoProducts.clear();
     this.showNewProductForm = false;
+    this.newProductPreviewLoading = {};
+    this.newProductPreview = {};
+  }
+
+  private scheduleProductPreview(
+    key: string,
+    url: string,
+    onResult: (preview: ProductPreview | null, loading: boolean) => void
+  ): void {
+    this.clearPreviewTimer(key);
+    const trimmed = url.trim();
+    if (!trimmed || !this.isSupportedProductUrl(trimmed)) {
+      onResult(null, false);
+      return;
+    }
+    onResult(null, true);
+    const timer = setTimeout(() => {
+      this.previewTimers.delete(key);
+      this.productPreviewService.preview(trimmed).subscribe({
+        next: (preview) => onResult(preview, false),
+        error: () => onResult(null, false)
+      });
+    }, 450);
+    this.previewTimers.set(key, timer);
+  }
+
+  private clearPreviewTimer(key: string): void {
+    const existing = this.previewTimers.get(key);
+    if (existing) {
+      clearTimeout(existing);
+      this.previewTimers.delete(key);
+    }
+  }
+
+  private handleProductImageUpload(event: Event, onSuccess: (imageUrl: string) => void): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0];
+    if (!file) {
+      return;
+    }
+    this.productImageUploadService.upload(file).subscribe({
+      next: (response) => {
+        onSuccess(response.imageUrl);
+        this.toastService.success('Zdjęcie produktu zostało przesłane.');
+        input.value = '';
+      },
+      error: () => {
+        input.value = '';
+      }
+    });
+  }
+
+  isAllegroShopUrl(url: string | null | undefined): boolean {
+    if (!url?.trim()) {
+      return false;
+    }
+    try {
+      return new URL(url.trim()).hostname.toLowerCase().includes('allegro.');
+    } catch {
+      return false;
+    }
+  }
+
+  private manualImageWarning(_platform: string): string {
+    return 'Allegro blokuje automatyczne pobieranie zdjęć. Wklej URL obrazka lub prześlij plik.';
+  }
+
+  private isSupportedProductUrl(url: string): boolean {
+    try {
+      const host = new URL(url).hostname.toLowerCase();
+      return (
+        host.includes('temu.com') ||
+        host.includes('aliexpress.') ||
+        host.includes('allegro.') ||
+        host.includes('amazon.') ||
+        host === 'amzn.to' ||
+        host.endsWith('.amzn.to')
+      );
+    } catch {
+      return false;
+    }
   }
 
   private refreshVideo(videoId: number): void {

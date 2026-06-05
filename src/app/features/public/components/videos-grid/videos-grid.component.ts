@@ -21,6 +21,7 @@ export class VideosGridComponent implements OnChanges {
   isLoadingVideo = false;
   hasLoadError = false;
   private readonly brokenPreviewUrls = new Set<string>();
+  private readonly brokenProductImageIds = new Set<number>();
 
   constructor(
     private videoService: VideoService,
@@ -62,8 +63,20 @@ export class VideosGridComponent implements OnChanges {
     this.brokenPreviewUrls.add(video.previewImageUrl);
   }
 
+  productImageSrc(productId: number, imageUrl: string): string {
+    if (this.brokenProductImageIds.has(productId)) {
+      return this.videoService.resolveProductImageUrl(null);
+    }
+    return this.videoService.resolveProductImageUrl(imageUrl);
+  }
+
+  onProductImageError(productId: number): void {
+    this.brokenProductImageIds.add(productId);
+  }
+
   openModal(video: Video): void {
     this.isLoadingVideo = true;
+    this.brokenProductImageIds.clear();
     this.selectedVideo = video;
     this.safeVideoUrl = this.getTikTokSafeUrl(video.tiktokUrl);
     document.body.style.overflow = 'hidden';

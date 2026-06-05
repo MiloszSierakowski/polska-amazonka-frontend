@@ -97,6 +97,12 @@ export class VideoService {
       .pipe(map((row) => this.mapRow(row)));
   }
 
+  resyncProduct(videoId: number, productId: number): Observable<Video> {
+    return this.http
+      .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}/resync`, {})
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.backendUrl}/api/videos/${id}`);
   }
@@ -112,6 +118,30 @@ export class VideoService {
     return `${this.backendUrl}/uploads/videos/default.png`;
   }
 
+  resolveProductImageUrl(imageUrl: string | null | undefined): string {
+    const trimmed = imageUrl?.trim();
+    if (!trimmed || trimmed.endsWith('/uploads/products/default.png')) {
+      return 'https://placehold.co/400x400/e8f4fc/1a7bb8?text=Produkt';
+    }
+    if (this.isAllegroImageUrl(trimmed)) {
+      const params = new URLSearchParams({ url: trimmed });
+      return `${this.backendUrl}/api/products/image?${params.toString()}`;
+    }
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      return trimmed;
+    }
+    return `${this.backendUrl}${trimmed.startsWith('/') ? '' : '/'}${trimmed}`;
+  }
+
+  private isAllegroImageUrl(imageUrl: string): boolean {
+    try {
+      const host = new URL(imageUrl).hostname.toLowerCase();
+      return host === 'a.allegroimg.com' || host === 'assets.allegrostatic.com';
+    } catch {
+      return false;
+    }
+  }
+
   private mapRow(row: VideoApiResponse): Video {
     return {
       id: row.id,
@@ -124,7 +154,7 @@ export class VideoService {
       products: (row.products ?? []).map((product) => ({
         id: product.id,
         name: product.name,
-        imageUrl: product.imageUrl ?? '',
+        imageUrl: this.resolveProductImageUrl(product.imageUrl),
         productLink: {
           id: product.productLink?.id ?? product.productLinkId ?? 0,
           url: product.productLink?.url ?? '#',
