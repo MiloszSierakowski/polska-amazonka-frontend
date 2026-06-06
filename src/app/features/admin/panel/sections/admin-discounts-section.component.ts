@@ -7,6 +7,13 @@ import { DiscountCodeService } from '../../services/discount-code.service';
 import { AffiliateCodeService } from '../../services/affiliate-code.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 
+type DeleteTargetType = 'discount' | 'affiliate';
+
+interface DeleteTarget {
+  type: DeleteTargetType;
+  id: number;
+}
+
 @Component({
   selector: 'app-admin-discounts-section',
   standalone: true,
@@ -19,8 +26,12 @@ export class AdminDiscountsSectionComponent implements OnInit {
   affiliateItems: AffiliateCode[] = [];
   editingDiscountId: number | null = null;
   editingAffiliateId: number | null = null;
+  deleteModalOpen = false;
+  deleteTarget: DeleteTarget | null = null;
+  isDeleting = false;
 
-  readonly platforms = ['ALIEXPRESS', 'TEMU'];
+  readonly discountPlatforms = ['ALIEXPRESS', 'TEMU'];
+  readonly affiliatePlatforms = ['ALIEXPRESS', 'TEMU', 'AMAZON', 'ALLEGRO'];
 
   discountForm = this.fb.group({
     platform: ['', Validators.required],
@@ -45,6 +56,14 @@ export class AdminDiscountsSectionComponent implements OnInit {
   ngOnInit(): void {
     this.loadDiscountCodes();
     this.loadAffiliateCodes();
+  }
+
+  get canAddDiscountCode(): boolean {
+    return this.discountItems.length < this.discountPlatforms.length;
+  }
+
+  get showDiscountForm(): boolean {
+    return this.editingDiscountId !== null || this.canAddDiscountCode;
   }
 
   startAddDiscount(): void {
@@ -104,6 +123,13 @@ export class AdminDiscountsSectionComponent implements OnInit {
     });
   }
 
+  isAffiliatePlatformDisabled(platform: string): boolean {
+    if (this.editingAffiliateId != null) {
+      return false;
+    }
+    return this.affiliateItems.some((item) => item.platform === platform && item.isActive);
+  }
+
   saveAffiliate(): void {
     if (this.affiliateForm.invalid) {
       this.affiliateForm.markAllAsTouched();
@@ -117,17 +143,71 @@ export class AdminDiscountsSectionComponent implements OnInit {
       isActive: value.isActive ?? true
     };
     if (this.editingAffiliateId) {
-      this.affiliateCodeService.update(this.editingAffiliateId, payload).subscribe(() => {
-        this.toastService.success('Kod afiliacyjny został zaktualizowany.');
-        this.startAddAffiliate();
-        this.loadAffiliateCodes();
+      this.affiliateCodeService.update(this.editingAffiliateId, payload).subscribe({
+        next: () => {
+          this.toastService.success('Kod afiliacyjny został zaktualizowany.');
+          this.startAddAffiliate();
+          this.loadAffiliateCodes();
+        },
+        error: () => {}
       });
       return;
     }
-    this.affiliateCodeService.create(payload).subscribe(() => {
-      this.toastService.success('Kod afiliacyjny został zapisany.');
-      this.startAddAffiliate();
-      this.loadAffiliateCodes();
+    this.affiliateCodeService.create(payload).subscribe({
+      next: () => {
+        this.toastService.success('Kod afiliacyjny został zapisany.');
+        this.startAddAffiliate();
+        this.loadAffiliateCodes();
+      },
+      error: () => {}
+    });
+  }
+
+  openDeleteModal(type: DeleteTargetType, id: number): void {
+    this.deleteTarget = { type, id };
+    this.deleteModalOpen = true;
+  }
+
+  cancelDelete(): void {
+    if (this.isDeleting) {
+      return;
+    }
+    this.deleteModalOpen = false;
+    this.deleteTarget = null;
+  }
+
+  confirmDelete(): void {
+    if (!this.deleteTarget || this.isDeleting) {
+      return;
+    }
+    this.isDeleting = true;
+    const target = this.deleteTarget;
+    const request$ = target.type === 'discount'
+      ? this.discountCodeService.delete(target.id)
+      : this.affiliateCodeService.delete(target.id);
+
+    request$.subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.deleteModalOpen = false;
+        this.deleteTarget = null;
+        if (target.type === 'discount') {
+          if (this.editingDiscountId === target.id) {
+            this.startAddDiscount();
+          }
+          this.loadDiscountCodes();
+          this.toastService.success('Kod rabatowy został usunięty.');
+          return;
+        }
+        if (this.editingAffiliateId === target.id) {
+          this.startAddAffiliate();
+        }
+        this.loadAffiliateCodes();
+        this.toastService.success('Kod afiliacyjny został usunięty.');
+      },
+      error: () => {
+        this.isDeleting = false;
+      }
     });
   }
 

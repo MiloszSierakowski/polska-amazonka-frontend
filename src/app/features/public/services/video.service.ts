@@ -118,6 +118,10 @@ export class VideoService {
     return `${this.backendUrl}/uploads/videos/default.png`;
   }
 
+  resolveProductRedirectUrl(productId: number): string {
+    return `${this.backendUrl}/api/public/products/${productId}/redirect`;
+  }
+
   resolveProductImageUrl(imageUrl: string | null | undefined): string {
     const trimmed = imageUrl?.trim();
     if (!trimmed || trimmed.endsWith('/uploads/products/default.png')) {

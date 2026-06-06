@@ -1,4 +1,4 @@
-<div class="discount-wrapper" *ngIf="!hasLoadError">
+<div class="discount-wrapper" *ngIf="!hasLoadError && discountCodes.length > 0">
 
   <div
     class="toggle-button"
@@ -26,10 +26,10 @@
     <div
       class="discount-card"
       *ngFor="let code of discountCodes"
-      [ngClass]="cardClass(code.platform)"
+      [style.backgroundColor]="platformConfig(code.platform).backgroundColor"
     >
       <div class="card-left">
-        <img [src]="logoSrc(code.platform)" [alt]="code.platform" />
+        <img [src]="platformConfig(code.platform).logoSrc" [alt]="code.platform" />
       </div>
 
       <div class="card-right">

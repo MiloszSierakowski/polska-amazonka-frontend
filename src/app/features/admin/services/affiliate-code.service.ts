@@ -33,4 +33,8 @@ export class AffiliateCodeService {
   update(id: number, payload: SaveAffiliateCodePayload): Observable<AffiliateCode> {
     return this.http.put<AffiliateCode>(`${this.apiUrl}/${id}`, payload);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

@@ -74,6 +74,10 @@ export class VideosGridComponent implements OnChanges {
     this.brokenProductImageIds.add(productId);
   }
 
+  productRedirectUrl(productId: number): string {
+    return this.videoService.resolveProductRedirectUrl(productId);
+  }
+
   openModal(video: Video): void {
     this.isLoadingVideo = true;
     this.brokenProductImageIds.clear();

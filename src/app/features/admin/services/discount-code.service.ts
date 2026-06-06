@@ -34,4 +34,8 @@ export class DiscountCodeService {
   update(id: number, payload: SaveDiscountCodePayload): Observable<DiscountCode> {
     return this.http.put<DiscountCode>(`${this.apiUrl}/${id}`, payload);
   }
+
+  delete(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 }

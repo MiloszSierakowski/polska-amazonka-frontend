@@ -10,16 +10,19 @@
             {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
           </span>
         </div>
-        <button type="button" class="item-action" (click)="startEditDiscount(item)">Edytuj</button>
+        <div class="item-actions">
+          <button type="button" class="item-action" (click)="startEditDiscount(item)">Edytuj</button>
+          <button type="button" class="item-action item-action-danger" (click)="openDeleteModal('discount', item.id)">Usuń</button>
+        </div>
       </li>
     </ul>
-    <form class="item-form" [formGroup]="discountForm" (ngSubmit)="saveDiscount()">
+    <form class="item-form" *ngIf="showDiscountForm" [formGroup]="discountForm" (ngSubmit)="saveDiscount()">
       <h3>{{ editingDiscountId ? 'Edycja kodu rabatowego' : 'Nowy kod rabatowy' }}</h3>
       <label>
         <span>Platforma</span>
         <select formControlName="platform">
           <option value="" disabled>Wybierz platformę</option>
-          <option *ngFor="let platform of platforms" [value]="platform">{{ platform }}</option>
+          <option *ngFor="let platform of discountPlatforms" [value]="platform">{{ platform }}</option>
         </select>
       </label>
       <label>
@@ -35,7 +38,7 @@
         <span>Aktywny</span>
       </label>
       <div class="form-actions">
-        <button type="button" class="btn-secondary" (click)="startAddDiscount()">Wyczyść</button>
+        <button type="button" class="btn-secondary" (click)="startAddDiscount()" *ngIf="canAddDiscountCode">Wyczyść</button>
         <button type="submit" class="btn-primary">Zapisz</button>
       </div>
     </form>
@@ -52,7 +55,10 @@
             {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
           </span>
         </div>
-        <button type="button" class="item-action" (click)="startEditAffiliate(item)">Edytuj</button>
+        <div class="item-actions">
+          <button type="button" class="item-action" (click)="startEditAffiliate(item)">Edytuj</button>
+          <button type="button" class="item-action item-action-danger" (click)="openDeleteModal('affiliate', item.id)">Usuń</button>
+        </div>
       </li>
     </ul>
     <form class="item-form" [formGroup]="affiliateForm" (ngSubmit)="saveAffiliate()">
@@ -61,7 +67,11 @@
         <span>Platforma</span>
         <select formControlName="platform">
           <option value="" disabled>Wybierz platformę</option>
-          <option *ngFor="let platform of platforms" [value]="platform">{{ platform }}</option>
+          <option
+            *ngFor="let platform of affiliatePlatforms"
+            [value]="platform"
+            [disabled]="isAffiliatePlatformDisabled(platform)"
+          >{{ platform }}</option>
         </select>
       </label>
       <label>
@@ -78,4 +88,17 @@
       </div>
     </form>
   </section>
+</div>
+
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+  <div class="delete-modal" (click)="$event.stopPropagation()">
+    <h3>Potwierdzenie usunięcia</h3>
+    <p>Czy na pewno chcesz usunąć ten kod? Tej operacji nie można cofnąć.</p>
+    <div class="delete-modal-actions">
+      <button type="button" class="btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Usuwanie...' : 'Potwierdź usunięcie' }}
+      </button>
+    </div>
+  </div>
 </div>

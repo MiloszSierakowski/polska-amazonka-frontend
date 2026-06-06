@@ -1,7 +1,6 @@
 @import "../../../../../styles/breakpoints";
 @import "../../../../../styles/scaling";
 
-/* desktop – ukrywamy */
 @media (min-width: $desktop) {
   :host {
     display: none;
@@ -98,14 +97,6 @@
   color: #fff;
   max-height: $discount-card-max-height;
   max-width: $discount-card-max-width;
-}
-
-.aliexpress {
-  background: #e42c1b;
-}
-
-.temu {
-  background: #fb7800;
 }
 
 .card-left {

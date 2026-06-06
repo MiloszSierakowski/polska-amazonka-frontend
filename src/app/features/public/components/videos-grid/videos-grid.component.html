@@ -48,7 +48,7 @@
         <a
           class="product-card"
           *ngFor="let product of selectedVideo.products"
-          [href]="product.productLink.url"
+          [href]="productRedirectUrl(product.id)"
           target="_blank"
           rel="noopener noreferrer"
         >
