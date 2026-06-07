@@ -22,7 +22,7 @@ export class AdminVideosSectionComponent implements OnInit {
   categories: Category[] = [];
   openedVideoId: number | null = null;
   editingProductId: number | null = null;
-  showExistingProductForm = false;
+  isAddingNewProduct = false;
   showNewProductForm = false;
   addProductPreviewLoading = false;
   editProductPreviewLoading = false;
@@ -149,8 +149,7 @@ export class AdminVideosSectionComponent implements OnInit {
 
   startEditProduct(product: AdminVideoProductMock): void {
     this.editingProductId = product.id;
-    this.showExistingProductForm = true;
-    this.showNewProductForm = false;
+    this.isAddingNewProduct = false;
     this.editProductPreview = null;
     this.editProductPreviewLoading = false;
     this.productEditForm.reset({
@@ -163,8 +162,7 @@ export class AdminVideosSectionComponent implements OnInit {
 
   startAddProduct(): void {
     this.editingProductId = null;
-    this.showExistingProductForm = true;
-    this.showNewProductForm = false;
+    this.isAddingNewProduct = true;
     this.addProductPreview = null;
     this.addProductPreviewLoading = false;
     this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
@@ -173,8 +171,7 @@ export class AdminVideosSectionComponent implements OnInit {
 
   cancelProductForm(): void {
     this.editingProductId = null;
-    this.showExistingProductForm = false;
-    this.showNewProductForm = false;
+    this.isAddingNewProduct = false;
     this.addProductPreview = null;
     this.editProductPreview = null;
     this.addProductPreviewLoading = false;

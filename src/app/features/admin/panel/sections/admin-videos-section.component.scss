@@ -21,6 +21,25 @@
   padding: 0;
 }
 
+.product-list-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.product-inline-edit-form {
+  margin-top: 0;
+  border-top: 0;
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+  background: #f1f5f9;
+  box-shadow: none;
+}
+
+.product-list-item:has(.product-inline-edit-form) .product-card {
+  border-bottom-left-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
 .video-card,
 .new-video-card {
   background: $admin-card-bg;
