@@ -1,0 +1,193 @@
+<section class="analytics-admin">
+  <div class="analytics-filters">
+    <div class="filter-pills-scroll" (wheel)="onWheel($event)">
+      <div class="filter-pills-inner">
+        <button
+          type="button"
+          class="filter-pill"
+          [class.is-active]="isRangeActive('today')"
+          (click)="setRange('today')"
+        >
+          Dzisiaj
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.is-active]="isRangeActive('yesterday')"
+          (click)="setRange('yesterday')"
+        >
+          Wczoraj
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.is-active]="isRangeActive('7days')"
+          (click)="setRange('7days')"
+        >
+          Ostatnie 7 dni
+        </button>
+        <button
+          type="button"
+          class="filter-pill"
+          [class.is-active]="isRangeActive('currentMonth')"
+          (click)="setRange('currentMonth')"
+        >
+          Bieżący miesiąc
+        </button>
+        <button
+          type="button"
+          class="filter-pill filter-pill-calendar"
+          [class.is-active]="isRangeActive('custom') || isDateRangeOpen"
+          (click)="toggleDateRangePicker()"
+        >
+          <svg class="filter-pill-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="3" y="5" width="18" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="1.8" />
+            <path d="M3 9 H21" fill="none" stroke="currentColor" stroke-width="1.8" />
+            <path d="M8 3 V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+            <path d="M16 3 V7" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" />
+          </svg>
+          Wybierz zakres dat...
+        </button>
+      </div>
+    </div>
+
+    <div class="date-range-panel" *ngIf="isDateRangeOpen">
+      <label class="date-range-field">
+        <span>Od</span>
+        <input type="date" name="customFromDate" [(ngModel)]="customFromDate" />
+      </label>
+      <label class="date-range-field">
+        <span>Do</span>
+        <input type="date" name="customToDate" [(ngModel)]="customToDate" />
+      </label>
+      <button type="button" class="date-range-apply" (click)="applyCustomRange()">
+        Zastosuj
+      </button>
+    </div>
+  </div>
+
+  <p class="analytics-status" *ngIf="isLoading">Ładowanie statystyk...</p>
+  <p class="analytics-status analytics-status-error" *ngIf="!isLoading && hasLoadError">
+    Nie udało się pobrać statystyk.
+  </p>
+
+  <div class="analytics-charts" *ngIf="!isLoading">
+    <article class="chart-card chart-card-wide">
+      <h2 class="chart-title">Najpopularniejsze produkty</h2>
+      <ul class="ranking-list" *ngIf="hasProductListData">
+        <li class="ranking-item" *ngFor="let item of productRankingItems">
+          <div class="ranking-thumb" *ngIf="item.imageUrl && !isRankingImageBroken('product-' + item.id); else productThumbFallback">
+            <img
+              [src]="item.imageUrl"
+              [alt]="item.name"
+              width="40"
+              height="40"
+              (error)="onRankingImageError('product-' + item.id)"
+            />
+          </div>
+          <ng-template #productThumbFallback>
+            <div class="ranking-thumb ranking-thumb-fallback" aria-hidden="true"></div>
+          </ng-template>
+
+          <div class="ranking-body">
+            <p class="ranking-name">{{ item.name }}</p>
+            <div class="ranking-progress-row">
+              <div class="ranking-progress-track">
+                <div class="ranking-progress-fill" [style.width.%]="item.progressPercent"></div>
+              </div>
+              <span class="ranking-count">{{ item.clickCount }}</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <div class="analytics-empty-state" *ngIf="!hasProductListData">
+        <svg class="analytics-empty-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="28" cy="28" r="14" fill="none" stroke="currentColor" stroke-width="3" />
+          <path d="M38 38 L52 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          <path d="M22 24 C24 20 32 20 34 24 C36 28 28 30 28 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <p class="analytics-empty-text">{{ emptyStateMessage }}</p>
+      </div>
+    </article>
+
+    <article class="chart-card">
+      <h2 class="chart-title">Najpopularniejsze filmy</h2>
+      <ul class="ranking-list" *ngIf="hasVideoListData">
+        <li class="ranking-item" *ngFor="let item of videoRankingItems">
+          <div class="ranking-thumb" *ngIf="item.imageUrl && !isRankingImageBroken('video-' + item.id); else videoThumbFallback">
+            <img
+              [src]="item.imageUrl"
+              [alt]="item.name"
+              width="40"
+              height="40"
+              (error)="onRankingImageError('video-' + item.id)"
+            />
+          </div>
+          <ng-template #videoThumbFallback>
+            <div class="ranking-thumb ranking-thumb-fallback" aria-hidden="true"></div>
+          </ng-template>
+
+          <div class="ranking-body">
+            <p class="ranking-name">{{ item.name }}</p>
+            <div class="ranking-progress-row">
+              <div class="ranking-progress-track">
+                <div class="ranking-progress-fill ranking-progress-fill-video" [style.width.%]="item.progressPercent"></div>
+              </div>
+              <span class="ranking-count">{{ item.clickCount }}</span>
+            </div>
+          </div>
+        </li>
+      </ul>
+      <div class="analytics-empty-state" *ngIf="!hasVideoListData">
+        <svg class="analytics-empty-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="28" cy="28" r="14" fill="none" stroke="currentColor" stroke-width="3" />
+          <path d="M38 38 L52 52" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" />
+          <path d="M22 24 C24 20 32 20 34 24 C36 28 28 30 28 30" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <p class="analytics-empty-text">{{ emptyStateMessage }}</p>
+      </div>
+    </article>
+
+    <article class="chart-card">
+      <h2 class="chart-title">Udział kategorii</h2>
+      <div class="chart-canvas-wrap chart-canvas-wrap-doughnut" *ngIf="hasCategoryChartData">
+        <canvas
+          baseChart
+          type="doughnut"
+          [data]="categoryDoughnutChartData"
+          [options]="categoryDoughnutChartOptions"
+        ></canvas>
+      </div>
+      <div class="analytics-empty-state" *ngIf="!hasCategoryChartData">
+        <svg class="analytics-empty-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="3" />
+          <circle cx="32" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="3" />
+          <path d="M32 14 L32 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M32 58 L32 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <p class="analytics-empty-text">{{ emptyStateMessage }}</p>
+      </div>
+    </article>
+
+    <article class="chart-card">
+      <h2 class="chart-title">Udział sklepów</h2>
+      <div class="chart-canvas-wrap chart-canvas-wrap-doughnut" *ngIf="hasShopChartData">
+        <canvas
+          baseChart
+          type="doughnut"
+          [data]="shopDoughnutChartData"
+          [options]="shopDoughnutChartOptions"
+        ></canvas>
+      </div>
+      <div class="analytics-empty-state" *ngIf="!hasShopChartData">
+        <svg class="analytics-empty-icon" viewBox="0 0 64 64" aria-hidden="true">
+          <circle cx="32" cy="32" r="18" fill="none" stroke="currentColor" stroke-width="3" />
+          <circle cx="32" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="3" />
+          <path d="M32 14 L32 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          <path d="M32 58 L32 50" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+        </svg>
+        <p class="analytics-empty-text">{{ emptyStateMessage }}</p>
+      </div>
+    </article>
+  </div>
+</section>

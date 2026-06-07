@@ -1,8 +1,11 @@
-import { Component, EventEmitter, Input, OnChanges, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { ClickStatService } from '../../services/click-stat.service';
 import { VideoService } from '../../services/video.service';
-import { Video } from '../../models/video.model';
+import { Video, Product } from '../../models/video.model';
+import { ShopMatcherService } from '../../../../core/services/shop-matcher.service';
+import { Shop } from '../../../../core/models/shop.model';
 
 @Component({
   selector: 'app-videos-grid',
@@ -11,7 +14,7 @@ import { Video } from '../../models/video.model';
   templateUrl: './videos-grid.component.html',
   styleUrl: './videos-grid.component.scss'
 })
-export class VideosGridComponent implements OnChanges {
+export class VideosGridComponent implements OnInit, OnChanges {
   @Input() selectedCategoryId: number | null = null;
   @Output() loadFailed = new EventEmitter<void>();
 
@@ -25,9 +28,15 @@ export class VideosGridComponent implements OnChanges {
 
   constructor(
     private videoService: VideoService,
+    private clickStatService: ClickStatService,
+    private shopMatcherService: ShopMatcherService,
     private sanitizer: DomSanitizer
   ) {
     this.loadVideos();
+  }
+
+  ngOnInit(): void {
+    this.shopMatcherService.loadActiveShops().subscribe();
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -78,7 +87,24 @@ export class VideosGridComponent implements OnChanges {
     return this.videoService.resolveProductRedirectUrl(productId);
   }
 
+  onProductClick(productId: number): void {
+    this.clickStatService.recordClick('product', productId);
+  }
+
+  detectProductShop(product: Product): Shop | null {
+    return this.shopMatcherService.detectShopFromUrl(product.productLink?.url);
+  }
+
+  shopBadgeBackground(product: Product): string {
+    return this.shopMatcherService.badgeBackgroundColor(this.detectProductShop(product));
+  }
+
+  shopBadgeTextColor(product: Product): string {
+    return this.shopMatcherService.badgeTextColor(this.shopBadgeBackground(product));
+  }
+
   openModal(video: Video): void {
+    this.clickStatService.recordClick('video', video.id);
     this.isLoadingVideo = true;
     this.brokenProductImageIds.clear();
     this.selectedVideo = video;

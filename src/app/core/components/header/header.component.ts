@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { ClickStatService } from '../../../features/public/services/click-stat.service';
 import { LinkService, LinkDTO } from '../../services/link.service';
 
 @Component({
@@ -13,13 +14,20 @@ export class HeaderComponent implements OnInit {
 
   links: LinkDTO[] = [];
 
-  constructor(private linkService: LinkService) {}
+  constructor(
+    private linkService: LinkService,
+    private clickStatService: ClickStatService
+  ) {}
 
   ngOnInit(): void {
     this.linkService.getSocialLinks().subscribe({
       next: (data) => this.links = data,
       error: (err) => console.error('Error fetching links:', err)
     });
+  }
+
+  onLinkClick(linkId: number): void {
+    this.clickStatService.recordClick('link', linkId);
   }
 
   getPlatform(url: string): string {

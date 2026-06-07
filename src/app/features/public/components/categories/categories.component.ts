@@ -2,6 +2,7 @@ import { Component, EventEmitter, Inject, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CategoryService } from '../../../../services/category.service';
+import { ClickStatService } from '../../services/click-stat.service';
 import { Category } from '../../models/category.model';
 
 interface CategoryView extends Category {
@@ -25,6 +26,7 @@ export class CategoriesComponent implements OnInit {
 
   constructor(
     private categoryService: CategoryService,
+    private clickStatService: ClickStatService,
     @Inject('BACKEND_URL') private backendUrl: string
   ) {}
 
@@ -42,7 +44,19 @@ export class CategoriesComponent implements OnInit {
   }
 
   selectCategory(id: number): void {
-    this.selectedCategoryId = this.selectedCategoryId === id ? null : id;
+    const isSelecting = this.selectedCategoryId !== id;
+
+    if (isSelecting) {
+      const category = this.categories.find((item) => item.id === id);
+      if (category) {
+        this.clickStatService.recordClick('category', category.id);
+        if (category.shopId != null) {
+          this.clickStatService.recordClick('shop', category.shopId);
+        }
+      }
+    }
+
+    this.selectedCategoryId = isSelecting ? id : null;
     this.categorySelected.emit(this.selectedCategoryId);
   }
 

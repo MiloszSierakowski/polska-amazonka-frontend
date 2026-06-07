@@ -27,12 +27,14 @@ export class AdminShopsSectionComponent implements OnInit {
   shopAddForm = this.fb.group({
     name: ['', Validators.required],
     shopUrl: [''],
+    colorCode: ['#64748B'],
     isActive: [true]
   });
 
   shopEditForm = this.fb.group({
     name: ['', Validators.required],
     shopUrl: [''],
+    colorCode: ['#64748B'],
     isActive: [true]
   });
 
@@ -51,6 +53,7 @@ export class AdminShopsSectionComponent implements OnInit {
     this.shopAddForm.reset({
       name: '',
       shopUrl: '',
+      colorCode: '#64748B',
       isActive: true
     });
     this.isShopModalOpen = true;
@@ -61,6 +64,7 @@ export class AdminShopsSectionComponent implements OnInit {
     this.shopAddForm.reset({
       name: '',
       shopUrl: '',
+      colorCode: '#64748B',
       isActive: true
     });
   }
@@ -74,6 +78,7 @@ export class AdminShopsSectionComponent implements OnInit {
     this.shopEditForm.reset({
       name: item.name,
       shopUrl: item.shopUrl ?? '',
+      colorCode: item.colorCode ?? '#64748B',
       isActive: item.isActive ?? true
     });
   }
@@ -83,6 +88,7 @@ export class AdminShopsSectionComponent implements OnInit {
     this.shopEditForm.reset({
       name: '',
       shopUrl: '',
+      colorCode: '#64748B',
       isActive: true
     });
   }
@@ -167,6 +173,7 @@ export class AdminShopsSectionComponent implements OnInit {
     return {
       name: value.name!.trim(),
       shopUrl: shopUrl ? shopUrl : null,
+      colorCode: value.colorCode?.trim() || '#64748B',
       isActive: value.isActive ?? true
     };
   }

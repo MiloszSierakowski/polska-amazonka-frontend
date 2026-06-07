@@ -170,6 +170,22 @@
 }
 
 .shop-data-form {
+  .shop-color-field {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+
+    input[type='color'] {
+      width: 3rem;
+      height: 2.5rem;
+      padding: 0.15rem;
+      border: 1px solid #cbd5e1;
+      border-radius: 0.65rem;
+      background: #fff;
+      cursor: pointer;
+    }
+  }
+
   .shop-form-toggle {
     display: flex;
     flex-direction: row;

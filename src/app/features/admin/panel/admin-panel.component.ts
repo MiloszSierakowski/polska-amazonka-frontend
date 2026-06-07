@@ -8,6 +8,7 @@ import { AdminShopsSectionComponent } from './sections/admin-shops-section.compo
 import { AdminDiscountsSectionComponent } from './sections/admin-discounts-section.component';
 import { AdminUsersSectionComponent } from './sections/admin-users-section.component';
 import { AdminChangelogSectionComponent } from './sections/admin-changelog-section.component';
+import { AdminAnalyticsSectionComponent } from './sections/admin-analytics-section.component';
 import { AdminUserProfileModalComponent } from './admin-user-profile-modal.component';
 import { UserProfile } from '../models/admin-user.model';
 
@@ -28,6 +29,7 @@ interface AccordionSection {
     AdminDiscountsSectionComponent,
     AdminUsersSectionComponent,
     AdminChangelogSectionComponent,
+    AdminAnalyticsSectionComponent,
     AdminUserProfileModalComponent
   ],
   templateUrl: './admin-panel.component.html',
@@ -43,6 +45,7 @@ export class AdminPanelComponent {
     { id: 'categories', title: 'Kategorie', adminOnly: false },
     { id: 'shops', title: 'Sklepy', adminOnly: false },
     { id: 'discounts', title: 'Kody rabatowe i afiliacyjne', adminOnly: false },
+    { id: 'analytics', title: 'Statystyki', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
     { id: 'changelog', title: 'Historia zmian', adminOnly: false }
   ];

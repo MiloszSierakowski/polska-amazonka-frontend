@@ -68,6 +68,7 @@
   box-shadow: 0 2px 14px rgba(15, 23, 42, 0.08);
   overflow: hidden;
   border: 1px solid #e2e8f0;
+  min-width: 0;
 }
 
 .accordion-header {
@@ -112,6 +113,8 @@
 
 .accordion-panel {
   padding: 1rem;
+  min-width: 0;
+  max-width: 100%;
 }
 
 @media (min-width: 480px) {

@@ -1,6 +1,7 @@
 import { Component, EventEmitter, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { PublicDiscountCode } from '../../models/public-discount-code.model';
+import { ClickStatService } from '../../services/click-stat.service';
 import { PublicDiscountService } from '../../services/public-discount.service';
 
 export interface ShopVisualEntry {
@@ -52,7 +53,10 @@ export class DiscountSectionComponent implements OnInit {
   isOpen = false;
   hasLoadError = false;
 
-  constructor(private publicDiscountService: PublicDiscountService) {}
+  constructor(
+    private publicDiscountService: PublicDiscountService,
+    private clickStatService: ClickStatService
+  ) {}
 
   ngOnInit(): void {
     this.loadDiscountCodes();
@@ -77,6 +81,8 @@ export class DiscountSectionComponent implements OnInit {
   }
 
   openShop(code: PublicDiscountCode): void {
+    this.clickStatService.recordClick('shop', code.shopId);
+    this.clickStatService.recordClick('discount_code', code.id);
     window.open(this.shopVisual(code.shopSlug).shopUrl, '_blank', 'noopener,noreferrer');
   }
 
