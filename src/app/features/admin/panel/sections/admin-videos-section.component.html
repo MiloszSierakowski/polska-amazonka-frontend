@@ -17,7 +17,7 @@
           <img class="video-thumb" [src]="previewImageSrc(video)" [alt]="video.title" />
           <span class="video-title">{{ video.title }}</span>
         </div>
-        <form class="mobile-form" [formGroup]="videoForm" (ngSubmit)="saveVideo(video)">
+        <form class="mobile-form video-data-form" [formGroup]="videoForm" (ngSubmit)="saveVideo(video)">
           <h3>Film</h3>
           <label>
             <span>Tytuł filmu</span>
@@ -27,12 +27,17 @@
             <span>URL TikTok</span>
             <input type="url" formControlName="tiktokUrl" />
           </label>
-          <label class="toggle-row">
-            <span>Aktywny</span>
-            <input type="checkbox" formControlName="isActive" />
+          <label class="video-form-toggle">
+            <span class="video-form-toggle-label">Aktywny</span>
+            <span class="video-form-switch">
+              <input type="checkbox" class="video-form-switch-input" formControlName="isActive" />
+              <span class="video-form-switch-slider" aria-hidden="true"></span>
+            </span>
           </label>
-          <button type="submit" class="primary-action">Zapisz film</button>
-          <button type="button" class="icon-action danger" (click)="deleteVideo(video)">🗑 Usuń film</button>
+          <div class="video-form-actions">
+            <button type="submit" class="video-form-btn video-form-btn-primary">Zapisz film</button>
+            <button type="button" class="video-form-btn video-form-btn-danger" (click)="deleteVideo(video)">Usuń film</button>
+          </div>
         </form>
 
         <section class="editor-block">
@@ -53,16 +58,29 @@
         <section class="editor-block">
           <h3>Produkty przypisane do filmu</h3>
           <ul class="product-list" *ngIf="video.products.length; else noProducts">
-            <li class="product-row" *ngFor="let product of video.products">
-              <img class="product-thumb" [src]="product.imageUrl || 'https://placehold.co/80x80/e8f4fc/1a7bb8?text=Produkt'" [alt]="product.name" />
-              <div class="product-info">
-                <span class="product-name">{{ product.name }}</span>
-                <span class="product-link">{{ product.shopUrl }}</span>
+            <li class="product-card" *ngFor="let product of video.products">
+              <div class="product-card-body">
+                <img
+                  class="product-thumb"
+                  [src]="product.imageUrl || 'https://placehold.co/80x80/e8f4fc/1a7bb8?text=Produkt'"
+                  [alt]="product.name"
+                />
+                <div class="product-info">
+                  <span class="product-name">{{ product.name }}</span>
+                  <span class="product-link">{{ product.shopUrl }}</span>
+                </div>
               </div>
-              <div class="product-actions">
-                <button type="button" class="icon-action" (click)="resyncProduct(video, product.id)">Odśwież</button>
-                <button type="button" class="icon-action" (click)="startEditProduct(product)">Edytuj</button>
-                <button type="button" class="icon-action danger" (click)="detachProduct(video, product.id)" aria-label="Usuń">🗑</button>
+              <div class="product-action-group">
+                <button type="button" class="product-action" (click)="resyncProduct(video, product.id)">Odśwież</button>
+                <button type="button" class="product-action" (click)="startEditProduct(product)">Edytuj</button>
+                <button
+                  type="button"
+                  class="product-action product-action-danger"
+                  (click)="detachProduct(video, product.id)"
+                  aria-label="Usuń produkt"
+                >
+                  Usuń
+                </button>
               </div>
             </li>
           </ul>
@@ -83,11 +101,13 @@
             </label>
             <div *ngIf="editProductPreviewLoading || editProductPreview">
               <p class="empty-state" *ngIf="editProductPreviewLoading">Pobieranie podglądu produktu...</p>
-              <div class="product-row" *ngIf="!editProductPreviewLoading && editProductPreview">
-                <img class="product-thumb" [src]="productPreviewImageSrc(editProductPreview.imageUrl)" [alt]="editProductPreview.name" />
-                <div class="product-info">
-                  <span class="product-name">{{ editProductPreview.name }}</span>
-                  <span class="product-link">{{ editProductPreview.platform }}</span>
+              <div class="product-card product-card--preview" *ngIf="!editProductPreviewLoading && editProductPreview">
+                <div class="product-card-body">
+                  <img class="product-thumb" [src]="productPreviewImageSrc(editProductPreview.imageUrl)" [alt]="editProductPreview.name" />
+                  <div class="product-info">
+                    <span class="product-name">{{ editProductPreview.name }}</span>
+                    <span class="product-link">{{ editProductPreview.platform }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -132,11 +152,13 @@
             </label>
             <div class="product-preview" *ngIf="addProductPreviewLoading || addProductPreview">
               <p class="empty-state" *ngIf="addProductPreviewLoading">Pobieranie podglądu produktu...</p>
-              <div class="product-row" *ngIf="!addProductPreviewLoading && addProductPreview">
-                <img class="product-thumb" [src]="productPreviewImageSrc(addProductPreview.imageUrl)" [alt]="addProductPreview.name" />
-                <div class="product-info">
-                  <span class="product-name">{{ addProductPreview.name }}</span>
-                  <span class="product-link">{{ addProductPreview.platform }}</span>
+              <div class="product-card product-card--preview" *ngIf="!addProductPreviewLoading && addProductPreview">
+                <div class="product-card-body">
+                  <img class="product-thumb" [src]="productPreviewImageSrc(addProductPreview.imageUrl)" [alt]="addProductPreview.name" />
+                  <div class="product-info">
+                    <span class="product-name">{{ addProductPreview.name }}</span>
+                    <span class="product-link">{{ addProductPreview.platform }}</span>
+                  </div>
                 </div>
               </div>
             </div>
@@ -179,7 +201,7 @@
 
   <section class="new-video-card">
     <h3>Dodaj nowy film</h3>
-    <form class="mobile-form" [formGroup]="newVideoForm" (ngSubmit)="saveNewVideo()">
+    <form class="mobile-form video-data-form" [formGroup]="newVideoForm" (ngSubmit)="saveNewVideo()">
       <label>
         <span>Tytuł filmu</span>
         <input type="text" formControlName="title" />
@@ -188,9 +210,12 @@
         <span>URL TikTok</span>
         <input type="url" formControlName="tiktokUrl" />
       </label>
-      <label class="toggle-row">
-        <span>Aktywny</span>
-        <input type="checkbox" formControlName="isActive" />
+      <label class="video-form-toggle">
+        <span class="video-form-toggle-label">Aktywny</span>
+        <span class="video-form-switch">
+          <input type="checkbox" class="video-form-switch-input" formControlName="isActive" />
+          <span class="video-form-switch-slider" aria-hidden="true"></span>
+        </span>
       </label>
 
       <section class="editor-block embedded">
@@ -225,11 +250,13 @@
             </p>
             <div *ngIf="isNewProductPreviewLoading(i) || getNewProductPreview(i)">
               <p class="empty-state" *ngIf="isNewProductPreviewLoading(i)">Pobieranie podglądu produktu...</p>
-              <div class="product-row" *ngIf="!isNewProductPreviewLoading(i) && getNewProductPreview(i) as preview">
-                <img class="product-thumb" [src]="productPreviewImageSrc(preview.imageUrl)" [alt]="preview.name" />
-                <div class="product-info">
-                  <span class="product-name">{{ preview.name }}</span>
-                  <span class="product-link">{{ preview.platform }}</span>
+              <div class="product-card product-card--preview" *ngIf="!isNewProductPreviewLoading(i) && getNewProductPreview(i) as preview">
+                <div class="product-card-body">
+                  <img class="product-thumb" [src]="productPreviewImageSrc(preview.imageUrl)" [alt]="preview.name" />
+                  <div class="product-info">
+                    <span class="product-name">{{ preview.name }}</span>
+                    <span class="product-link">{{ preview.platform }}</span>
+                  </div>
                 </div>
               </div>
             </div>
