@@ -99,10 +99,20 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
-            <label>
-              <span>Prześlij zdjęcie</span>
-              <input type="file" accept="image/*" (change)="onEditProductImageSelected($event)" />
-            </label>
+            <div class="file-upload-field">
+              <span class="file-upload-label">Prześlij zdjęcie</span>
+              <input
+                id="edit-product-image-file"
+                type="file"
+                accept="image/*"
+                class="file-input-hidden"
+                (change)="onEditProductImageSelected($event)"
+              />
+              <label class="custom-file-upload" for="edit-product-image-file">
+                <span>Wybierz plik</span>
+                <span class="custom-file-upload-name" *ngIf="editProductSelectedFileName">{{ editProductSelectedFileName }}</span>
+              </label>
+            </div>
             <div class="form-actions">
               <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
               <button type="submit" class="primary-action">Zapisz</button>
@@ -141,10 +151,20 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
-            <label>
-              <span>Prześlij zdjęcie</span>
-              <input type="file" accept="image/*" (change)="onAddProductImageSelected($event)" />
-            </label>
+            <div class="file-upload-field">
+              <span class="file-upload-label">Prześlij zdjęcie</span>
+              <input
+                id="add-product-image-file"
+                type="file"
+                accept="image/*"
+                class="file-input-hidden"
+                (change)="onAddProductImageSelected($event)"
+              />
+              <label class="custom-file-upload" for="add-product-image-file">
+                <span>Wybierz plik</span>
+                <span class="custom-file-upload-name" *ngIf="addProductSelectedFileName">{{ addProductSelectedFileName }}</span>
+              </label>
+            </div>
             <div class="form-actions">
               <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
               <button type="submit" class="primary-action" [disabled]="addProductPreviewLoading">Zapisz</button>
@@ -221,10 +241,20 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
-            <label>
-              <span>Prześlij zdjęcie</span>
-              <input type="file" accept="image/*" (change)="onNewProductImageSelected(i, $event)" />
-            </label>
+            <div class="file-upload-field">
+              <span class="file-upload-label">Prześlij zdjęcie</span>
+              <input
+                [id]="'new-product-image-file-' + i"
+                type="file"
+                accept="image/*"
+                class="file-input-hidden"
+                (change)="onNewProductImageSelected(i, $event)"
+              />
+              <label class="custom-file-upload" [attr.for]="'new-product-image-file-' + i">
+                <span>Wybierz plik</span>
+                <span class="custom-file-upload-name" *ngIf="newProductSelectedFileNames[i]">{{ newProductSelectedFileNames[i] }}</span>
+              </label>
+            </div>
           </div>
         </div>
         <button type="button" class="add-product-btn" (click)="addNewVideoProduct()">+ Dodaj produkt</button>

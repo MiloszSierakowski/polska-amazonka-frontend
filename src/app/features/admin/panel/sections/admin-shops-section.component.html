@@ -1,0 +1,58 @@
+<div class="section-body">
+  <ul class="item-list">
+    <li class="item-row" *ngFor="let item of items">
+      <div class="item-main">
+        <span class="item-title">{{ item.name }}</span>
+        <span class="item-meta">{{ item.slug }} · {{ item.code }}</span>
+        <span class="item-meta" *ngIf="item.shopUrl">{{ item.shopUrl }}</span>
+        <span class="item-badge" [class.inactive]="!item.isActive">
+          {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+        </span>
+      </div>
+      <div class="item-row-actions">
+        <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
+        <button type="button" class="item-action danger" (click)="openDeleteModal(item)">Usuń</button>
+      </div>
+    </li>
+  </ul>
+  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
+    <h3>{{ editingId ? 'Edycja sklepu' : 'Nowy sklep' }}</h3>
+    <label>
+      <span>Nazwa</span>
+      <input type="text" formControlName="name" />
+    </label>
+    <label>
+      <span>Slug</span>
+      <input type="text" formControlName="slug" />
+    </label>
+    <label>
+      <span>Code</span>
+      <input type="text" formControlName="code" />
+    </label>
+    <label>
+      <span>URL sklepu (opcjonalnie)</span>
+      <input type="text" formControlName="shopUrl" />
+    </label>
+    <label class="checkbox-row">
+      <input type="checkbox" formControlName="isActive" />
+      <span>Aktywny</span>
+    </label>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
+      <button type="submit" class="btn-primary">Zapisz</button>
+    </div>
+  </form>
+</div>
+
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+  <div class="delete-modal" (click)="$event.stopPropagation()">
+    <h3>Potwierdzenie usunięcia</h3>
+    <p>Czy na pewno chcesz usunąć ten sklep? Powiązana kategoria sklepowa zostanie również usunięta.</p>
+    <div class="delete-modal-actions">
+      <button type="button" class="btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Usuwanie...' : 'Potwierdź usunięcie' }}
+      </button>
+    </div>
+  </div>
+</div>

@@ -3,5 +3,14 @@ export interface Shop {
   slug: string;
   code: string;
   name: string;
-  shopUrl: string;
+  shopUrl: string | null;
+  isActive?: boolean;
+}
+
+export interface SaveShopPayload {
+  slug: string;
+  code: string;
+  name: string;
+  shopUrl?: string | null;
+  isActive?: boolean;
 }

@@ -1,13 +1,40 @@
 <div class="section-body">
-  <ul class="item-list">
-    <li class="item-row" *ngFor="let item of items">
+  <p class="reorder-hint">Przeciągnij kategorie, aby zmienić kolejność wyświetlania na stronie głównej.</p>
+  <ul
+    class="item-list"
+    cdkDropList
+    (cdkDropListDropped)="drop($event)"
+    [cdkDropListDisabled]="isSavingOrder"
+  >
+    <li class="item-row" *ngFor="let item of items" cdkDrag [cdkDragDisabled]="isSavingOrder">
+      <div class="drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
       <div class="item-main">
         <img class="category-thumb" [src]="imageSrc(item)" [alt]="item.name" />
-        <span class="item-title">{{ item.name }}</span>
+        <div class="item-title-row">
+          <span class="item-title">{{ item.name }}</span>
+          <button
+            type="button"
+            class="shop-badge"
+            *ngIf="isShopCategory(item)"
+            (click)="openShopCategoryLock(item, $event)"
+            aria-label="Kategoria powiązana ze sklepem — szczegóły"
+          >
+            🛒 Sklep
+          </button>
+        </div>
       </div>
       <div class="item-row-actions">
         <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
-        <button type="button" class="item-action danger" (click)="deleteCategory(item)" aria-label="Usuń kategorię">🗑</button>
+        <button
+          type="button"
+          class="item-action danger"
+          [class.is-locked]="isShopCategory(item)"
+          [attr.aria-disabled]="isShopCategory(item) ? 'true' : null"
+          (click)="deleteCategory(item)"
+          aria-label="Usuń kategorię"
+        >
+          🗑
+        </button>
       </div>
     </li>
   </ul>
@@ -17,15 +44,19 @@
       <span>Nazwa</span>
       <input type="text" formControlName="name" />
     </label>
-    <div class="image-upload-block">
+    <div class="file-upload-field">
+      <span class="file-upload-label">Obrazek kategorii</span>
       <input
-        #fileInput
+        id="category-image-file"
         type="file"
         accept="image/*"
         class="file-input-hidden"
         (change)="onFileSelected($event)"
       />
-      <button type="button" class="upload-image-btn" (click)="openFilePicker(fileInput)">Prześlij obrazek</button>
+      <label class="custom-file-upload" for="category-image-file">
+        <span>Prześlij obrazek</span>
+        <span class="custom-file-upload-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+      </label>
       <img *ngIf="previewUrl" class="image-preview" [src]="previewUrl" alt="Podgląd obrazka kategorii" />
     </div>
     <div class="form-actions">
@@ -33,4 +64,17 @@
       <button type="submit" class="btn-primary">Zapisz</button>
     </div>
   </form>
+</div>
+
+<div class="lock-modal-overlay" *ngIf="shopCategoryLockModalOpen" (click)="closeShopCategoryLockModal()">
+  <div class="lock-modal" (click)="$event.stopPropagation()">
+    <h3>Kategoria powiązana ze sklepem</h3>
+    <p>
+      Ta kategoria jest powiązana ze sklepem {{ lockedCategoryName }}.
+      Aby zapobiec błędom, możesz ją usunąć tylko poprzez usunięcie całego sklepu w zakładce „Sklepy”.
+    </p>
+    <div class="lock-modal-actions">
+      <button type="button" class="btn-primary" (click)="closeShopCategoryLockModal()">Rozumiem</button>
+    </div>
+  </div>
 </div>

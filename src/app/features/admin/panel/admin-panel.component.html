@@ -30,6 +30,7 @@
       <div class="accordion-panel" *ngIf="isOpen(section.id)">
         <app-admin-videos-section *ngIf="section.id === 'videos'"></app-admin-videos-section>
         <app-admin-categories-section *ngIf="section.id === 'categories'"></app-admin-categories-section>
+        <app-admin-shops-section *ngIf="section.id === 'shops'"></app-admin-shops-section>
         <app-admin-discounts-section *ngIf="section.id === 'discounts'"></app-admin-discounts-section>
         <app-admin-users-section *ngIf="section.id === 'users'"></app-admin-users-section>
         <app-admin-changelog-section *ngIf="section.id === 'changelog'"></app-admin-changelog-section>

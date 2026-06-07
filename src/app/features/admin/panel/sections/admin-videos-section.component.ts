@@ -28,6 +28,9 @@ export class AdminVideosSectionComponent implements OnInit {
   editProductPreviewLoading = false;
   addProductPreview: ProductPreview | null = null;
   editProductPreview: ProductPreview | null = null;
+  addProductSelectedFileName = '';
+  editProductSelectedFileName = '';
+  newProductSelectedFileNames: Record<number, string> = {};
   newProductPreviewLoading: Record<number, boolean> = {};
   newProductPreview: Record<number, ProductPreview | null> = {};
 
@@ -155,6 +158,7 @@ export class AdminVideosSectionComponent implements OnInit {
       imageUrl: product.imageUrl,
       shopUrl: product.shopUrl
     });
+    this.editProductSelectedFileName = '';
   }
 
   startAddProduct(): void {
@@ -164,6 +168,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.addProductPreview = null;
     this.addProductPreviewLoading = false;
     this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
+    this.addProductSelectedFileName = '';
   }
 
   cancelProductForm(): void {
@@ -174,6 +179,9 @@ export class AdminVideosSectionComponent implements OnInit {
     this.editProductPreview = null;
     this.addProductPreviewLoading = false;
     this.editProductPreviewLoading = false;
+    this.addProductSelectedFileName = '';
+    this.editProductSelectedFileName = '';
+    this.newProductSelectedFileNames = {};
     this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
     this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '' });
   }
@@ -201,18 +209,24 @@ export class AdminVideosSectionComponent implements OnInit {
   onAddProductImageSelected(event: Event): void {
     this.handleProductImageUpload(event, (imageUrl) => {
       this.productAddForm.patchValue({ imageUrl });
+    }, (fileName) => {
+      this.addProductSelectedFileName = fileName;
     });
   }
 
   onEditProductImageSelected(event: Event): void {
     this.handleProductImageUpload(event, (imageUrl) => {
       this.productEditForm.patchValue({ imageUrl });
+    }, (fileName) => {
+      this.editProductSelectedFileName = fileName;
     });
   }
 
   onNewProductImageSelected(index: number, event: Event): void {
     this.handleProductImageUpload(event, (imageUrl) => {
       this.newVideoProducts.at(index).patchValue({ imageUrl });
+    }, (fileName) => {
+      this.newProductSelectedFileNames[index] = fileName;
     });
   }
 
@@ -361,6 +375,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.showNewProductForm = this.newVideoProducts.length > 0;
     delete this.newProductPreviewLoading[index];
     delete this.newProductPreview[index];
+    delete this.newProductSelectedFileNames[index];
     this.clearPreviewTimer(`new-${index}`);
   }
 
@@ -435,12 +450,17 @@ export class AdminVideosSectionComponent implements OnInit {
     }
   }
 
-  private handleProductImageUpload(event: Event, onSuccess: (imageUrl: string) => void): void {
+  private handleProductImageUpload(
+    event: Event,
+    onSuccess: (imageUrl: string) => void,
+    onFileSelected?: (fileName: string) => void
+  ): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0];
     if (!file) {
       return;
     }
+    onFileSelected?.(file.name);
     this.productImageUploadService.upload(file).subscribe({
       next: (response) => {
         onSuccess(response.imageUrl);

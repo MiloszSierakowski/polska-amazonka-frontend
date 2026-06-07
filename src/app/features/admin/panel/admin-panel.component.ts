@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { AuthService } from '../services/auth.service';
 import { AdminVideosSectionComponent } from './sections/admin-videos-section.component';
 import { AdminCategoriesSectionComponent } from './sections/admin-categories-section.component';
+import { AdminShopsSectionComponent } from './sections/admin-shops-section.component';
 import { AdminDiscountsSectionComponent } from './sections/admin-discounts-section.component';
 import { AdminUsersSectionComponent } from './sections/admin-users-section.component';
 import { AdminChangelogSectionComponent } from './sections/admin-changelog-section.component';
@@ -23,6 +24,7 @@ interface AccordionSection {
     CommonModule,
     AdminVideosSectionComponent,
     AdminCategoriesSectionComponent,
+    AdminShopsSectionComponent,
     AdminDiscountsSectionComponent,
     AdminUsersSectionComponent,
     AdminChangelogSectionComponent,
@@ -39,6 +41,7 @@ export class AdminPanelComponent {
   readonly sections: AccordionSection[] = [
     { id: 'videos', title: 'Filmy', adminOnly: false },
     { id: 'categories', title: 'Kategorie', adminOnly: false },
+    { id: 'shops', title: 'Sklepy', adminOnly: false },
     { id: 'discounts', title: 'Kody rabatowe i afiliacyjne', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
     { id: 'changelog', title: 'Historia zmian', adminOnly: false }

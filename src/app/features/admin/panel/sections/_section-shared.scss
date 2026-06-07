@@ -1,3 +1,18 @@
+$admin-card-radius: 0.85rem;
+$admin-card-padding: 1rem;
+$admin-card-shadow: 0 4px 16px rgba(15, 23, 42, 0.08);
+$admin-card-border: 1px solid #e2e8f0;
+$admin-card-bg: #fff;
+$admin-card-bg-muted: #f8fafc;
+
+@mixin admin-card-tile {
+  padding: $admin-card-padding;
+  background: $admin-card-bg-muted;
+  border-radius: $admin-card-radius;
+  border: $admin-card-border;
+  box-shadow: $admin-card-shadow;
+}
+
 .section-body {
   display: flex;
   flex-direction: column;
@@ -10,17 +25,14 @@
   padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 0.65rem;
+  gap: 0.75rem;
 }
 
 .item-row {
   display: flex;
   flex-direction: column;
   gap: 0.65rem;
-  padding: 0.85rem 1rem;
-  background: #f8fafc;
-  border-radius: 0.75rem;
-  border: 1px solid #e2e8f0;
+  @include admin-card-tile;
 }
 
 .item-main {
@@ -65,16 +77,31 @@
   font-weight: 600;
   color: #1a7bb8;
   cursor: pointer;
+
+  &.danger {
+    border-color: #fecaca;
+    color: #b91c1c;
+    background: #fef2f2;
+  }
+
+  &.danger.is-locked {
+    border-color: #e2e8f0;
+    color: #94a3b8;
+    background: #f1f5f9;
+    cursor: not-allowed;
+    opacity: 0.85;
+  }
 }
 
 .item-form {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  padding: 1rem;
-  background: #fff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0.75rem;
+  padding: $admin-card-padding;
+  background: $admin-card-bg;
+  border: $admin-card-border;
+  border-radius: $admin-card-radius;
+  box-shadow: $admin-card-shadow;
 
   h3 {
     margin: 0;
@@ -140,6 +167,52 @@
   border: 1px solid #cbd5e1;
   background: #fff;
   color: #334155;
+}
+
+.file-upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.file-upload-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #334155;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.custom-file-upload {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  min-height: 2.75rem;
+  padding: 0.65rem 0.9rem;
+  border: 1px dashed #94a3b8;
+  border-radius: 0.65rem;
+  background: $admin-card-bg-muted;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #1a7bb8;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+
+  &:hover,
+  &:focus-within {
+    background: #e8f4fc;
+    border-color: #309fe5;
+  }
+}
+
+.custom-file-upload-name {
+  font-size: 0.78rem;
+  font-weight: 500;
+  color: #475569;
+  word-break: break-all;
 }
 
 @media (min-width: 640px) {

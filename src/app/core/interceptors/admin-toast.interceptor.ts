@@ -6,6 +6,10 @@ import { isAdminAreaPath } from '../admin/admin-route.util';
 import { parseApiError } from '../admin/api-error.util';
 import { ToastService } from '../admin/toast.service';
 
+interface ApiErrorBody {
+  errorCode?: string;
+}
+
 export const adminToastInterceptor: HttpInterceptorFn = (req, next) => {
   const router = inject(Router);
   const toastService = inject(ToastService);
@@ -16,7 +20,7 @@ export const adminToastInterceptor: HttpInterceptorFn = (req, next) => {
 
   return next(req).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (shouldShowToast(error, req.method)) {
+      if (shouldShowToast(error, req.method, req.url)) {
         const parsed = parseApiError(error);
         if (parsed.type === 'warning') {
           toastService.warning(parsed.message);
@@ -29,7 +33,10 @@ export const adminToastInterceptor: HttpInterceptorFn = (req, next) => {
   );
 };
 
-function shouldShowToast(error: HttpErrorResponse, method: string): boolean {
+function shouldShowToast(error: HttpErrorResponse, method: string, url: string): boolean {
+  if (shouldSkipHandledAdminError(error, method, url)) {
+    return false;
+  }
   if (error.status === 0) {
     return true;
   }
@@ -38,4 +45,15 @@ function shouldShowToast(error: HttpErrorResponse, method: string): boolean {
     return true;
   }
   return error.status === 401 || error.status === 403 || error.status >= 500;
+}
+
+function shouldSkipHandledAdminError(error: HttpErrorResponse, method: string, url: string): boolean {
+  const body = (error.error ?? {}) as ApiErrorBody;
+  if (body.errorCode === 'SHOP_CATEGORY_LOCKED') {
+    return true;
+  }
+  if (method.toUpperCase() === 'DELETE' && /\/api\/shops\/\d+$/.test(url) && error.status === 400) {
+    return true;
+  }
+  return false;
 }

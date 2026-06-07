@@ -1,9 +1,16 @@
 <div class="categories-scroll" *ngIf="!hasLoadError" (wheel)="onWheel($event)">
-  <div class="categories-inner">
+  <div
+    class="categories-inner"
+    cdkDropList
+    cdkDropListOrientation="horizontal"
+    [cdkDropListDisabled]="true"
+  >
     <button
       type="button"
       class="category-box"
       *ngFor="let c of categories; trackBy: trackByCategoryId"
+      cdkDrag
+      [cdkDragDisabled]="true"
       [class.active]="c.id === selectedCategoryId"
       (click)="selectCategory(c.id)"
     >

@@ -8,6 +8,10 @@ interface CategoryApiRow {
   name: string;
   imageUrl?: string | null;
   image_url?: string | null;
+  shopId?: number | null;
+  shop_id?: number | null;
+  displayOrder?: number | null;
+  display_order?: number | null;
 }
 
 @Injectable({
@@ -56,6 +60,10 @@ export class CategoryService {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 
+  reorder(orderedIds: number[]): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/reorder`, orderedIds);
+  }
+
   resolveDisplayImageUrl(category: Category, backendUrl: string): string {
     const raw = category.imageUrl?.trim();
     if (raw) {
@@ -81,7 +89,9 @@ export class CategoryService {
     return {
       id: row.id,
       name: String(row.name).trim(),
-      imageUrl: row.imageUrl ?? row.image_url ?? null
+      imageUrl: row.imageUrl ?? row.image_url ?? null,
+      shopId: row.shopId ?? row.shop_id ?? null,
+      displayOrder: row.displayOrder ?? row.display_order ?? null
     };
   }
 }

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, Inject, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DragDropModule } from '@angular/cdk/drag-drop';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../models/category.model';
 
@@ -10,7 +11,7 @@ interface CategoryView extends Category {
 @Component({
   selector: 'app-categories',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, DragDropModule],
   templateUrl: './categories.component.html',
   styleUrl: './categories.component.scss'
 })
