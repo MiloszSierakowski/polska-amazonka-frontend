@@ -45,6 +45,13 @@ export interface CreateVideoPayload {
   products?: CreateVideoProductPayload[];
 }
 
+export interface UpdateVideoPayload {
+  title: string;
+  tiktokUrl: string;
+  isActive: boolean;
+  localMp4Url?: string | null;
+}
+
 export interface AddVideoProductPayload {
   name?: string | null;
   imageUrl?: string | null;
@@ -82,6 +89,12 @@ export class VideoService {
   create(payload: CreateVideoPayload): Observable<Video> {
     return this.http
       .post<VideoApiResponse>(`${this.backendUrl}/api/videos`, payload)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  update(id: number, payload: UpdateVideoPayload): Observable<Video> {
+    return this.http
+      .put<VideoApiResponse>(`${this.backendUrl}/api/videos/${id}`, payload)
       .pipe(map((row) => this.mapRow(row)));
   }
 

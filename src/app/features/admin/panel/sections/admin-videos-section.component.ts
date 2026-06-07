@@ -21,6 +21,8 @@ export class AdminVideosSectionComponent implements OnInit {
   videos: AdminVideoMock[] = [];
   categories: Category[] = [];
   openedVideoId: number | null = null;
+  isVideoModalOpen = false;
+  modalVideoId: number | null = null;
   editingProductId: number | null = null;
   isAddingNewProduct = false;
   showNewProductForm = false;
@@ -86,6 +88,13 @@ export class AdminVideosSectionComponent implements OnInit {
     return this.newVideoForm.get('products') as FormArray<FormGroup>;
   }
 
+  get modalEditingVideo(): AdminVideoMock | null {
+    if (this.modalVideoId == null) {
+      return null;
+    }
+    return this.videos.find((video) => video.id === this.modalVideoId) ?? null;
+  }
+
   previewImageSrc(video: AdminVideoMock): string {
     return this.videoService.resolvePreviewImageUrl(video.previewImageUrl);
   }
@@ -94,7 +103,7 @@ export class AdminVideosSectionComponent implements OnInit {
     return this.videoService.resolveProductImageUrl(imageUrl);
   }
 
-  toggleVideo(video: AdminVideoMock): void {
+  toggleProductsPanel(video: AdminVideoMock): void {
     if (this.openedVideoId === video.id) {
       this.openedVideoId = null;
       this.cancelProductForm();
@@ -102,11 +111,38 @@ export class AdminVideosSectionComponent implements OnInit {
     }
     this.openedVideoId = video.id;
     this.cancelProductForm();
+  }
+
+  openAddVideoModal(): void {
+    this.openedVideoId = null;
+    this.cancelProductForm();
+    this.modalVideoId = null;
+    this.newVideoForm.reset({ title: '', tiktokUrl: '', isActive: true });
+    this.newVideoCategoryIds.clear();
+    this.newVideoProducts.clear();
+    this.showNewProductForm = false;
+    this.newProductPreviewLoading = {};
+    this.newProductPreview = {};
+    this.newProductSelectedFileNames = {};
+    this.isVideoModalOpen = true;
+  }
+
+  openEditVideoModal(video: AdminVideoMock): void {
+    this.cancelProductForm();
+    this.modalVideoId = video.id;
     this.videoForm.reset({
       title: video.title,
       tiktokUrl: video.tiktokUrl,
       isActive: video.isActive
     });
+    this.isVideoModalOpen = true;
+  }
+
+  closeVideoModal(): void {
+    this.isVideoModalOpen = false;
+    this.modalVideoId = null;
+    this.resetNewVideoForm(false);
+    this.videoForm.reset({ title: '', tiktokUrl: '', isActive: true });
   }
 
   isVideoOpen(video: AdminVideoMock): boolean {
@@ -119,9 +155,19 @@ export class AdminVideosSectionComponent implements OnInit {
       return;
     }
     const value = this.videoForm.getRawValue();
-    video.title = value.title!;
-    video.tiktokUrl = value.tiktokUrl!;
-    video.isActive = value.isActive ?? true;
+    this.videoService
+      .update(video.id, {
+        title: value.title!,
+        tiktokUrl: value.tiktokUrl!,
+        isActive: value.isActive ?? true
+      })
+      .subscribe((updated) => {
+        const adminVideo = this.toAdminVideo(updated);
+        adminVideo.categoryIds = video.categoryIds;
+        this.videos = this.videos.map((item) => (item.id === video.id ? adminVideo : item));
+        this.toastService.success('Film został zapisany.');
+        this.closeVideoModal();
+      });
   }
 
   deleteVideo(video: AdminVideoMock): void {
@@ -136,6 +182,9 @@ export class AdminVideosSectionComponent implements OnInit {
       if (this.openedVideoId === video.id) {
         this.openedVideoId = null;
         this.cancelProductForm();
+      }
+      if (this.modalVideoId === video.id) {
+        this.closeVideoModal();
       }
       this.loadVideos();
     });
@@ -376,6 +425,14 @@ export class AdminVideosSectionComponent implements OnInit {
     this.clearPreviewTimer(`new-${index}`);
   }
 
+  startAddingNewVideo(): void {
+    this.openAddVideoModal();
+  }
+
+  cancelAddingNewVideo(): void {
+    this.closeVideoModal();
+  }
+
   saveNewVideo(): void {
     if (this.newVideoForm.invalid) {
       this.newVideoForm.markAllAsTouched();
@@ -403,18 +460,23 @@ export class AdminVideosSectionComponent implements OnInit {
       })
       .subscribe(() => {
         this.toastService.success('Film został dodany.');
-        this.resetNewVideoForm();
+        this.closeVideoModal();
         this.loadVideos();
       });
   }
 
-  resetNewVideoForm(): void {
+  resetNewVideoForm(closeModal = true): void {
     this.newVideoForm.reset({ title: '', tiktokUrl: '', isActive: true });
     this.newVideoCategoryIds.clear();
     this.newVideoProducts.clear();
     this.showNewProductForm = false;
     this.newProductPreviewLoading = {};
     this.newProductPreview = {};
+    this.newProductSelectedFileNames = {};
+    if (closeModal) {
+      this.isVideoModalOpen = false;
+      this.modalVideoId = null;
+    }
   }
 
   private scheduleProductPreview(
@@ -506,6 +568,13 @@ export class AdminVideosSectionComponent implements OnInit {
       const updated = this.toAdminVideo(video);
       this.videos = this.videos.map((item) => (item.id === videoId ? updated : item));
       if (this.openedVideoId === videoId) {
+        this.videoForm.reset({
+          title: updated.title,
+          tiktokUrl: updated.tiktokUrl,
+          isActive: updated.isActive
+        });
+      }
+      if (this.modalVideoId === videoId) {
         this.videoForm.reset({
           title: updated.title,
           tiktokUrl: updated.tiktokUrl,
