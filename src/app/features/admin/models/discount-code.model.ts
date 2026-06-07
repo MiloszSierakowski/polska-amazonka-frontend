@@ -1,6 +1,8 @@
 export interface DiscountCode {
   id: number;
-  platform: string;
+  shopId: number;
+  shopName: string;
+  shopSlug: string;
   codeValue: string;
   description: string;
   isActive: boolean;

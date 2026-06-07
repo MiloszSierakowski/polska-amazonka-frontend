@@ -3,36 +3,36 @@ import { CommonModule } from '@angular/common';
 import { PublicDiscountCode } from '../../models/public-discount-code.model';
 import { PublicDiscountService } from '../../services/public-discount.service';
 
-export interface PlatformConfigEntry {
+export interface ShopVisualEntry {
   backgroundColor: string;
   logoSrc: string;
   shopUrl: string;
 }
 
-export const PLATFORM_CONFIG: Record<string, PlatformConfigEntry> = {
-  ALIEXPRESS: {
+export const SHOP_VISUALS: Record<string, ShopVisualEntry> = {
+  aliexpress: {
     backgroundColor: '#e42c1b',
     logoSrc: 'assets/discount/aliexpressmini.png',
     shopUrl: 'https://pl.aliexpress.com'
   },
-  TEMU: {
+  temu: {
     backgroundColor: '#fb7800',
     logoSrc: 'assets/discount/temu.png',
     shopUrl: 'https://www.temu.com'
   },
-  AMAZON: {
+  amazon: {
     backgroundColor: '#FF9900',
     logoSrc: 'assets/discount/discount.png',
     shopUrl: 'https://www.amazon.pl'
   },
-  ALLEGRO: {
+  allegro: {
     backgroundColor: '#ff5a00',
     logoSrc: 'assets/discount/discount.png',
     shopUrl: 'https://allegro.pl'
   }
 };
 
-export const DEFAULT_PLATFORM_CONFIG: PlatformConfigEntry = {
+export const DEFAULT_SHOP_VISUAL: ShopVisualEntry = {
   backgroundColor: '#2da2df',
   logoSrc: 'assets/discount/discount.png',
   shopUrl: 'https://www.google.com'
@@ -62,9 +62,12 @@ export class DiscountSectionComponent implements OnInit {
     this.isOpen = !this.isOpen;
   }
 
-  platformConfig(platform: string): PlatformConfigEntry {
-    const key = platform.trim().toUpperCase();
-    return PLATFORM_CONFIG[key] ?? DEFAULT_PLATFORM_CONFIG;
+  shopVisual(slug: string | null | undefined): ShopVisualEntry {
+    if (!slug) {
+      return DEFAULT_SHOP_VISUAL;
+    }
+    const key = slug.trim().toLowerCase();
+    return SHOP_VISUALS[key] ?? DEFAULT_SHOP_VISUAL;
   }
 
   copyCode(code: string): void {
@@ -73,8 +76,8 @@ export class DiscountSectionComponent implements OnInit {
     }
   }
 
-  openShop(platform: string): void {
-    window.open(this.platformConfig(platform).shopUrl, '_blank', 'noopener,noreferrer');
+  openShop(code: PublicDiscountCode): void {
+    window.open(this.shopVisual(code.shopSlug).shopUrl, '_blank', 'noopener,noreferrer');
   }
 
   private loadDiscountCodes(): void {

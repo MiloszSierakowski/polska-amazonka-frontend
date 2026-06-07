@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { AffiliateCode } from '../models/affiliate-code.model';
 
 export interface SaveAffiliateCodePayload {
-  platform: string;
+  shopId: number;
   codeValue: string;
   isActive: boolean;
 }

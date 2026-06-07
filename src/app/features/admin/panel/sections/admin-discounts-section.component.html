@@ -4,7 +4,7 @@
     <ul class="item-list">
       <li class="item-row" *ngFor="let item of discountItems">
         <div class="item-main">
-          <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
+          <span class="item-title">{{ item.shopName }} — {{ item.codeValue }}</span>
           <span class="item-meta">{{ item.description }}</span>
           <span class="item-badge" [class.inactive]="!item.isActive">
             {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
@@ -19,10 +19,10 @@
     <form class="item-form" *ngIf="showDiscountForm" [formGroup]="discountForm" (ngSubmit)="saveDiscount()">
       <h3>{{ editingDiscountId ? 'Edycja kodu rabatowego' : 'Nowy kod rabatowy' }}</h3>
       <label>
-        <span>Platforma</span>
-        <select formControlName="platform">
-          <option value="" disabled>Wybierz platformę</option>
-          <option *ngFor="let platform of discountPlatforms" [value]="platform">{{ platform }}</option>
+        <span>Sklep</span>
+        <select formControlName="shopId">
+          <option [ngValue]="null" disabled>Wybierz sklep</option>
+          <option *ngFor="let shop of shops" [ngValue]="shop.id">{{ shop.name }}</option>
         </select>
       </label>
       <label>
@@ -49,7 +49,7 @@
     <ul class="item-list">
       <li class="item-row" *ngFor="let item of affiliateItems">
         <div class="item-main">
-          <span class="item-title">{{ item.platform }} — {{ item.codeValue }}</span>
+          <span class="item-title">{{ item.shopName }} — {{ item.codeValue }}</span>
           <span class="item-meta">Kod afiliacyjny</span>
           <span class="item-badge" [class.inactive]="!item.isActive">
             {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
@@ -64,14 +64,14 @@
     <form class="item-form" [formGroup]="affiliateForm" (ngSubmit)="saveAffiliate()">
       <h3>{{ editingAffiliateId ? 'Edycja kodu afiliacyjnego' : 'Nowy kod afiliacyjny' }}</h3>
       <label>
-        <span>Platforma</span>
-        <select formControlName="platform">
-          <option value="" disabled>Wybierz platformę</option>
+        <span>Sklep</span>
+        <select formControlName="shopId">
+          <option [ngValue]="null" disabled>Wybierz sklep</option>
           <option
-            *ngFor="let platform of affiliatePlatforms"
-            [value]="platform"
-            [disabled]="isAffiliatePlatformDisabled(platform)"
-          >{{ platform }}</option>
+            *ngFor="let shop of shops"
+            [ngValue]="shop.id"
+            [disabled]="isAffiliateShopDisabled(shop.id)"
+          >{{ shop.name }}</option>
         </select>
       </label>
       <label>

@@ -6,6 +6,8 @@ import { AffiliateCode } from '../../models/affiliate-code.model';
 import { DiscountCodeService } from '../../services/discount-code.service';
 import { AffiliateCodeService } from '../../services/affiliate-code.service';
 import { ToastService } from '../../../../core/admin/toast.service';
+import { Shop } from '../../../../core/models/shop.model';
+import { ShopService } from '../../../../core/services/shop.service';
 
 type DeleteTargetType = 'discount' | 'affiliate';
 
@@ -24,24 +26,22 @@ interface DeleteTarget {
 export class AdminDiscountsSectionComponent implements OnInit {
   discountItems: DiscountCode[] = [];
   affiliateItems: AffiliateCode[] = [];
+  shops: Shop[] = [];
   editingDiscountId: number | null = null;
   editingAffiliateId: number | null = null;
   deleteModalOpen = false;
   deleteTarget: DeleteTarget | null = null;
   isDeleting = false;
 
-  readonly discountPlatforms = ['ALIEXPRESS', 'TEMU'];
-  readonly affiliatePlatforms = ['ALIEXPRESS', 'TEMU', 'AMAZON', 'ALLEGRO'];
-
   discountForm = this.fb.group({
-    platform: ['', Validators.required],
+    shopId: [null as number | null, Validators.required],
     codeValue: ['', Validators.required],
     description: ['', Validators.required],
     isActive: [true]
   });
 
   affiliateForm = this.fb.group({
-    platform: ['', Validators.required],
+    shopId: [null as number | null, Validators.required],
     codeValue: ['', Validators.required],
     isActive: [true]
   });
@@ -50,16 +50,18 @@ export class AdminDiscountsSectionComponent implements OnInit {
     private fb: FormBuilder,
     private discountCodeService: DiscountCodeService,
     private affiliateCodeService: AffiliateCodeService,
+    private shopService: ShopService,
     private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
+    this.loadShops();
     this.loadDiscountCodes();
     this.loadAffiliateCodes();
   }
 
   get canAddDiscountCode(): boolean {
-    return this.discountItems.length < this.discountPlatforms.length;
+    return this.discountItems.length < this.shops.length;
   }
 
   get showDiscountForm(): boolean {
@@ -68,13 +70,13 @@ export class AdminDiscountsSectionComponent implements OnInit {
 
   startAddDiscount(): void {
     this.editingDiscountId = null;
-    this.discountForm.reset({ platform: '', codeValue: '', description: '', isActive: true });
+    this.discountForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
   }
 
   startEditDiscount(item: DiscountCode): void {
     this.editingDiscountId = item.id;
     this.discountForm.patchValue({
-      platform: item.platform,
+      shopId: item.shopId,
       codeValue: item.codeValue,
       description: item.description,
       isActive: item.isActive
@@ -89,7 +91,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
     }
     const value = this.discountForm.getRawValue();
     const payload = {
-      platform: value.platform!,
+      shopId: value.shopId!,
       codeValue: value.codeValue!,
       description: value.description!,
       isActive: value.isActive ?? true
@@ -111,23 +113,23 @@ export class AdminDiscountsSectionComponent implements OnInit {
 
   startAddAffiliate(): void {
     this.editingAffiliateId = null;
-    this.affiliateForm.reset({ platform: '', codeValue: '', isActive: true });
+    this.affiliateForm.reset({ shopId: null, codeValue: '', isActive: true });
   }
 
   startEditAffiliate(item: AffiliateCode): void {
     this.editingAffiliateId = item.id;
     this.affiliateForm.patchValue({
-      platform: item.platform,
+      shopId: item.shopId,
       codeValue: item.codeValue,
       isActive: item.isActive
     });
   }
 
-  isAffiliatePlatformDisabled(platform: string): boolean {
+  isAffiliateShopDisabled(shopId: number): boolean {
     if (this.editingAffiliateId != null) {
       return false;
     }
-    return this.affiliateItems.some((item) => item.platform === platform && item.isActive);
+    return this.affiliateItems.some((item) => item.shopId === shopId && item.isActive);
   }
 
   saveAffiliate(): void {
@@ -138,7 +140,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
     }
     const value = this.affiliateForm.getRawValue();
     const payload = {
-      platform: value.platform!,
+      shopId: value.shopId!,
       codeValue: value.codeValue!,
       isActive: value.isActive ?? true
     };
@@ -208,6 +210,12 @@ export class AdminDiscountsSectionComponent implements OnInit {
       error: () => {
         this.isDeleting = false;
       }
+    });
+  }
+
+  private loadShops(): void {
+    this.shopService.getAllActive().subscribe((shops) => {
+      this.shops = shops;
     });
   }
 

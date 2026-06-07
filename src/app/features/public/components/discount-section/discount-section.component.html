@@ -26,10 +26,10 @@
     <div
       class="discount-card"
       *ngFor="let code of discountCodes"
-      [style.backgroundColor]="platformConfig(code.platform).backgroundColor"
+      [style.backgroundColor]="shopVisual(code.shopSlug).backgroundColor"
     >
       <div class="card-left">
-        <img [src]="platformConfig(code.platform).logoSrc" [alt]="code.platform" />
+        <img [src]="shopVisual(code.shopSlug).logoSrc" [alt]="code.shopName" />
       </div>
 
       <div class="card-right">
@@ -44,7 +44,7 @@
           </button>
         </div>
 
-        <button type="button" class="go-shop" (click)="openShop(code.platform)">
+        <button type="button" class="go-shop" (click)="openShop(code)">
           Przejdź do sklepu!
         </button>
       </div>

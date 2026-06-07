@@ -4,7 +4,7 @@ import { Observable } from 'rxjs';
 import { DiscountCode } from '../models/discount-code.model';
 
 export interface SaveDiscountCodePayload {
-  platform: string;
+  shopId: number;
   codeValue: string;
   description: string;
   isActive: boolean;
