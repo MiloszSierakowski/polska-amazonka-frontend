@@ -1,8 +1,20 @@
 <div class="section-body">
   <section class="code-block">
     <h2 class="block-title">Kody rabatowe</h2>
-    <ul class="item-list">
-      <li class="item-row" *ngFor="let item of discountItems">
+    <p class="reorder-hint">Przeciągnij kody, aby zmienić kolejność wyświetlania na stronie publicznej.</p>
+    <ul
+      class="item-list"
+      cdkDropList
+      (cdkDropListDropped)="dropDiscount($event)"
+      [cdkDropListDisabled]="isSavingDiscountOrder"
+    >
+      <li
+        class="item-row discount-card"
+        *ngFor="let item of discountItems"
+        cdkDrag
+        [cdkDragDisabled]="isSavingDiscountOrder"
+      >
+        <div class="drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
         <div class="item-main">
           <span class="item-title">{{ item.shopName }} — {{ item.codeValue }}</span>
           <span class="item-meta">{{ item.description }}</span>
@@ -46,8 +58,20 @@
 
   <section class="code-block affiliate-block">
     <h2 class="block-title">Kody afiliacyjne</h2>
-    <ul class="item-list">
-      <li class="item-row" *ngFor="let item of affiliateItems">
+    <p class="reorder-hint">Przeciągnij kody, aby zmienić ich kolejność w panelu.</p>
+    <ul
+      class="item-list"
+      cdkDropList
+      (cdkDropListDropped)="dropAffiliate($event)"
+      [cdkDropListDisabled]="isSavingAffiliateOrder"
+    >
+      <li
+        class="item-row discount-card"
+        *ngFor="let item of affiliateItems"
+        cdkDrag
+        [cdkDragDisabled]="isSavingAffiliateOrder"
+      >
+        <div class="drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
         <div class="item-main">
           <span class="item-title">{{ item.shopName }} — {{ item.codeValue }}</span>
           <span class="item-meta">Kod afiliacyjny</span>

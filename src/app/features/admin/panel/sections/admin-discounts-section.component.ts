@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { DiscountCode } from '../../models/discount-code.model';
 import { AffiliateCode } from '../../models/affiliate-code.model';
 import { DiscountCodeService } from '../../services/discount-code.service';
@@ -19,7 +20,7 @@ interface DeleteTarget {
 @Component({
   selector: 'app-admin-discounts-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DragDropModule],
   templateUrl: './admin-discounts-section.component.html',
   styleUrl: './admin-discounts-section.component.scss'
 })
@@ -32,6 +33,8 @@ export class AdminDiscountsSectionComponent implements OnInit {
   deleteModalOpen = false;
   deleteTarget: DeleteTarget | null = null;
   isDeleting = false;
+  isSavingDiscountOrder = false;
+  isSavingAffiliateOrder = false;
 
   discountForm = this.fb.group({
     shopId: [null as number | null, Validators.required],
@@ -162,6 +165,44 @@ export class AdminDiscountsSectionComponent implements OnInit {
         this.loadAffiliateCodes();
       },
       error: () => {}
+    });
+  }
+
+  dropDiscount(event: CdkDragDrop<DiscountCode[]>): void {
+    if (event.previousIndex === event.currentIndex || this.isSavingDiscountOrder) {
+      return;
+    }
+    moveItemInArray(this.discountItems, event.previousIndex, event.currentIndex);
+    this.isSavingDiscountOrder = true;
+    const orderedIds = this.discountItems.map((item) => item.id);
+    this.discountCodeService.reorder(orderedIds).subscribe({
+      next: () => {
+        this.isSavingDiscountOrder = false;
+        this.toastService.success('Kolejność kodów rabatowych została zapisana.');
+      },
+      error: () => {
+        this.isSavingDiscountOrder = false;
+        this.loadDiscountCodes();
+      }
+    });
+  }
+
+  dropAffiliate(event: CdkDragDrop<AffiliateCode[]>): void {
+    if (event.previousIndex === event.currentIndex || this.isSavingAffiliateOrder) {
+      return;
+    }
+    moveItemInArray(this.affiliateItems, event.previousIndex, event.currentIndex);
+    this.isSavingAffiliateOrder = true;
+    const orderedIds = this.affiliateItems.map((item) => item.id);
+    this.affiliateCodeService.reorder(orderedIds).subscribe({
+      next: () => {
+        this.isSavingAffiliateOrder = false;
+        this.toastService.success('Kolejność kodów afiliacyjnych została zapisana.');
+      },
+      error: () => {
+        this.isSavingAffiliateOrder = false;
+        this.loadAffiliateCodes();
+      }
     });
   }
 

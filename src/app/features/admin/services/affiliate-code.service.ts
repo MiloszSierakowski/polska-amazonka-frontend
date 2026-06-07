@@ -37,4 +37,8 @@ export class AffiliateCodeService {
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
+
+  reorder(orderedIds: number[]): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/reorder`, orderedIds);
+  }
 }
