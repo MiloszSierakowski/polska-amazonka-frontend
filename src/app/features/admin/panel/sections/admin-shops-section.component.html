@@ -1,47 +1,90 @@
-<div class="section-body">
-  <ul class="item-list">
-    <li class="item-row" *ngFor="let item of items">
-      <div class="item-main">
-        <span class="item-title">{{ item.name }}</span>
-        <span class="item-meta">{{ item.slug }} · {{ item.code }}</span>
-        <span class="item-meta" *ngIf="item.shopUrl">{{ item.shopUrl }}</span>
-        <span class="item-badge" [class.inactive]="!item.isActive">
-          {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
-        </span>
-      </div>
-      <div class="item-row-actions">
-        <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
-        <button type="button" class="item-action danger" (click)="openDeleteModal(item)">Usuń</button>
-      </div>
-    </li>
-  </ul>
-  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
-    <h3>{{ editingId ? 'Edycja sklepu' : 'Nowy sklep' }}</h3>
-    <label>
-      <span>Nazwa</span>
-      <input type="text" formControlName="name" />
-    </label>
-    <label>
-      <span>Slug</span>
-      <input type="text" formControlName="slug" />
-    </label>
-    <label>
-      <span>Code</span>
-      <input type="text" formControlName="code" />
-    </label>
-    <label>
-      <span>URL sklepu (opcjonalnie)</span>
-      <input type="text" formControlName="shopUrl" />
-    </label>
-    <label class="checkbox-row">
-      <input type="checkbox" formControlName="isActive" />
-      <span>Aktywny</span>
-    </label>
-    <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
-      <button type="submit" class="btn-primary">Zapisz</button>
+<div class="shops-admin">
+  <div class="shops-admin-toolbar">
+    <button type="button" class="primary-action shops-add-toggle" (click)="openAddShopModal()">
+      Dodaj sklep
+    </button>
+  </div>
+
+  <div class="section-body">
+    <ul class="item-list">
+      <li class="shop-list-item" *ngFor="let item of items">
+        <div class="shop-card">
+          <div class="shop-card-body">
+            <div class="shop-card-info">
+              <span class="shop-name">{{ item.name }}</span>
+              <span class="shop-meta" *ngIf="item.shopUrl">{{ item.shopUrl }}</span>
+            </div>
+          </div>
+          <div class="shop-action-group">
+            <span class="shop-status" [class.inactive]="!item.isActive">
+              {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+            </span>
+            <button type="button" class="shop-action" (click)="startEdit(item)">Edytuj</button>
+            <button type="button" class="shop-action shop-action-danger" (click)="openDeleteModal(item)">Usuń</button>
+          </div>
+        </div>
+
+        <form
+          class="item-form shop-data-form shop-inline-edit-form"
+          *ngIf="editingShopId === item.id"
+          [formGroup]="shopEditForm"
+          (ngSubmit)="saveEditShop(item)"
+        >
+          <h3>Edycja sklepu</h3>
+          <label>
+            <span>Nazwa</span>
+            <input type="text" formControlName="name" />
+          </label>
+          <label>
+            <span>URL sklepu (opcjonalnie)</span>
+            <input type="text" formControlName="shopUrl" />
+          </label>
+          <label class="shop-form-toggle">
+            <span class="shop-form-toggle-label">Aktywny</span>
+            <span class="shop-form-switch">
+              <input type="checkbox" class="shop-form-switch-input" formControlName="isActive" />
+              <span class="shop-form-switch-slider" aria-hidden="true"></span>
+            </span>
+          </label>
+          <div class="form-actions shop-form-actions">
+            <button type="button" class="secondary-action" (click)="cancelEdit()">Anuluj</button>
+            <button type="submit" class="primary-action">Zapisz</button>
+          </div>
+        </form>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="shop-modal-overlay" *ngIf="isShopModalOpen" (click)="closeShopModal()">
+  <div class="shop-modal" (click)="$event.stopPropagation()">
+    <div class="shop-modal-header">
+      <h3>Dodaj sklep</h3>
+      <button type="button" class="shop-modal-close" (click)="closeShopModal()" aria-label="Zamknij">×</button>
     </div>
-  </form>
+
+    <form class="item-form shop-data-form shop-modal-form" [formGroup]="shopAddForm" (ngSubmit)="saveNewShop()">
+      <label>
+        <span>Nazwa</span>
+        <input type="text" formControlName="name" />
+      </label>
+      <label>
+        <span>URL sklepu (opcjonalnie)</span>
+        <input type="text" formControlName="shopUrl" />
+      </label>
+      <label class="shop-form-toggle">
+        <span class="shop-form-toggle-label">Aktywny</span>
+        <span class="shop-form-switch">
+          <input type="checkbox" class="shop-form-switch-input" formControlName="isActive" />
+          <span class="shop-form-switch-slider" aria-hidden="true"></span>
+        </span>
+      </label>
+      <div class="shop-modal-footer">
+        <button type="button" class="secondary-action" (click)="closeShopModal()">Anuluj</button>
+        <button type="submit" class="primary-action">Zapisz</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
@@ -49,8 +92,8 @@
     <h3>Potwierdzenie usunięcia</h3>
     <p>Czy na pewno chcesz usunąć ten sklep? Powiązana kategoria sklepowa zostanie również usunięta.</p>
     <div class="delete-modal-actions">
-      <button type="button" class="btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
-      <button type="button" class="btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+      <button type="button" class="secondary-action" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="shop-form-btn shop-form-btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
         {{ isDeleting ? 'Usuwanie...' : 'Potwierdź usunięcie' }}
       </button>
     </div>

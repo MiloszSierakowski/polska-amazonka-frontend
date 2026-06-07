@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Shop } from '../../../../core/models/shop.model';
+import { Shop, SaveShopPayload } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 
@@ -15,7 +15,8 @@ import { ToastService } from '../../../../core/admin/toast.service';
 })
 export class AdminShopsSectionComponent implements OnInit {
   items: Shop[] = [];
-  editingId: number | null = null;
+  editingShopId: number | null = null;
+  isShopModalOpen = false;
   deleteModalOpen = false;
   deleteTargetId: number | null = null;
   isDeleting = false;
@@ -23,10 +24,14 @@ export class AdminShopsSectionComponent implements OnInit {
   private readonly shopDeleteBlockedMessage =
     'Nie można usunąć sklepu. Najpierw usuń lub przypisz do innego sklepu powiązane z nim kody rabatowe/afiliacyjne.';
 
-  form = this.fb.group({
+  shopAddForm = this.fb.group({
     name: ['', Validators.required],
-    slug: ['', Validators.required],
-    code: ['', Validators.required],
+    shopUrl: [''],
+    isActive: [true]
+  });
+
+  shopEditForm = this.fb.group({
+    name: ['', Validators.required],
     shopUrl: [''],
     isActive: [true]
   });
@@ -41,58 +46,71 @@ export class AdminShopsSectionComponent implements OnInit {
     this.loadShops();
   }
 
-  startAdd(): void {
-    this.editingId = null;
-    this.form.reset({
+  openAddShopModal(): void {
+    this.cancelEdit();
+    this.shopAddForm.reset({
       name: '',
-      slug: '',
-      code: '',
+      shopUrl: '',
+      isActive: true
+    });
+    this.isShopModalOpen = true;
+  }
+
+  closeShopModal(): void {
+    this.isShopModalOpen = false;
+    this.shopAddForm.reset({
+      name: '',
       shopUrl: '',
       isActive: true
     });
   }
 
   startEdit(item: Shop): void {
-    this.editingId = item.id;
-    this.form.patchValue({
+    if (this.editingShopId === item.id) {
+      this.cancelEdit();
+      return;
+    }
+    this.editingShopId = item.id;
+    this.shopEditForm.reset({
       name: item.name,
-      slug: item.slug,
-      code: item.code,
       shopUrl: item.shopUrl ?? '',
       isActive: item.isActive ?? true
     });
   }
 
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
-      this.toastService.warning('Uzupełnij wymagane pola formularza sklepu.');
-      return;
-    }
-    const value = this.form.getRawValue();
-    const shopUrl = value.shopUrl?.trim();
-    const payload = {
-      name: value.name!.trim(),
-      slug: value.slug!.trim(),
-      code: value.code!.trim(),
-      shopUrl: shopUrl ? shopUrl : null,
-      isActive: value.isActive ?? true
-    };
-    if (this.editingId) {
-      this.shopService.update(this.editingId, payload).subscribe({
-        next: () => {
-          this.toastService.success('Sklep został zaktualizowany.');
-          this.startAdd();
-          this.loadShops();
-        },
-        error: () => {}
-      });
+  cancelEdit(): void {
+    this.editingShopId = null;
+    this.shopEditForm.reset({
+      name: '',
+      shopUrl: '',
+      isActive: true
+    });
+  }
+
+  saveNewShop(): void {
+    const payload = this.buildPayload(this.shopAddForm);
+    if (!payload) {
       return;
     }
     this.shopService.create(payload).subscribe({
       next: () => {
         this.toastService.success('Sklep został dodany.');
-        this.startAdd();
+        this.closeShopModal();
+        this.loadShops();
+      },
+      error: () => {}
+    });
+  }
+
+  saveEditShop(item: Shop): void {
+    const payload = this.buildPayload(this.shopEditForm);
+    if (!payload) {
+      return;
+    }
+    this.shopService.update(item.id, payload).subscribe({
+      next: () => {
+        this.toastService.success('Sklep został zaktualizowany.');
+        this.cancelEdit();
         this.loadShops();
       },
       error: () => {}
@@ -123,8 +141,8 @@ export class AdminShopsSectionComponent implements OnInit {
         this.isDeleting = false;
         this.deleteModalOpen = false;
         this.deleteTargetId = null;
-        if (this.editingId === targetId) {
-          this.startAdd();
+        if (this.editingShopId === targetId) {
+          this.cancelEdit();
         }
         this.loadShops();
         this.toastService.success('Sklep został usunięty.');
@@ -136,6 +154,21 @@ export class AdminShopsSectionComponent implements OnInit {
         }
       }
     });
+  }
+
+  private buildPayload(form: typeof this.shopAddForm): SaveShopPayload | null {
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola formularza sklepu.');
+      return null;
+    }
+    const value = form.getRawValue();
+    const shopUrl = value.shopUrl?.trim();
+    return {
+      name: value.name!.trim(),
+      shopUrl: shopUrl ? shopUrl : null,
+      isActive: value.isActive ?? true
+    };
   }
 
   private loadShops(): void {

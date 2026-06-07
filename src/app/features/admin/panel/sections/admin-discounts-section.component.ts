@@ -30,20 +30,35 @@ export class AdminDiscountsSectionComponent implements OnInit {
   shops: Shop[] = [];
   editingDiscountId: number | null = null;
   editingAffiliateId: number | null = null;
+  isDiscountModalOpen = false;
+  isAffiliateModalOpen = false;
   deleteModalOpen = false;
   deleteTarget: DeleteTarget | null = null;
   isDeleting = false;
   isSavingDiscountOrder = false;
   isSavingAffiliateOrder = false;
 
-  discountForm = this.fb.group({
+  discountAddForm = this.fb.group({
     shopId: [null as number | null, Validators.required],
     codeValue: ['', Validators.required],
     description: ['', Validators.required],
     isActive: [true]
   });
 
-  affiliateForm = this.fb.group({
+  discountEditForm = this.fb.group({
+    shopId: [null as number | null, Validators.required],
+    codeValue: ['', Validators.required],
+    description: ['', Validators.required],
+    isActive: [true]
+  });
+
+  affiliateAddForm = this.fb.group({
+    shopId: [null as number | null, Validators.required],
+    codeValue: ['', Validators.required],
+    isActive: [true]
+  });
+
+  affiliateEditForm = this.fb.group({
     shopId: [null as number | null, Validators.required],
     codeValue: ['', Validators.required],
     isActive: [true]
@@ -67,18 +82,28 @@ export class AdminDiscountsSectionComponent implements OnInit {
     return this.discountItems.length < this.shops.length;
   }
 
-  get showDiscountForm(): boolean {
-    return this.editingDiscountId !== null || this.canAddDiscountCode;
+  openAddDiscountModal(): void {
+    if (!this.canAddDiscountCode) {
+      this.toastService.warning('Każdy sklep ma już przypisany kod rabatowy.');
+      return;
+    }
+    this.cancelEditDiscount();
+    this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
+    this.isDiscountModalOpen = true;
   }
 
-  startAddDiscount(): void {
-    this.editingDiscountId = null;
-    this.discountForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
+  closeDiscountModal(): void {
+    this.isDiscountModalOpen = false;
+    this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
   }
 
   startEditDiscount(item: DiscountCode): void {
+    if (this.editingDiscountId === item.id) {
+      this.cancelEditDiscount();
+      return;
+    }
     this.editingDiscountId = item.id;
-    this.discountForm.patchValue({
+    this.discountEditForm.reset({
       shopId: item.shopId,
       codeValue: item.codeValue,
       description: item.description,
@@ -86,46 +111,62 @@ export class AdminDiscountsSectionComponent implements OnInit {
     });
   }
 
-  saveDiscount(): void {
-    if (this.discountForm.invalid) {
-      this.discountForm.markAllAsTouched();
-      this.toastService.warning('Uzupełnij wymagane pola formularza kodu rabatowego.');
-      return;
-    }
-    const value = this.discountForm.getRawValue();
-    const payload = {
-      shopId: value.shopId!,
-      codeValue: value.codeValue!,
-      description: value.description!,
-      isActive: value.isActive ?? true
-    };
-    if (this.editingDiscountId) {
-      this.discountCodeService.update(this.editingDiscountId, payload).subscribe(() => {
-        this.toastService.success('Kod rabatowy został zaktualizowany.');
-        this.startAddDiscount();
-        this.loadDiscountCodes();
-      });
+  cancelEditDiscount(): void {
+    this.editingDiscountId = null;
+    this.discountEditForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
+  }
+
+  saveNewDiscount(): void {
+    const payload = this.buildDiscountPayload(this.discountAddForm);
+    if (!payload) {
       return;
     }
     this.discountCodeService.create(payload).subscribe(() => {
       this.toastService.success('Kod rabatowy został zapisany.');
-      this.startAddDiscount();
+      this.closeDiscountModal();
       this.loadDiscountCodes();
     });
   }
 
-  startAddAffiliate(): void {
-    this.editingAffiliateId = null;
-    this.affiliateForm.reset({ shopId: null, codeValue: '', isActive: true });
+  saveEditDiscount(item: DiscountCode): void {
+    const payload = this.buildDiscountPayload(this.discountEditForm);
+    if (!payload) {
+      return;
+    }
+    this.discountCodeService.update(item.id, payload).subscribe(() => {
+      this.toastService.success('Kod rabatowy został zaktualizowany.');
+      this.cancelEditDiscount();
+      this.loadDiscountCodes();
+    });
+  }
+
+  openAddAffiliateModal(): void {
+    this.cancelEditAffiliate();
+    this.affiliateAddForm.reset({ shopId: null, codeValue: '', isActive: true });
+    this.isAffiliateModalOpen = true;
+  }
+
+  closeAffiliateModal(): void {
+    this.isAffiliateModalOpen = false;
+    this.affiliateAddForm.reset({ shopId: null, codeValue: '', isActive: true });
   }
 
   startEditAffiliate(item: AffiliateCode): void {
+    if (this.editingAffiliateId === item.id) {
+      this.cancelEditAffiliate();
+      return;
+    }
     this.editingAffiliateId = item.id;
-    this.affiliateForm.patchValue({
+    this.affiliateEditForm.reset({
       shopId: item.shopId,
       codeValue: item.codeValue,
       isActive: item.isActive
     });
+  }
+
+  cancelEditAffiliate(): void {
+    this.editingAffiliateId = null;
+    this.affiliateEditForm.reset({ shopId: null, codeValue: '', isActive: true });
   }
 
   isAffiliateShopDisabled(shopId: number): boolean {
@@ -135,33 +176,30 @@ export class AdminDiscountsSectionComponent implements OnInit {
     return this.affiliateItems.some((item) => item.shopId === shopId && item.isActive);
   }
 
-  saveAffiliate(): void {
-    if (this.affiliateForm.invalid) {
-      this.affiliateForm.markAllAsTouched();
-      this.toastService.warning('Uzupełnij wymagane pola formularza kodu afiliacyjnego.');
-      return;
-    }
-    const value = this.affiliateForm.getRawValue();
-    const payload = {
-      shopId: value.shopId!,
-      codeValue: value.codeValue!,
-      isActive: value.isActive ?? true
-    };
-    if (this.editingAffiliateId) {
-      this.affiliateCodeService.update(this.editingAffiliateId, payload).subscribe({
-        next: () => {
-          this.toastService.success('Kod afiliacyjny został zaktualizowany.');
-          this.startAddAffiliate();
-          this.loadAffiliateCodes();
-        },
-        error: () => {}
-      });
+  saveNewAffiliate(): void {
+    const payload = this.buildAffiliatePayload(this.affiliateAddForm);
+    if (!payload) {
       return;
     }
     this.affiliateCodeService.create(payload).subscribe({
       next: () => {
         this.toastService.success('Kod afiliacyjny został zapisany.');
-        this.startAddAffiliate();
+        this.closeAffiliateModal();
+        this.loadAffiliateCodes();
+      },
+      error: () => {}
+    });
+  }
+
+  saveEditAffiliate(item: AffiliateCode): void {
+    const payload = this.buildAffiliatePayload(this.affiliateEditForm);
+    if (!payload) {
+      return;
+    }
+    this.affiliateCodeService.update(item.id, payload).subscribe({
+      next: () => {
+        this.toastService.success('Kod afiliacyjny został zaktualizowany.');
+        this.cancelEditAffiliate();
         this.loadAffiliateCodes();
       },
       error: () => {}
@@ -236,14 +274,14 @@ export class AdminDiscountsSectionComponent implements OnInit {
         this.deleteTarget = null;
         if (target.type === 'discount') {
           if (this.editingDiscountId === target.id) {
-            this.startAddDiscount();
+            this.cancelEditDiscount();
           }
           this.loadDiscountCodes();
           this.toastService.success('Kod rabatowy został usunięty.');
           return;
         }
         if (this.editingAffiliateId === target.id) {
-          this.startAddAffiliate();
+          this.cancelEditAffiliate();
         }
         this.loadAffiliateCodes();
         this.toastService.success('Kod afiliacyjny został usunięty.');
@@ -252,6 +290,35 @@ export class AdminDiscountsSectionComponent implements OnInit {
         this.isDeleting = false;
       }
     });
+  }
+
+  private buildDiscountPayload(form: typeof this.discountAddForm) {
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola formularza kodu rabatowego.');
+      return null;
+    }
+    const value = form.getRawValue();
+    return {
+      shopId: value.shopId!,
+      codeValue: value.codeValue!,
+      description: value.description!,
+      isActive: value.isActive ?? true
+    };
+  }
+
+  private buildAffiliatePayload(form: typeof this.affiliateAddForm) {
+    if (form.invalid) {
+      form.markAllAsTouched();
+      this.toastService.warning('Uzupełnij wymagane pola formularza kodu afiliacyjnego.');
+      return null;
+    }
+    const value = form.getRawValue();
+    return {
+      shopId: value.shopId!,
+      codeValue: value.codeValue!,
+      isActive: value.isActive ?? true
+    };
   }
 
   private loadShops(): void {

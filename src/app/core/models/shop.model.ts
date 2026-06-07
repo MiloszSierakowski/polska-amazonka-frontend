@@ -8,8 +8,6 @@ export interface Shop {
 }
 
 export interface SaveShopPayload {
-  slug: string;
-  code: string;
   name: string;
   shopUrl?: string | null;
   isActive?: boolean;
