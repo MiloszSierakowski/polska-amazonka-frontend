@@ -1,69 +1,125 @@
-<div class="section-body">
-  <p class="reorder-hint">Przeciągnij kategorie, aby zmienić kolejność wyświetlania na stronie głównej.</p>
-  <ul
-    class="item-list"
-    cdkDropList
-    (cdkDropListDropped)="drop($event)"
-    [cdkDropListDisabled]="isSavingOrder"
-  >
-    <li class="item-row" *ngFor="let item of items" cdkDrag [cdkDragDisabled]="isSavingOrder">
-      <div class="drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
-      <div class="item-main">
-        <img class="category-thumb" [src]="imageSrc(item)" [alt]="item.name" />
-        <div class="item-title-row">
-          <span class="item-title">{{ item.name }}</span>
-          <button
-            type="button"
-            class="shop-badge"
-            *ngIf="isShopCategory(item)"
-            (click)="openShopCategoryLock(item, $event)"
-            aria-label="Kategoria powiązana ze sklepem — szczegóły"
-          >
-            🛒 Sklep
-          </button>
+<div class="categories-admin">
+  <div class="categories-admin-toolbar">
+    <button type="button" class="primary-action categories-add-toggle" (click)="openAddCategoryModal()">
+      Dodaj kategorię
+    </button>
+  </div>
+
+  <div class="section-body">
+    <p class="reorder-hint">Przeciągnij kategorie, aby zmienić kolejność wyświetlania na stronie głównej.</p>
+    <ul
+      class="item-list"
+      cdkDropList
+      (cdkDropListDropped)="drop($event)"
+      [cdkDropListDisabled]="isSavingOrder"
+    >
+      <li
+        class="category-list-item"
+        *ngFor="let item of items"
+        cdkDrag
+        [cdkDragDisabled]="isSavingOrder || editingCategoryId === item.id"
+      >
+        <div class="category-card">
+          <div class="category-card-body">
+            <div class="category-drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
+            <img class="category-thumb" [src]="imageSrc(item)" [alt]="item.name" />
+            <div class="category-card-info">
+              <span class="category-name">{{ item.name }}</span>
+              <button
+                type="button"
+                class="shop-badge"
+                *ngIf="isShopCategory(item)"
+                (click)="openShopCategoryLock(item, $event)"
+                aria-label="Kategoria powiązana ze sklepem — szczegóły"
+              >
+                🛒 Sklep
+              </button>
+            </div>
+          </div>
+          <div class="category-action-group">
+            <button type="button" class="category-action" (click)="startEdit(item)">Edytuj</button>
+            <button
+              type="button"
+              class="category-action category-action-danger"
+              [class.is-locked]="isShopCategory(item)"
+              [attr.aria-disabled]="isShopCategory(item) ? 'true' : null"
+              (click)="deleteCategory(item)"
+              aria-label="Usuń kategorię"
+            >
+              Usuń
+            </button>
+          </div>
         </div>
-      </div>
-      <div class="item-row-actions">
-        <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
-        <button
-          type="button"
-          class="item-action danger"
-          [class.is-locked]="isShopCategory(item)"
-          [attr.aria-disabled]="isShopCategory(item) ? 'true' : null"
-          (click)="deleteCategory(item)"
-          aria-label="Usuń kategorię"
+
+        <form
+          class="item-form category-inline-edit-form"
+          *ngIf="editingCategoryId === item.id"
+          [formGroup]="categoryEditForm"
+          (ngSubmit)="saveEditCategory(item)"
         >
-          🗑
-        </button>
-      </div>
-    </li>
-  </ul>
-  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
-    <h3>{{ editingId ? 'Edycja kategorii' : 'Nowa kategoria' }}</h3>
-    <label>
-      <span>Nazwa</span>
-      <input type="text" formControlName="name" />
-    </label>
-    <div class="file-upload-field">
-      <span class="file-upload-label">Obrazek kategorii</span>
-      <input
-        id="category-image-file"
-        type="file"
-        accept="image/*"
-        class="file-input-hidden"
-        (change)="onFileSelected($event)"
-      />
-      <label class="custom-file-upload" for="category-image-file">
-        <span>Prześlij obrazek</span>
-        <span class="custom-file-upload-name" *ngIf="selectedFileName">{{ selectedFileName }}</span>
+          <h3>Edycja kategorii</h3>
+          <label>
+            <span>Nazwa</span>
+            <input type="text" formControlName="name" />
+          </label>
+          <div class="file-upload-field">
+            <span class="file-upload-label">Obrazek kategorii</span>
+            <input
+              [id]="'category-edit-image-file-' + item.id"
+              type="file"
+              accept="image/*"
+              class="file-input-hidden"
+              (change)="onEditFileSelected($event)"
+            />
+            <label class="custom-file-upload" [attr.for]="'category-edit-image-file-' + item.id">
+              <span>Prześlij obrazek</span>
+              <span class="custom-file-upload-name" *ngIf="editSelectedFileName">{{ editSelectedFileName }}</span>
+            </label>
+            <img *ngIf="editPreviewUrl" class="image-preview" [src]="editPreviewUrl" alt="Podgląd obrazka kategorii" />
+          </div>
+          <div class="form-actions category-form-actions">
+            <button type="button" class="secondary-action" (click)="cancelEdit()">Anuluj</button>
+            <button type="submit" class="primary-action">Zapisz</button>
+          </div>
+        </form>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="category-modal-overlay" *ngIf="isCategoryModalOpen" (click)="closeCategoryModal()">
+  <div class="category-modal" (click)="$event.stopPropagation()">
+    <div class="category-modal-header">
+      <h3>Dodaj kategorię</h3>
+      <button type="button" class="category-modal-close" (click)="closeCategoryModal()" aria-label="Zamknij">×</button>
+    </div>
+
+    <form class="item-form category-modal-form" [formGroup]="categoryAddForm" (ngSubmit)="saveNewCategory()">
+      <label>
+        <span>Nazwa</span>
+        <input type="text" formControlName="name" />
       </label>
-      <img *ngIf="previewUrl" class="image-preview" [src]="previewUrl" alt="Podgląd obrazka kategorii" />
-    </div>
-    <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
-      <button type="submit" class="btn-primary">Zapisz</button>
-    </div>
-  </form>
+      <div class="file-upload-field">
+        <span class="file-upload-label">Obrazek kategorii</span>
+        <input
+          id="category-add-image-file"
+          type="file"
+          accept="image/*"
+          class="file-input-hidden"
+          (change)="onAddFileSelected($event)"
+        />
+        <label class="custom-file-upload" for="category-add-image-file">
+          <span>Prześlij obrazek</span>
+          <span class="custom-file-upload-name" *ngIf="addSelectedFileName">{{ addSelectedFileName }}</span>
+        </label>
+        <img *ngIf="addPreviewUrl" class="image-preview" [src]="addPreviewUrl" alt="Podgląd obrazka kategorii" />
+      </div>
+      <div class="category-modal-footer">
+        <button type="button" class="secondary-action" (click)="closeCategoryModal()">Anuluj</button>
+        <button type="submit" class="primary-action">Zapisz</button>
+      </div>
+    </form>
+  </div>
 </div>
 
 <div class="lock-modal-overlay" *ngIf="shopCategoryLockModalOpen" (click)="closeShopCategoryLockModal()">
@@ -74,7 +130,7 @@
       Aby zapobiec błędom, możesz ją usunąć tylko poprzez usunięcie całego sklepu w zakładce „Sklepy”.
     </p>
     <div class="lock-modal-actions">
-      <button type="button" class="btn-primary" (click)="closeShopCategoryLockModal()">Rozumiem</button>
+      <button type="button" class="primary-action" (click)="closeShopCategoryLockModal()">Rozumiem</button>
     </div>
   </div>
 </div>

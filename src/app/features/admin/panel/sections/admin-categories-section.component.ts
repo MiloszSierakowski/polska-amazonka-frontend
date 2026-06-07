@@ -20,15 +20,23 @@ interface ApiErrorBody {
 })
 export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   items: Category[] = [];
-  editingId: number | null = null;
-  selectedFile: File | null = null;
-  selectedFileName = '';
-  previewUrl: string | null = null;
+  editingCategoryId: number | null = null;
+  isCategoryModalOpen = false;
+  addSelectedFile: File | null = null;
+  addSelectedFileName = '';
+  addPreviewUrl: string | null = null;
+  editSelectedFile: File | null = null;
+  editSelectedFileName = '';
+  editPreviewUrl: string | null = null;
   shopCategoryLockModalOpen = false;
   lockedCategoryName = '';
   isSavingOrder = false;
 
-  form = this.fb.group({
+  categoryAddForm = this.fb.group({
+    name: ['', Validators.required]
+  });
+
+  categoryEditForm = this.fb.group({
     name: ['', Validators.required]
   });
 
@@ -44,47 +52,78 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
-    this.revokePreview();
+    this.revokeAddPreview();
+    this.revokeEditPreview();
   }
 
-  startAdd(): void {
-    this.editingId = null;
-    this.form.reset({ name: '' });
-    this.clearImageSelection();
+  openAddCategoryModal(): void {
+    this.cancelEdit();
+    this.categoryAddForm.reset({ name: '' });
+    this.clearAddImageSelection();
+    this.isCategoryModalOpen = true;
+  }
+
+  closeCategoryModal(): void {
+    this.isCategoryModalOpen = false;
+    this.categoryAddForm.reset({ name: '' });
+    this.clearAddImageSelection();
   }
 
   startEdit(item: Category): void {
-    this.editingId = item.id;
-    this.form.patchValue({ name: item.name });
-    this.clearImageSelection();
-    this.previewUrl = this.categoryService.resolveDisplayImageUrl(item, this.backendUrl);
+    if (this.editingCategoryId === item.id) {
+      this.cancelEdit();
+      return;
+    }
+    this.editingCategoryId = item.id;
+    this.categoryEditForm.reset({ name: item.name });
+    this.clearEditImageSelection();
+    this.editPreviewUrl = this.categoryService.resolveDisplayImageUrl(item, this.backendUrl);
   }
 
-  onFileSelected(event: Event): void {
+  cancelEdit(): void {
+    this.editingCategoryId = null;
+    this.categoryEditForm.reset({ name: '' });
+    this.clearEditImageSelection();
+  }
+
+  onAddFileSelected(event: Event): void {
     const input = event.target as HTMLInputElement;
     const file = input.files?.[0] ?? null;
-    this.setSelectedFile(file);
+    this.setAddSelectedFile(file);
     input.value = '';
   }
 
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  onEditFileSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.setEditSelectedFile(file);
+    input.value = '';
+  }
+
+  saveNewCategory(): void {
+    if (this.categoryAddForm.invalid) {
+      this.categoryAddForm.markAllAsTouched();
       this.toastService.warning('Nazwa kategorii jest wymagana.');
       return;
     }
-    const name = this.form.value.name!;
-    if (this.editingId) {
-      this.categoryService.update(this.editingId, name, this.selectedFile).subscribe(() => {
-        this.toastService.success('Kategoria została zaktualizowana.');
-        this.startAdd();
-        this.loadCategories();
-      });
+    const name = this.categoryAddForm.value.name!;
+    this.categoryService.create(name, this.addSelectedFile).subscribe(() => {
+      this.toastService.success('Kategoria została dodana.');
+      this.closeCategoryModal();
+      this.loadCategories();
+    });
+  }
+
+  saveEditCategory(item: Category): void {
+    if (this.categoryEditForm.invalid) {
+      this.categoryEditForm.markAllAsTouched();
+      this.toastService.warning('Nazwa kategorii jest wymagana.');
       return;
     }
-    this.categoryService.create(name, this.selectedFile).subscribe(() => {
-      this.toastService.success('Kategoria została dodana.');
-      this.startAdd();
+    const name = this.categoryEditForm.value.name!;
+    this.categoryService.update(item.id, name, this.editSelectedFile).subscribe(() => {
+      this.toastService.success('Kategoria została zaktualizowana.');
+      this.cancelEdit();
       this.loadCategories();
     });
   }
@@ -122,8 +161,8 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     this.categoryService.delete(item.id).subscribe({
       next: () => {
         this.toastService.success('Kategoria została usunięta.');
-        if (this.editingId === item.id) {
-          this.startAdd();
+        if (this.editingCategoryId === item.id) {
+          this.cancelEdit();
         }
         this.loadCategories();
       },
@@ -172,25 +211,47 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     });
   }
 
-  private setSelectedFile(file: File | null): void {
-    this.revokePreview();
-    this.selectedFile = file;
-    this.selectedFileName = file?.name ?? '';
+  private setAddSelectedFile(file: File | null): void {
+    this.revokeAddPreview();
+    this.addSelectedFile = file;
+    this.addSelectedFileName = file?.name ?? '';
     if (file) {
-      this.previewUrl = URL.createObjectURL(file);
+      this.addPreviewUrl = URL.createObjectURL(file);
     }
   }
 
-  private clearImageSelection(): void {
-    this.selectedFile = null;
-    this.selectedFileName = '';
-    this.revokePreview();
-    this.previewUrl = null;
+  private setEditSelectedFile(file: File | null): void {
+    this.revokeEditPreview();
+    this.editSelectedFile = file;
+    this.editSelectedFileName = file?.name ?? '';
+    if (file) {
+      this.editPreviewUrl = URL.createObjectURL(file);
+    }
   }
 
-  private revokePreview(): void {
-    if (this.previewUrl && this.previewUrl.startsWith('blob:')) {
-      URL.revokeObjectURL(this.previewUrl);
+  private clearAddImageSelection(): void {
+    this.addSelectedFile = null;
+    this.addSelectedFileName = '';
+    this.revokeAddPreview();
+    this.addPreviewUrl = null;
+  }
+
+  private clearEditImageSelection(): void {
+    this.editSelectedFile = null;
+    this.editSelectedFileName = '';
+    this.revokeEditPreview();
+    this.editPreviewUrl = null;
+  }
+
+  private revokeAddPreview(): void {
+    if (this.addPreviewUrl && this.addPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.addPreviewUrl);
+    }
+  }
+
+  private revokeEditPreview(): void {
+    if (this.editPreviewUrl && this.editPreviewUrl.startsWith('blob:')) {
+      URL.revokeObjectURL(this.editPreviewUrl);
     }
   }
 }
