@@ -1,5 +1,3 @@
-import { AdminUser } from '../models/admin-user.model';
-
 export interface AdminCategoryMock {
   id: number;
   name: string;
@@ -84,9 +82,4 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
 export const MOCK_ADMIN_DISCOUNTS: AdminDiscountMock[] = [
   { id: 1, platform: 'ALIEXPRESS', codeValue: 'IFP9MDH', type: 'DISCOUNT', isActive: true },
   { id: 2, platform: 'TEMU', codeValue: 'apk84760', type: 'DISCOUNT', isActive: true }
-];
-
-export const MOCK_ADMIN_USERS: AdminUser[] = [
-  { id: 1, login: 'admin', role: 'ADMIN' },
-  { id: 2, login: 'worker1', role: 'WORKER' }
 ];

@@ -106,6 +106,11 @@ export class AuthService {
     return this.getRole() === 'ADMIN';
   }
 
+  canAccessPanel(): boolean {
+    const role = this.getRole();
+    return this.isLoggedIn() && (role === 'ADMIN' || role === 'WORKER');
+  }
+
   private persistSession(response: LoginResponse): void {
     sessionStorage.setItem(TOKEN_KEY, response.token);
     sessionStorage.setItem(ID_KEY, String(response.id));

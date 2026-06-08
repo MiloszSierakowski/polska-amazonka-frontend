@@ -50,7 +50,7 @@ export class AdminPanelComponent {
     { id: 'analytics', title: 'Statystyki', adminOnly: false },
     { id: 'broken-links', title: 'Uszkodzone linki', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
-    { id: 'changelog', title: 'Historia zmian', adminOnly: false }
+    { id: 'changelog', title: 'Historia zmian', adminOnly: true }
   ];
 
   constructor(

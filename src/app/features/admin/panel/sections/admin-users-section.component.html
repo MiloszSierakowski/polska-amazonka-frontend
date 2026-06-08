@@ -1,31 +1,90 @@
-<div class="section-body">
-  <ul class="item-list">
-    <li class="item-row" *ngFor="let item of items">
-      <div class="item-main">
-        <span class="item-title">{{ item.login }}</span>
-        <span class="item-badge" [class.is-admin]="item.role === 'ADMIN'">
-          {{ roleLabel(item.role) }}
-        </span>
-      </div>
-      <button type="button" class="item-action" (click)="startEdit(item)">Edytuj</button>
-    </li>
-  </ul>
-  <form class="item-form" [formGroup]="form" (ngSubmit)="save()">
-    <h3>{{ editingId ? 'Edycja użytkownika' : 'Nowy pracownik' }}</h3>
-    <label>
-      <span>Login</span>
-      <input type="text" formControlName="login" />
-    </label>
-    <label>
-      <span>Rola</span>
-      <select formControlName="role">
-        <option value="WORKER">WORKER</option>
-        <option value="ADMIN">ADMIN</option>
-      </select>
-    </label>
-    <div class="form-actions">
-      <button type="button" class="btn-secondary" (click)="startAdd()">Wyczyść</button>
-      <button type="submit" class="btn-primary">Zapisz</button>
+<div class="users-admin">
+  <div class="users-admin-toolbar">
+    <button type="button" class="primary-action users-add-toggle" (click)="openAddUserModal()">
+      Dodaj użytkownika
+    </button>
+  </div>
+
+  <p class="users-status" *ngIf="isLoading">Ładowanie użytkowników...</p>
+  <p class="users-status users-status-error" *ngIf="!isLoading && hasLoadError">
+    Nie udało się pobrać listy użytkowników.
+  </p>
+  <p class="users-status" *ngIf="!isLoading && !hasLoadError && !items.length">
+    Brak użytkowników w systemie.
+  </p>
+
+  <div class="section-body" *ngIf="!isLoading && !hasLoadError">
+    <ul class="item-list" *ngIf="items.length">
+      <li class="item-row" *ngFor="let item of items" [class.is-blocked]="item.isBlocked">
+        <div class="item-main">
+          <span class="item-title">{{ item.login }}</span>
+          <span class="item-meta" *ngIf="item.email">{{ item.email }}</span>
+          <span class="item-meta" *ngIf="!item.email">Brak adresu e-mail</span>
+          <div class="item-badges">
+            <span class="item-badge" [class.is-admin]="item.role === 'ADMIN'">
+              {{ roleLabel(item.role) }}
+            </span>
+            <span class="item-badge" [class.inactive]="item.isBlocked">
+              {{ item.isBlocked ? 'Zablokowany' : 'Aktywny' }}
+            </span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button
+            type="button"
+            class="item-action"
+            [disabled]="isActionPending(item.id)"
+            (click)="toggleBlocked(item)"
+          >
+            {{ item.isBlocked ? 'Odblokuj' : 'Zablokuj' }}
+          </button>
+          <button
+            type="button"
+            class="item-action item-action-danger"
+            [disabled]="isActionPending(item.id)"
+            (click)="deleteUser(item)"
+          >
+            Usuń
+          </button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="user-modal-overlay" *ngIf="isUserModalOpen" (click)="closeUserModal()">
+  <div class="user-modal" (click)="$event.stopPropagation()">
+    <div class="user-modal-header">
+      <h3>Dodaj użytkownika</h3>
+      <button type="button" class="user-modal-close" (click)="closeUserModal()" aria-label="Zamknij">×</button>
     </div>
-  </form>
+
+    <form class="item-form user-modal-form" [formGroup]="userAddForm" (ngSubmit)="saveNewUser()">
+      <label>
+        <span>Login</span>
+        <input type="text" formControlName="login" />
+      </label>
+      <label>
+        <span>E-mail (opcjonalnie)</span>
+        <input type="email" formControlName="email" />
+      </label>
+      <label>
+        <span>Hasło</span>
+        <input type="password" formControlName="password" />
+      </label>
+      <label>
+        <span>Rola</span>
+        <select formControlName="role">
+          <option value="WORKER">WORKER</option>
+          <option value="ADMIN">ADMIN</option>
+        </select>
+      </label>
+      <div class="user-modal-footer">
+        <button type="button" class="secondary-action" (click)="closeUserModal()">Anuluj</button>
+        <button type="submit" class="primary-action" [disabled]="isSaving">
+          {{ isSaving ? 'Zapisywanie...' : 'Zapisz' }}
+        </button>
+      </div>
+    </form>
+  </div>
 </div>

@@ -33,4 +33,17 @@ export interface AdminUser {
   id: number;
   login: string;
   role: UserRole;
+  email: string | null;
+  isBlocked: boolean;
+}
+
+export interface CreateAdminUserPayload {
+  login: string;
+  password: string;
+  role: UserRole;
+  email?: string | null;
+}
+
+export interface UpdateUserBlockedPayload {
+  isBlocked: boolean;
 }

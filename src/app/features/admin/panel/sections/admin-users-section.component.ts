@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { MOCK_ADMIN_USERS } from '../../mocks/admin-mock.data';
+import { HttpErrorResponse } from '@angular/common/http';
 import { AdminUser } from '../../models/admin-user.model';
+import { AdminUserService } from '../../services/admin-user.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
@@ -12,55 +13,139 @@ import { ToastService } from '../../../../core/admin/toast.service';
   templateUrl: './admin-users-section.component.html',
   styleUrl: './admin-users-section.component.scss'
 })
-export class AdminUsersSectionComponent {
-  items: AdminUser[] = [...MOCK_ADMIN_USERS];
-  editingId: number | null = null;
+export class AdminUsersSectionComponent implements OnInit {
+  items: AdminUser[] = [];
+  isLoading = false;
+  hasLoadError = false;
+  isSaving = false;
+  isUserModalOpen = false;
+  actionUserId: number | null = null;
 
-  form = this.fb.group({
+  userAddForm = this.fb.group({
     login: ['', Validators.required],
+    email: [''],
+    password: ['', [Validators.required, Validators.minLength(8)]],
     role: ['WORKER' as 'ADMIN' | 'WORKER', Validators.required]
   });
 
   constructor(
     private fb: FormBuilder,
+    private adminUserService: AdminUserService,
     private toastService: ToastService
   ) {}
 
-  startAdd(): void {
-    this.editingId = null;
-    this.form.reset({ login: '', role: 'WORKER' });
+  ngOnInit(): void {
+    this.loadUsers();
   }
 
-  startEdit(item: AdminUser): void {
-    this.editingId = item.id;
-    this.form.patchValue({ login: item.login, role: item.role });
+  openAddUserModal(): void {
+    this.userAddForm.reset({ login: '', email: '', password: '', role: 'WORKER' });
+    this.isUserModalOpen = true;
   }
 
-  save(): void {
-    if (this.form.invalid) {
-      this.form.markAllAsTouched();
+  closeUserModal(): void {
+    this.isUserModalOpen = false;
+    this.userAddForm.reset({ login: '', email: '', password: '', role: 'WORKER' });
+  }
+
+  saveNewUser(): void {
+    if (this.userAddForm.invalid) {
+      this.userAddForm.markAllAsTouched();
       this.toastService.warning('Uzupełnij wymagane pola użytkownika.');
       return;
     }
-    const value = this.form.getRawValue();
-    if (this.editingId) {
-      this.items = this.items.map((item) =>
-        item.id === this.editingId
-          ? { ...item, login: value.login!, role: value.role! }
-          : item
-      );
-    } else {
-      const nextId = Math.max(0, ...this.items.map((i) => i.id)) + 1;
-      this.items = [
-        ...this.items,
-        { id: nextId, login: value.login!, role: value.role! }
-      ];
+    const value = this.userAddForm.getRawValue();
+    const email = value.email?.trim();
+    this.isSaving = true;
+    this.adminUserService
+      .create({
+        login: value.login!.trim(),
+        password: value.password!,
+        role: value.role!,
+        email: email ? email : null
+      })
+      .subscribe({
+        next: () => {
+          this.isSaving = false;
+          this.toastService.success('Użytkownik został dodany.');
+          this.closeUserModal();
+          this.loadUsers();
+        },
+        error: (error: HttpErrorResponse) => {
+          this.isSaving = false;
+          this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się dodać użytkownika.'));
+        }
+      });
+  }
+
+  deleteUser(item: AdminUser): void {
+    if (!confirm(`Czy na pewno usunąć użytkownika „${item.login}”?`)) {
+      return;
     }
-    this.toastService.success('Dane użytkownika zostały zapisane lokalnie.');
-    this.startAdd();
+    this.actionUserId = item.id;
+    this.adminUserService.delete(item.id).subscribe({
+      next: () => {
+        this.actionUserId = null;
+        this.items = this.items.filter((user) => user.id !== item.id);
+        this.toastService.success('Użytkownik został usunięty.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.actionUserId = null;
+        this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się usunąć użytkownika.'));
+      }
+    });
+  }
+
+  toggleBlocked(item: AdminUser): void {
+    const nextBlocked = !item.isBlocked;
+    const actionLabel = nextBlocked ? 'zablokować' : 'odblokować';
+    if (!confirm(`Czy na pewno ${actionLabel} użytkownika „${item.login}”?`)) {
+      return;
+    }
+    this.actionUserId = item.id;
+    this.adminUserService.setBlocked(item.id, { isBlocked: nextBlocked }).subscribe({
+      next: (updated) => {
+        this.actionUserId = null;
+        this.items = this.items.map((user) => (user.id === updated.id ? updated : user));
+        this.toastService.success(nextBlocked ? 'Użytkownik został zablokowany.' : 'Użytkownik został odblokowany.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.actionUserId = null;
+        this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się zmienić statusu użytkownika.'));
+      }
+    });
+  }
+
+  isActionPending(userId: number): boolean {
+    return this.actionUserId === userId;
   }
 
   roleLabel(role: string): string {
     return role === 'ADMIN' ? 'Administrator' : 'Pracownik';
+  }
+
+  private loadUsers(): void {
+    this.isLoading = true;
+    this.hasLoadError = false;
+    this.adminUserService.getUsers().subscribe({
+      next: (users) => {
+        this.items = users;
+        this.isLoading = false;
+      },
+      error: () => {
+        this.hasLoadError = true;
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private resolveErrorMessage(error: HttpErrorResponse, fallback: string): string {
+    if (typeof error.error === 'string' && error.error.trim()) {
+      return error.error;
+    }
+    if (error.error?.message) {
+      return error.error.message;
+    }
+    return fallback;
   }
 }
