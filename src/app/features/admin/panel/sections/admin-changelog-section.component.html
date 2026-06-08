@@ -1,4 +1,12 @@
-<div class="section-body changelog-body">
+<p class="changelog-status" *ngIf="isLoading">Ładowanie dziennika aktywności...</p>
+<p class="changelog-status changelog-status-error" *ngIf="!isLoading && hasLoadError">
+  Nie udało się pobrać dziennika aktywności.
+</p>
+<p class="changelog-status" *ngIf="!isLoading && !hasLoadError && !logs.length">
+  Brak wpisów w dzienniku aktywności.
+</p>
+
+<div class="section-body changelog-body" *ngIf="!isLoading && !hasLoadError && logs.length">
   <ul class="changelog-list">
     <li class="changelog-row" *ngFor="let log of logs">
       <div class="changelog-head">

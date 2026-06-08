@@ -1,0 +1,97 @@
+<div class="broken-links-admin">
+  <div class="broken-links-header">
+    <h2 class="broken-links-title">Uszkodzone linki</h2>
+    <p class="broken-links-subtitle">Produkty z niedziałającymi adresami URL wymagające naprawy.</p>
+  </div>
+
+  <p class="broken-links-status" *ngIf="isLoading">Ładowanie uszkodzonych linków...</p>
+  <p class="broken-links-status broken-links-status-error" *ngIf="!isLoading && hasLoadError">
+    Nie udało się pobrać listy uszkodzonych linków.
+  </p>
+  <p class="broken-links-status" *ngIf="!isLoading && !hasLoadError && !items.length">
+    Brak uszkodzonych linków. Wszystko działa poprawnie.
+  </p>
+
+  <div class="section-body" *ngIf="!isLoading && !hasLoadError && items.length">
+    <ul class="item-list">
+      <li class="broken-link-list-item" *ngFor="let item of items; trackBy: trackByItem">
+        <div class="broken-link-card">
+          <div class="broken-link-card-body">
+            <img
+              class="broken-link-thumb"
+              [src]="productImageSrc(item.imageUrl)"
+              [alt]="item.productName"
+            />
+            <div class="broken-link-info">
+              <span class="broken-link-product-name">{{ item.productName }}</span>
+              <span class="broken-link-video-title">Film: {{ item.videoTitle }}</span>
+              <span class="broken-link-url">{{ item.shopUrl }}</span>
+            </div>
+          </div>
+          <div class="broken-link-action-group">
+            <span class="broken-link-badge">Uszkodzony</span>
+            <button type="button" class="broken-link-action" (click)="startEdit(item)">
+              {{ isEditing(item) ? 'Anuluj edycję' : 'Napraw' }}
+            </button>
+          </div>
+        </div>
+
+        <form
+          class="item-form broken-link-edit-form"
+          *ngIf="isEditing(item)"
+          [formGroup]="productEditForm"
+          (ngSubmit)="saveEdit(item)"
+        >
+          <h3>Naprawa linku produktu</h3>
+          <p class="broken-link-form-error" *ngIf="saveError">{{ saveError }}</p>
+          <label>
+            <span>URL do sklepu</span>
+            <input type="url" formControlName="shopUrl" (input)="onEditUrlInput()" />
+          </label>
+          <div *ngIf="editPreviewLoading || editPreview">
+            <p class="empty-state" *ngIf="editPreviewLoading">Pobieranie podglądu produktu...</p>
+            <div class="broken-link-preview" *ngIf="!editPreviewLoading && editPreview">
+              <img
+                class="broken-link-thumb"
+                [src]="productPreviewImageSrc(editPreview.imageUrl)"
+                [alt]="editPreview.name"
+              />
+              <div class="broken-link-info">
+                <span class="broken-link-product-name">{{ editPreview.name }}</span>
+                <span class="broken-link-video-title">{{ editPreview.platform }}</span>
+              </div>
+            </div>
+          </div>
+          <label>
+            <span>Nazwa</span>
+            <input type="text" formControlName="name" />
+          </label>
+          <label>
+            <span>URL obrazka</span>
+            <input type="url" formControlName="imageUrl" />
+          </label>
+          <div class="file-upload-field">
+            <span class="file-upload-label">Prześlij zdjęcie</span>
+            <input
+              [id]="'broken-link-image-' + item.productId"
+              type="file"
+              accept="image/*"
+              class="file-input-hidden"
+              (change)="onEditImageSelected($event)"
+            />
+            <label class="custom-file-upload" [attr.for]="'broken-link-image-' + item.productId">
+              <span>Wybierz plik</span>
+              <span class="custom-file-upload-name" *ngIf="editSelectedFileName">{{ editSelectedFileName }}</span>
+            </label>
+          </div>
+          <div class="form-actions">
+            <button type="button" class="secondary-action" (click)="cancelEdit()" [disabled]="isSaving">Anuluj</button>
+            <button type="submit" class="primary-action" [disabled]="isSaving">
+              {{ isSaving ? 'Zapisywanie...' : 'Zapisz' }}
+            </button>
+          </div>
+        </form>
+      </li>
+    </ul>
+  </div>
+</div>

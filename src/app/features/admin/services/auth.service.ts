@@ -27,17 +27,17 @@ export class AuthService {
   }
 
   logout(): void {
-    localStorage.removeItem(TOKEN_KEY);
-    localStorage.removeItem(ID_KEY);
-    localStorage.removeItem(LOGIN_KEY);
-    localStorage.removeItem(ROLE_KEY);
-    localStorage.removeItem(FIRST_NAME_KEY);
-    localStorage.removeItem(LAST_NAME_KEY);
-    localStorage.removeItem(EMAIL_KEY);
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(ID_KEY);
+    sessionStorage.removeItem(LOGIN_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
+    sessionStorage.removeItem(FIRST_NAME_KEY);
+    sessionStorage.removeItem(LAST_NAME_KEY);
+    sessionStorage.removeItem(EMAIL_KEY);
   }
 
   getToken(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+    return sessionStorage.getItem(TOKEN_KEY);
   }
 
   isLoggedIn(): boolean {
@@ -45,7 +45,7 @@ export class AuthService {
   }
 
   getUserId(): number | null {
-    const raw = localStorage.getItem(ID_KEY);
+    const raw = sessionStorage.getItem(ID_KEY);
     if (!raw) {
       return null;
     }
@@ -54,23 +54,23 @@ export class AuthService {
   }
 
   getLogin(): string | null {
-    return localStorage.getItem(LOGIN_KEY);
+    return sessionStorage.getItem(LOGIN_KEY);
   }
 
   getRole(): string | null {
-    return localStorage.getItem(ROLE_KEY);
+    return sessionStorage.getItem(ROLE_KEY);
   }
 
   getFirstName(): string | null {
-    return localStorage.getItem(FIRST_NAME_KEY);
+    return sessionStorage.getItem(FIRST_NAME_KEY);
   }
 
   getLastName(): string | null {
-    return localStorage.getItem(LAST_NAME_KEY);
+    return sessionStorage.getItem(LAST_NAME_KEY);
   }
 
   getEmail(): string | null {
-    return localStorage.getItem(EMAIL_KEY);
+    return sessionStorage.getItem(EMAIL_KEY);
   }
 
   getProfileSnapshot(): UserProfile | null {
@@ -91,14 +91,14 @@ export class AuthService {
   }
 
   updateProfileState(profile: UserProfile): void {
-    localStorage.setItem(ID_KEY, String(profile.id));
-    localStorage.setItem(LOGIN_KEY, profile.login);
-    localStorage.setItem(ROLE_KEY, profile.role);
+    sessionStorage.setItem(ID_KEY, String(profile.id));
+    sessionStorage.setItem(LOGIN_KEY, profile.login);
+    sessionStorage.setItem(ROLE_KEY, profile.role);
     this.setOptionalStorage(FIRST_NAME_KEY, profile.firstName);
     this.setOptionalStorage(LAST_NAME_KEY, profile.lastName);
     this.setOptionalStorage(EMAIL_KEY, profile.email);
     if (profile.token) {
-      localStorage.setItem(TOKEN_KEY, profile.token);
+      sessionStorage.setItem(TOKEN_KEY, profile.token);
     }
   }
 
@@ -107,10 +107,10 @@ export class AuthService {
   }
 
   private persistSession(response: LoginResponse): void {
-    localStorage.setItem(TOKEN_KEY, response.token);
-    localStorage.setItem(ID_KEY, String(response.id));
-    localStorage.setItem(LOGIN_KEY, response.login);
-    localStorage.setItem(ROLE_KEY, response.role);
+    sessionStorage.setItem(TOKEN_KEY, response.token);
+    sessionStorage.setItem(ID_KEY, String(response.id));
+    sessionStorage.setItem(LOGIN_KEY, response.login);
+    sessionStorage.setItem(ROLE_KEY, response.role);
     this.setOptionalStorage(FIRST_NAME_KEY, response.firstName);
     this.setOptionalStorage(LAST_NAME_KEY, response.lastName);
     this.setOptionalStorage(EMAIL_KEY, response.email);
@@ -118,9 +118,9 @@ export class AuthService {
 
   private setOptionalStorage(key: string, value: string | null): void {
     if (value == null || value === '') {
-      localStorage.removeItem(key);
+      sessionStorage.removeItem(key);
       return;
     }
-    localStorage.setItem(key, value);
+    sessionStorage.setItem(key, value);
   }
 }

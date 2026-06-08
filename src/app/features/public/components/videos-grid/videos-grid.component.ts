@@ -46,7 +46,7 @@ export class VideosGridComponent implements OnInit, OnChanges {
   }
 
   loadVideos(): void {
-    this.videoService.getVideos(this.selectedCategoryId).subscribe({
+    this.videoService.getPublicVideos(this.selectedCategoryId).subscribe({
       next: (videos) => {
         this.hasLoadError = false;
         this.videos = videos.filter((v) => v.isActive);

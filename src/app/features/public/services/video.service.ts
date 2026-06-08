@@ -80,9 +80,25 @@ export class VideoService {
       .pipe(map((rows) => rows.map((row) => this.mapRow(row))));
   }
 
+  getPublicVideos(categoryId: number | null = null): Observable<Video[]> {
+    let params = new HttpParams();
+    if (categoryId != null) {
+      params = params.set('categoryId', String(categoryId));
+    }
+    return this.http
+      .get<VideoApiResponse[]>(`${this.backendUrl}/api/public/videos`, { params })
+      .pipe(map((rows) => rows.map((row) => this.mapRow(row))));
+  }
+
   getById(id: number): Observable<Video> {
     return this.http
       .get<VideoApiResponse>(`${this.backendUrl}/api/videos/${id}`)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  getPublicById(id: number): Observable<Video> {
+    return this.http
+      .get<VideoApiResponse>(`${this.backendUrl}/api/public/videos/${id}`)
       .pipe(map((row) => this.mapRow(row)));
   }
 
@@ -101,6 +117,12 @@ export class VideoService {
   addProduct(videoId: number, payload: AddVideoProductPayload): Observable<Video> {
     return this.http
       .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products`, payload)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  updateProduct(videoId: number, productId: number, payload: AddVideoProductPayload): Observable<Video> {
+    return this.http
+      .put<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}`, payload)
       .pipe(map((row) => this.mapRow(row)));
   }
 

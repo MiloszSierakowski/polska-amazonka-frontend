@@ -1,4 +1,3 @@
-import { ChangeLog } from '../models/change-log.model';
 import { AdminUser } from '../models/admin-user.model';
 
 export interface AdminCategoryMock {
@@ -90,31 +89,4 @@ export const MOCK_ADMIN_DISCOUNTS: AdminDiscountMock[] = [
 export const MOCK_ADMIN_USERS: AdminUser[] = [
   { id: 1, login: 'admin', role: 'ADMIN' },
   { id: 2, login: 'worker1', role: 'WORKER' }
-];
-
-export const MOCK_CHANGE_LOGS: ChangeLog[] = [
-  {
-    id: 1,
-    userId: 1,
-    userLogin: 'admin',
-    action: 'DODANIE_FILMU',
-    details: 'Dodano film: Domowe gadżety #1',
-    createdAt: '2026-05-17T14:20:00'
-  },
-  {
-    id: 2,
-    userId: 1,
-    userLogin: 'admin',
-    action: 'DODANIE_KATEGORII',
-    details: 'Dodano kategorię: znaleziska',
-    createdAt: '2026-05-17T15:05:00'
-  },
-  {
-    id: 3,
-    userId: 2,
-    userLogin: 'worker1',
-    action: 'EDYCJA_PRODUKTU',
-    details: 'Zaktualizowano produkt: Organizer na bluzy',
-    createdAt: '2026-05-17T16:40:00'
-  }
 ];
