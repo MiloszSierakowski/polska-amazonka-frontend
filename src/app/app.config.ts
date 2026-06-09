@@ -6,14 +6,13 @@ import { provideCharts, withDefaultRegisterables } from 'ng2-charts';
 import { routes } from './app.routes';
 import { authInterceptor } from './core/interceptors/auth.interceptor';
 import { adminToastInterceptor } from './core/interceptors/admin-toast.interceptor';
-
-export const BACKEND_URL = 'http://localhost:8080';
+import { resolveBackendUrl } from './core/config/backend-url';
 
 export const appConfig: ApplicationConfig = {
   providers: [
     provideRouter(routes),
     provideHttpClient(withInterceptors([authInterceptor, adminToastInterceptor])),
     provideCharts(withDefaultRegisterables()),
-    { provide: 'BACKEND_URL', useValue: BACKEND_URL }
+    { provide: 'BACKEND_URL', useValue: resolveBackendUrl() }
   ]
 };
