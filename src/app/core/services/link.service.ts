@@ -7,7 +7,13 @@ export interface LinkDTO {
   url: string;
   type: string;
   isActive: boolean;
-  lastCheckedAt: string | null;
+  lastCheckedAt?: string | null;
+}
+
+export interface SaveLinkPayload {
+  url: string;
+  type?: string;
+  isActive?: boolean;
 }
 
 @Injectable({

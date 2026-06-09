@@ -1,0 +1,85 @@
+@import 'section-shared';
+
+.links-admin {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.links-status {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.links-status-error {
+  color: #dc2626;
+}
+
+.item-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.item-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  background: rgba(15, 23, 42, 0.45);
+}
+
+.modal-card {
+  width: min(100%, 24rem);
+  max-height: 90vh;
+  overflow: auto;
+  padding: 1rem;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.75rem;
+
+  h3 {
+    margin: 0;
+    font-size: 1rem;
+  }
+}
+
+.modal-close {
+  border: 0;
+  background: #f1f5f9;
+  border-radius: 0.5rem;
+  width: 2rem;
+  height: 2rem;
+  cursor: pointer;
+}
+
+.field-error-text,
+.form-alert-error {
+  margin: 0;
+  font-size: 0.8rem;
+  color: #dc2626;
+  font-weight: 600;
+}
+
+.field-hint {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #64748b;
+}

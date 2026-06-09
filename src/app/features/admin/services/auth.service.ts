@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable, finalize, of, tap } from 'rxjs';
 import { LoginResponse, UserProfile } from '../models/admin-user.model';
 
 const TOKEN_KEY = 'pa_admin_token';
@@ -26,14 +26,14 @@ export class AuthService {
       .pipe(tap((response) => this.persistSession(response)));
   }
 
-  logout(): void {
-    sessionStorage.removeItem(TOKEN_KEY);
-    sessionStorage.removeItem(ID_KEY);
-    sessionStorage.removeItem(LOGIN_KEY);
-    sessionStorage.removeItem(ROLE_KEY);
-    sessionStorage.removeItem(FIRST_NAME_KEY);
-    sessionStorage.removeItem(LAST_NAME_KEY);
-    sessionStorage.removeItem(EMAIL_KEY);
+  logout(): Observable<void> {
+    if (!this.isLoggedIn()) {
+      this.clearSession();
+      return of(void 0);
+    }
+    return this.http.post<void>(`${this.backendUrl}/api/auth/logout`, {}).pipe(
+      finalize(() => this.clearSession())
+    );
   }
 
   getToken(): string | null {
@@ -109,6 +109,16 @@ export class AuthService {
   canAccessPanel(): boolean {
     const role = this.getRole();
     return this.isLoggedIn() && (role === 'ADMIN' || role === 'WORKER');
+  }
+
+  private clearSession(): void {
+    sessionStorage.removeItem(TOKEN_KEY);
+    sessionStorage.removeItem(ID_KEY);
+    sessionStorage.removeItem(LOGIN_KEY);
+    sessionStorage.removeItem(ROLE_KEY);
+    sessionStorage.removeItem(FIRST_NAME_KEY);
+    sessionStorage.removeItem(LAST_NAME_KEY);
+    sessionStorage.removeItem(EMAIL_KEY);
   }
 
   private persistSession(response: LoginResponse): void {

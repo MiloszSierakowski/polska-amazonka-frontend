@@ -1,10 +1,26 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormBuilder,
+  ReactiveFormsModule,
+  ValidationErrors,
+  Validators
+} from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { AdminUser } from '../../models/admin-user.model';
 import { AdminUserService } from '../../services/admin-user.service';
 import { ToastService } from '../../../../core/admin/toast.service';
+import { parseApiError } from '../../../../core/admin/api-error.util';
+
+function optionalEmailValidator(control: AbstractControl): ValidationErrors | null {
+  const value = (control.value as string | null | undefined)?.trim();
+  if (!value) {
+    return null;
+  }
+  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  return emailPattern.test(value) ? null : { email: true };
+}
 
 @Component({
   selector: 'app-admin-users-section',
@@ -19,11 +35,13 @@ export class AdminUsersSectionComponent implements OnInit {
   hasLoadError = false;
   isSaving = false;
   isUserModalOpen = false;
+  formSubmitted = false;
   actionUserId: number | null = null;
+  saveError = '';
 
   userAddForm = this.fb.group({
-    login: ['', Validators.required],
-    email: [''],
+    login: ['', [Validators.required, Validators.minLength(3)]],
+    email: ['', [optionalEmailValidator]],
     password: ['', [Validators.required, Validators.minLength(8)]],
     role: ['WORKER' as 'ADMIN' | 'WORKER', Validators.required]
   });
@@ -39,19 +57,20 @@ export class AdminUsersSectionComponent implements OnInit {
   }
 
   openAddUserModal(): void {
-    this.userAddForm.reset({ login: '', email: '', password: '', role: 'WORKER' });
+    this.resetAddForm();
     this.isUserModalOpen = true;
   }
 
   closeUserModal(): void {
     this.isUserModalOpen = false;
-    this.userAddForm.reset({ login: '', email: '', password: '', role: 'WORKER' });
+    this.resetAddForm();
   }
 
   saveNewUser(): void {
+    this.saveError = '';
+    this.formSubmitted = true;
     if (this.userAddForm.invalid) {
       this.userAddForm.markAllAsTouched();
-      this.toastService.warning('Uzupełnij wymagane pola użytkownika.');
       return;
     }
     const value = this.userAddForm.getRawValue();
@@ -73,9 +92,42 @@ export class AdminUsersSectionComponent implements OnInit {
         },
         error: (error: HttpErrorResponse) => {
           this.isSaving = false;
-          this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się dodać użytkownika.'));
+          this.saveError = parseApiError(error).message;
         }
       });
+  }
+
+  showFieldError(fieldName: string): boolean {
+    const control = this.userAddForm.get(fieldName);
+    return !!(control && control.invalid && (control.touched || this.formSubmitted));
+  }
+
+  fieldErrorMessage(fieldName: string): string {
+    const control = this.userAddForm.get(fieldName);
+    if (!control?.errors) {
+      return '';
+    }
+    if (control.errors['required']) {
+      if (fieldName === 'login') {
+        return 'Login jest wymagany.';
+      }
+      if (fieldName === 'password') {
+        return 'Hasło jest wymagane.';
+      }
+      return 'To pole jest wymagane.';
+    }
+    if (control.errors['minlength']) {
+      if (fieldName === 'login') {
+        return 'Login musi mieć co najmniej 3 znaki.';
+      }
+      if (fieldName === 'password') {
+        return 'Hasło musi mieć co najmniej 8 znaków.';
+      }
+    }
+    if (control.errors['email']) {
+      return 'Podany adres e-mail jest nieprawidłowy.';
+    }
+    return 'Wartość w tym polu jest nieprawidłowa.';
   }
 
   deleteUser(item: AdminUser): void {
@@ -91,7 +143,7 @@ export class AdminUsersSectionComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.actionUserId = null;
-        this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się usunąć użytkownika.'));
+        this.toastService.error(parseApiError(error).message);
       }
     });
   }
@@ -111,7 +163,7 @@ export class AdminUsersSectionComponent implements OnInit {
       },
       error: (error: HttpErrorResponse) => {
         this.actionUserId = null;
-        this.toastService.error(this.resolveErrorMessage(error, 'Nie udało się zmienić statusu użytkownika.'));
+        this.toastService.error(parseApiError(error).message);
       }
     });
   }
@@ -122,6 +174,12 @@ export class AdminUsersSectionComponent implements OnInit {
 
   roleLabel(role: string): string {
     return role === 'ADMIN' ? 'Administrator' : 'Pracownik';
+  }
+
+  private resetAddForm(): void {
+    this.saveError = '';
+    this.formSubmitted = false;
+    this.userAddForm.reset({ login: '', email: '', password: '', role: 'WORKER' });
   }
 
   private loadUsers(): void {
@@ -137,15 +195,5 @@ export class AdminUsersSectionComponent implements OnInit {
         this.isLoading = false;
       }
     });
-  }
-
-  private resolveErrorMessage(error: HttpErrorResponse, fallback: string): string {
-    if (typeof error.error === 'string' && error.error.trim()) {
-      return error.error;
-    }
-    if (error.error?.message) {
-      return error.error.message;
-    }
-    return fallback;
   }
 }

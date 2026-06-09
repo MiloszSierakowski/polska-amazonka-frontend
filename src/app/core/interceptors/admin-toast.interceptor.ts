@@ -55,5 +55,8 @@ function shouldSkipHandledAdminError(error: HttpErrorResponse, method: string, u
   if (method.toUpperCase() === 'DELETE' && /\/api\/shops\/\d+$/.test(url) && error.status === 400) {
     return true;
   }
+  if (method.toUpperCase() === 'POST' && /\/api\/admin\/users$/.test(url)) {
+    return true;
+  }
   return false;
 }

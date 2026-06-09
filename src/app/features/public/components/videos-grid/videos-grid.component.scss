@@ -1,5 +1,6 @@
 .videos-section {
   margin-top: 20px;
+  padding-bottom: 12px;
 }
 
 .videos-grid {
@@ -27,6 +28,17 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
+}
+
+@media (max-width: 600px) {
+  .videos-section {
+    padding-bottom: 6px;
+  }
+
+  .videos-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
 }
 
 .no-videos {

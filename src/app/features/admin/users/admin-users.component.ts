@@ -37,8 +37,9 @@ export class AdminUsersComponent implements OnInit {
   }
 
   logout(): void {
-    this.authService.logout();
-    this.router.navigate(['/admin/login']);
+    this.authService.logout().subscribe(() => {
+      this.router.navigate(['/admin/login']);
+    });
   }
 
   roleLabel(role: string): string {

@@ -1,29 +1,31 @@
-<div class="categories-scroll" *ngIf="!hasLoadError" (wheel)="onWheel($event)">
-  <div
-    class="categories-inner"
-    cdkDropList
-    cdkDropListOrientation="horizontal"
-    [cdkDropListDisabled]="true"
-  >
-    <button
-      type="button"
-      class="category-box"
-      *ngFor="let c of categories; trackBy: trackByCategoryId"
-      cdkDrag
-      [cdkDragDisabled]="true"
-      [class.active]="c.id === selectedCategoryId"
-      (click)="selectCategory(c.id)"
+<div class="categories-shell" *ngIf="!hasLoadError">
+  <div class="categories-scroll" (wheel)="onWheel($event)">
+    <div
+      class="categories-inner"
+      cdkDropList
+      cdkDropListOrientation="horizontal"
+      [cdkDropListDisabled]="true"
     >
-      <span class="category-icon-wrapper">
-        <img
-          [src]="c.displayImageUrl"
-          [alt]="c.name"
-          class="category-icon"
-          width="220"
-          height="72"
-          (error)="onImageError($event, c)"
-        />
-      </span>
-    </button>
+      <button
+        type="button"
+        class="category-box"
+        *ngFor="let c of categories; trackBy: trackByCategoryId"
+        cdkDrag
+        [cdkDragDisabled]="true"
+        [class.active]="c.id === selectedCategoryId"
+        (click)="selectCategory(c.id)"
+      >
+        <span class="category-icon-wrapper">
+          <img
+            [src]="c.displayImageUrl"
+            [alt]="c.name"
+            class="category-icon"
+            width="220"
+            height="72"
+            (error)="onImageError($event, c)"
+          />
+        </span>
+      </button>
+    </div>
   </div>
 </div>

@@ -40,7 +40,7 @@
           </button>
           <button
             type="button"
-            class="item-action item-action-danger"
+            class="item-action danger"
             [disabled]="isActionPending(item.id)"
             (click)="deleteUser(item)"
           >
@@ -60,25 +60,61 @@
     </div>
 
     <form class="item-form user-modal-form" [formGroup]="userAddForm" (ngSubmit)="saveNewUser()">
-      <label>
+      <p class="form-alert-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
+
+      <label class="field-shell">
         <span>Login</span>
-        <input type="text" formControlName="login" />
+        <div class="field-control">
+          <input
+            type="text"
+            formControlName="login"
+            autocomplete="username"
+            [class.is-invalid]="showFieldError('login')"
+          />
+          <p class="field-error-text" *ngIf="showFieldError('login')" role="alert">
+            {{ fieldErrorMessage('login') }}
+          </p>
+        </div>
       </label>
-      <label>
+
+      <label class="field-shell">
         <span>E-mail (opcjonalnie)</span>
-        <input type="email" formControlName="email" />
+        <div class="field-control">
+          <input
+            type="email"
+            formControlName="email"
+            autocomplete="email"
+            [class.is-invalid]="showFieldError('email')"
+          />
+          <p class="field-error-text" *ngIf="showFieldError('email')" role="alert">
+            {{ fieldErrorMessage('email') }}
+          </p>
+        </div>
       </label>
-      <label>
+
+      <label class="field-shell">
         <span>Hasło</span>
-        <input type="password" formControlName="password" />
+        <div class="field-control">
+          <input
+            type="password"
+            formControlName="password"
+            autocomplete="new-password"
+            [class.is-invalid]="showFieldError('password')"
+          />
+          <p class="field-error-text" *ngIf="showFieldError('password')" role="alert">
+            {{ fieldErrorMessage('password') }}
+          </p>
+        </div>
       </label>
-      <label>
+
+      <label class="field-shell">
         <span>Rola</span>
         <select formControlName="role">
-          <option value="WORKER">WORKER</option>
-          <option value="ADMIN">ADMIN</option>
+          <option value="WORKER">Pracownik</option>
+          <option value="ADMIN">Administrator</option>
         </select>
       </label>
+
       <div class="user-modal-footer">
         <button type="button" class="secondary-action" (click)="closeUserModal()">Anuluj</button>
         <button type="submit" class="primary-action" [disabled]="isSaving">

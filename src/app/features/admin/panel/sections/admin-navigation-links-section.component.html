@@ -1,0 +1,80 @@
+<div class="links-admin">
+  <div class="form-actions">
+    <button type="button" class="btn-primary" (click)="openAddModal()">Dodaj link</button>
+  </div>
+
+  <p class="links-status" *ngIf="isLoading">Ładowanie linków...</p>
+  <p class="links-status links-status-error" *ngIf="!isLoading && hasLoadError">
+    Nie udało się pobrać listy linków.
+  </p>
+  <p class="links-status" *ngIf="!isLoading && !hasLoadError && !items.length">
+    Brak linków social media.
+  </p>
+
+  <div class="section-body" *ngIf="!isLoading && !hasLoadError">
+    <ul class="item-list" *ngIf="items.length">
+      <li class="item-row" *ngFor="let item of items">
+        <div class="item-main">
+          <span class="item-title">{{ platformLabel(item.url) }}</span>
+          <span class="item-meta">{{ item.url }}</span>
+          <div class="item-badges">
+            <span class="item-badge" [class.inactive]="!item.isActive">
+              {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
+            </span>
+            <span class="item-badge">{{ item.type }}</span>
+          </div>
+        </div>
+        <div class="item-actions">
+          <button type="button" class="item-action" (click)="openEditModal(item)">Edytuj</button>
+          <button type="button" class="item-action danger" (click)="openDeleteModal(item)">Usuń</button>
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <h3>{{ modalTitle() }}</h3>
+      <button type="button" class="modal-close" (click)="closeModal()" aria-label="Zamknij">×</button>
+    </div>
+
+    <form class="item-form" [formGroup]="linkForm" (ngSubmit)="saveLink()">
+      <p class="form-alert-error" *ngIf="saveError" role="alert">{{ saveError }}</p>
+
+      <label>
+        <span>Adres URL</span>
+        <input type="url" formControlName="url" [class.is-invalid]="showFieldError('url')" />
+        <p class="field-error-text" *ngIf="showFieldError('url')" role="alert">
+          {{ fieldErrorMessage('url') }}
+        </p>
+      </label>
+
+      <label class="checkbox-row">
+        <input type="checkbox" formControlName="isActive" />
+        <span>Aktywny</span>
+      </label>
+
+      <div class="form-actions">
+        <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Anuluj</button>
+        <button type="submit" class="btn-primary" [disabled]="isSaving">
+          {{ isSaving ? 'Zapisywanie...' : 'Zapisz' }}
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <h3>Potwierdzenie usunięcia</h3>
+    <p>Czy na pewno chcesz usunąć ten link social media?</p>
+    <div class="form-actions">
+      <button type="button" class="btn-secondary" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="item-action danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Usuwanie...' : 'Potwierdź usunięcie' }}
+      </button>
+    </div>
+  </div>
+</div>

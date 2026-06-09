@@ -1,13 +1,24 @@
 @import "../../../../../styles/breakpoints";
 @import "../../../../../styles/scaling";
 
+:host {
+  display: block;
+  overflow: visible;
+}
+
+.categories-shell {
+  width: 100%;
+  overflow: visible;
+  padding: $space-sm 0;
+}
+
 .categories-scroll {
   width: 100%;
   overflow-x: auto;
-  overflow-y: hidden;
-  white-space: nowrap;
+  overflow-y: visible;
   scrollbar-width: none;
-  padding: $space-sm 0;
+  scroll-padding-inline: $space-md;
+  -webkit-overflow-scrolling: touch;
 
   &::-webkit-scrollbar {
     display: none;
@@ -19,7 +30,7 @@
   flex-wrap: nowrap;
   width: max-content;
   gap: $categories-gap;
-  padding: 0 $categories-padding-x;
+  padding: $space-xs $categories-padding-x;
   align-items: center;
 }
 
@@ -28,23 +39,28 @@
   min-width: 4.5rem;
   border: 0;
   background: transparent;
-  padding: 0;
+  padding: 3px;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  overflow: visible;
   transition: transform 0.2s ease;
 
   &:active {
-    transform: scale(0.92);
+    transform: scale(0.96);
   }
 }
 
 .category-icon-wrapper {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   border-radius: $category-radius;
   border: $category-border-width solid transparent;
-  padding: 1px;
+  padding: 2px;
   transition: border-color 0.2s, background 0.2s;
+  overflow: visible;
 }
 
 .category-box.active .category-icon-wrapper {
@@ -58,7 +74,28 @@
   width: auto;
   height: auto;
   min-width: 4rem;
-  min-height: 2.25rem;
   max-height: $category-icon-max-height;
   object-fit: contain;
+}
+
+@media (max-width: $mobile) {
+  .categories-shell {
+    padding: $space-md 0;
+  }
+
+  .categories-scroll {
+    scroll-padding-inline: $space-lg;
+  }
+
+  .categories-inner {
+    padding: $space-sm clamp(1rem, 5vw, 1.5rem);
+  }
+
+  .category-box {
+    padding: 4px;
+  }
+
+  .category-icon {
+    max-height: clamp(3.75rem, 3.25rem + 3vw, 5.25rem);
+  }
 }

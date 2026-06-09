@@ -32,11 +32,11 @@ export class HeaderComponent implements OnInit {
 
   getPlatform(url: string): string {
     const lower = url.toLowerCase();
-    if (lower.includes("tiktok")) return "tiktok";
-    if (lower.includes("instagram")) return "instagram";
-    if (lower.includes("facebook")) return "facebook";
-    if (lower.includes("youtube")) return "youtube";
-    return "default";
+    if (lower.includes('tiktok')) return 'tiktok';
+    if (lower.includes('instagram')) return 'instagram';
+    if (lower.includes('facebook')) return 'facebook';
+    if (lower.includes('youtube')) return 'youtube';
+    return 'default';
   }
 
   getIconPath(url: string): string {
