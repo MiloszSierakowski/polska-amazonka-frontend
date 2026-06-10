@@ -320,9 +320,25 @@
 
       <div class="video-modal-footer">
         <button type="button" class="secondary-action" (click)="closeVideoModal()">Anuluj</button>
-        <button type="button" class="video-form-btn video-form-btn-danger" (click)="deleteVideo(video)">Usuń film</button>
+        <button type="button" class="video-form-btn video-form-btn-danger" (click)="openDeleteModal(video)">Usuń film</button>
         <button type="submit" class="video-form-btn video-form-btn-primary">Zapisz film</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="video-delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+  <div class="video-delete-modal" role="dialog" aria-modal="true" aria-labelledby="video-delete-title" (click)="$event.stopPropagation()">
+    <h3 id="video-delete-title">Usunąć film?</h3>
+    <p *ngIf="deleteTargetVideo as video">
+      Czy na pewno chcesz usunąć film <strong>„{{ video.title }}”</strong>?
+      Produkty używane wyłącznie w tym filmie zostaną trwale usunięte.
+    </p>
+    <div class="video-delete-modal-actions">
+      <button type="button" class="secondary-action" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="video-form-btn video-form-btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Usuwanie…' : 'Usuń film' }}
+      </button>
+    </div>
   </div>
 </div>

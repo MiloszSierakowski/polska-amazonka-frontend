@@ -23,6 +23,9 @@ export class AdminVideosSectionComponent implements OnInit {
   openedVideoId: number | null = null;
   isVideoModalOpen = false;
   modalVideoId: number | null = null;
+  deleteModalOpen = false;
+  deleteTargetVideo: AdminVideoMock | null = null;
+  isDeleting = false;
   editingProductId: number | null = null;
   isAddingNewProduct = false;
   showNewProductForm = false;
@@ -170,23 +173,43 @@ export class AdminVideosSectionComponent implements OnInit {
       });
   }
 
-  deleteVideo(video: AdminVideoMock): void {
-    const confirmed = window.confirm(
-      'Czy na pewno usunąć ten film? Produkty używane tylko w tym filmie zostaną trwale usunięte.'
-    );
-    if (!confirmed) {
+  openDeleteModal(video: AdminVideoMock): void {
+    this.deleteTargetVideo = video;
+    this.deleteModalOpen = true;
+  }
+
+  cancelDelete(): void {
+    if (this.isDeleting) {
       return;
     }
-    this.videoService.delete(video.id).subscribe(() => {
-      this.toastService.success('Film został usunięty.');
-      if (this.openedVideoId === video.id) {
-        this.openedVideoId = null;
-        this.cancelProductForm();
+    this.deleteModalOpen = false;
+    this.deleteTargetVideo = null;
+  }
+
+  confirmDelete(): void {
+    const video = this.deleteTargetVideo;
+    if (!video || this.isDeleting) {
+      return;
+    }
+    this.isDeleting = true;
+    this.videoService.delete(video.id).subscribe({
+      next: () => {
+        this.isDeleting = false;
+        this.deleteModalOpen = false;
+        this.deleteTargetVideo = null;
+        this.toastService.success('Film został usunięty.');
+        if (this.openedVideoId === video.id) {
+          this.openedVideoId = null;
+          this.cancelProductForm();
+        }
+        if (this.modalVideoId === video.id) {
+          this.closeVideoModal();
+        }
+        this.loadVideos();
+      },
+      error: () => {
+        this.isDeleting = false;
       }
-      if (this.modalVideoId === video.id) {
-        this.closeVideoModal();
-      }
-      this.loadVideos();
     });
   }
 
