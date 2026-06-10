@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, OnChanges, OnInit, Output, SimpleChanges } from '@angular/core';
+import { Component, EventEmitter, Input, OnChanges, OnDestroy, OnInit, Output, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { ClickStatService } from '../../services/click-stat.service';
@@ -14,7 +14,7 @@ import { Shop } from '../../../../core/models/shop.model';
   templateUrl: './videos-grid.component.html',
   styleUrl: './videos-grid.component.scss'
 })
-export class VideosGridComponent implements OnInit, OnChanges {
+export class VideosGridComponent implements OnInit, OnChanges, OnDestroy {
   @Input() selectedCategoryId: number | null = null;
   @Output() loadFailed = new EventEmitter<void>();
 
@@ -25,6 +25,7 @@ export class VideosGridComponent implements OnInit, OnChanges {
   hasLoadError = false;
   private readonly brokenPreviewUrls = new Set<string>();
   private readonly brokenProductImageIds = new Set<number>();
+  private modalHistoryOpen = false;
 
   constructor(
     private videoService: VideoService,
@@ -37,6 +38,12 @@ export class VideosGridComponent implements OnInit, OnChanges {
 
   ngOnInit(): void {
     this.shopMatcherService.loadActiveShops().subscribe();
+    window.addEventListener('popstate', this.handlePopState);
+  }
+
+  ngOnDestroy(): void {
+    window.removeEventListener('popstate', this.handlePopState);
+    document.body.style.overflow = '';
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -110,9 +117,33 @@ export class VideosGridComponent implements OnInit, OnChanges {
     this.selectedVideo = video;
     this.safeVideoUrl = this.getTikTokSafeUrl(video.tiktokUrl);
     document.body.style.overflow = 'hidden';
+    this.pushModalHistoryState();
   }
 
   closeModal(): void {
+    if (this.modalHistoryOpen) {
+      window.history.back();
+      return;
+    }
+    this.closeModalState();
+  }
+
+  private readonly handlePopState = (): void => {
+    if (this.selectedVideo) {
+      this.closeModalState();
+    }
+    this.modalHistoryOpen = false;
+  };
+
+  private pushModalHistoryState(): void {
+    if (this.modalHistoryOpen) {
+      return;
+    }
+    window.history.pushState({ ...(window.history.state ?? {}), videoModalOpen: true }, '', window.location.href);
+    this.modalHistoryOpen = true;
+  }
+
+  private closeModalState(): void {
     this.selectedVideo = null;
     this.safeVideoUrl = null;
     this.isLoadingVideo = false;
