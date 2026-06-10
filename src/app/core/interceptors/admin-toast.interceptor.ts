@@ -58,5 +58,8 @@ function shouldSkipHandledAdminError(error: HttpErrorResponse, method: string, u
   if (method.toUpperCase() === 'POST' && /\/api\/admin\/users$/.test(url)) {
     return true;
   }
+  if (method.toUpperCase() === 'POST' && /\/api\/auth\/login$/.test(url)) {
+    return true;
+  }
   return false;
 }

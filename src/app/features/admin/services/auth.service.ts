@@ -26,6 +26,10 @@ export class AuthService {
       .pipe(tap((response) => this.persistSession(response)));
   }
 
+  clearLocalSession(): void {
+    this.clearSession();
+  }
+
   logout(): Observable<void> {
     if (!this.isLoggedIn()) {
       this.clearSession();
