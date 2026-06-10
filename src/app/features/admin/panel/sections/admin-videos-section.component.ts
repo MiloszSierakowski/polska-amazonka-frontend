@@ -356,17 +356,21 @@ export class AdminVideosSectionComponent implements OnInit {
         return;
       }
       const value = this.productEditForm.getRawValue();
-      video.products = video.products.map((product) =>
-        product.id === this.editingProductId
-          ? {
-              ...product,
-              name: value.name!,
-              imageUrl: value.imageUrl ?? '',
-              shopUrl: value.shopUrl!
-            }
-          : product
-      );
-      this.cancelProductForm();
+      const productId = this.editingProductId;
+      this.videoService
+        .updateProduct(video.id, productId, {
+          name: value.name || undefined,
+          imageUrl: value.imageUrl || undefined,
+          productLink: {
+            url: value.shopUrl!,
+            type: 'product'
+          }
+        })
+        .subscribe(() => {
+          this.toastService.success('Produkt został zapisany.');
+          this.cancelProductForm();
+          this.refreshVideo(video.id);
+        });
       return;
     }
     if (this.productAddForm.invalid) {
