@@ -80,11 +80,13 @@
   .header {
     min-height: clamp(10.5rem, 9rem + 8vw, 13rem);
     padding: clamp(1rem, 0.75rem + 1.4vw, 1.5rem) 0;
+    justify-content: flex-start;
   }
 
   .header-logo {
     height: clamp(7.25rem, 6rem + 6vw, 9.5rem);
-    max-width: calc(100% - 3.75rem);
+    max-width: calc(100% - 4.75rem);
+    margin-left: clamp(0.35rem, 0.2rem + 0.8vw, 0.75rem);
   }
 
   .social-icons {
@@ -115,7 +117,8 @@
 
   .header-logo {
     height: 7rem;
-    max-width: calc(100% - 3.25rem);
+    max-width: calc(100% - 4.15rem);
+    margin-left: 0.25rem;
   }
 
   .social-icons {
