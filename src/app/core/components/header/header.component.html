@@ -9,7 +9,7 @@
         rel="noopener noreferrer"
         (click)="onLinkClick(link.id)"
       >
-        <img [src]="getIconPath(link.url)" alt="social-icon" width="64" height="64" />
+        <img [src]="resolveIconPath(link)" alt="social-icon" width="64" height="64" />
       </a>
 
       <div class="drawer">

@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
-import { LinkDTO, SaveLinkPayload } from '../../../../core/services/link.service';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
+import { LinkDTO, LinkService, SaveLinkPayload } from '../../../../core/services/link.service';
 import { AdminLinkService } from '../../services/admin-link.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { parseApiError } from '../../../../core/admin/api-error.util';
@@ -10,7 +11,7 @@ import { parseApiError } from '../../../../core/admin/api-error.util';
 @Component({
   selector: 'app-admin-navigation-links-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, DragDropModule],
   templateUrl: './admin-navigation-links-section.component.html',
   styleUrl: './admin-navigation-links-section.component.scss'
 })
@@ -26,6 +27,12 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
   editingLinkId: number | null = null;
   formSubmitted = false;
   saveError = '';
+  selectedImageFile: File | null = null;
+  selectedImageFileName = '';
+  selectedImagePreviewUrl: string | null = null;
+  currentImagePath: string | null = null;
+  activeToggleId: number | null = null;
+  isSavingOrder = false;
 
   linkForm = this.fb.group({
     url: ['', Validators.required],
@@ -35,6 +42,7 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private adminLinkService: AdminLinkService,
+    private linkService: LinkService,
     private toastService: ToastService
   ) {}
 
@@ -56,6 +64,10 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
       url: item.url,
       isActive: item.isActive ?? true
     });
+    this.selectedImageFile = null;
+    this.selectedImageFileName = '';
+    this.revokeSelectedImagePreview();
+    this.currentImagePath = item.imagePath ?? null;
     this.isModalOpen = true;
   }
 
@@ -78,8 +90,8 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     }
     this.isSaving = true;
     const request$ = this.editingLinkId == null
-      ? this.adminLinkService.create(payload)
-      : this.adminLinkService.update(this.editingLinkId, payload);
+      ? this.adminLinkService.create(payload, this.selectedImageFile)
+      : this.adminLinkService.update(this.editingLinkId, payload, this.selectedImageFile);
 
     request$.subscribe({
       next: () => {
@@ -93,6 +105,62 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
       error: (error: HttpErrorResponse) => {
         this.isSaving = false;
         this.saveError = parseApiError(error).message;
+      }
+    });
+  }
+
+  onImageSelected(event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const file = input.files?.[0] ?? null;
+    this.revokeSelectedImagePreview();
+    this.selectedImageFile = file;
+    this.selectedImageFileName = file?.name ?? '';
+    this.selectedImagePreviewUrl = file ? URL.createObjectURL(file) : null;
+  }
+
+  toggleActive(item: LinkDTO, event: Event): void {
+    const input = event.target as HTMLInputElement;
+    const nextActive = input.checked;
+    const previousActive = item.isActive;
+    item.isActive = nextActive;
+    this.activeToggleId = item.id;
+    this.adminLinkService.update(
+      item.id,
+      {
+        url: item.url,
+        type: 'social',
+        isActive: nextActive
+      },
+      null
+    ).subscribe({
+      next: (updated) => {
+        this.activeToggleId = null;
+        this.items = this.items.map((link) => (link.id === updated.id ? updated : link));
+        this.toastService.success(nextActive ? 'Link został aktywowany.' : 'Link został wyłączony.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.activeToggleId = null;
+        item.isActive = previousActive;
+        this.toastService.error(parseApiError(error).message);
+      }
+    });
+  }
+
+  drop(event: CdkDragDrop<LinkDTO[]>): void {
+    if (event.previousIndex === event.currentIndex || this.isSavingOrder) {
+      return;
+    }
+    moveItemInArray(this.items, event.previousIndex, event.currentIndex);
+    this.isSavingOrder = true;
+    this.adminLinkService.reorder(this.items.map((item) => item.id)).subscribe({
+      next: () => {
+        this.isSavingOrder = false;
+        this.toastService.success('Kolejność linków została zapisana.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.isSavingOrder = false;
+        this.toastService.error(parseApiError(error).message);
+        this.loadLinks();
       }
     });
   }
@@ -160,6 +228,29 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     return 'Social';
   }
 
+  resolveIconPreview(item: LinkDTO): string {
+    return this.linkService.resolveIconUrl(item);
+  }
+
+  hasUploadedIcon(item: LinkDTO): boolean {
+    return !!item.imagePath?.trim();
+  }
+
+  modalImagePreview(): string | null {
+    if (this.selectedImagePreviewUrl) {
+      return this.selectedImagePreviewUrl;
+    }
+    if (this.currentImagePath) {
+      return this.linkService.resolveImageUrl(this.currentImagePath);
+    }
+    const url = this.linkForm.value.url?.trim();
+    return url ? this.linkService.defaultIconUrl(url) : this.linkService.defaultIconUrl('');
+  }
+
+  modalUsesDefaultIcon(): boolean {
+    return !this.selectedImagePreviewUrl && !this.currentImagePath;
+  }
+
   private buildPayload(): SaveLinkPayload | null {
     if (this.linkForm.invalid) {
       return null;
@@ -175,6 +266,10 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
   private resetForm(): void {
     this.saveError = '';
     this.formSubmitted = false;
+    this.revokeSelectedImagePreview();
+    this.selectedImageFile = null;
+    this.selectedImageFileName = '';
+    this.currentImagePath = null;
     this.linkForm.reset({
       url: '',
       isActive: true
@@ -194,5 +289,12 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
         this.hasLoadError = true;
       }
     });
+  }
+
+  private revokeSelectedImagePreview(): void {
+    if (this.selectedImagePreviewUrl) {
+      URL.revokeObjectURL(this.selectedImagePreviewUrl);
+      this.selectedImagePreviewUrl = null;
+    }
   }
 }

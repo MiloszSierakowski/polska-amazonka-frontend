@@ -12,8 +12,29 @@
   </p>
 
   <div class="section-body" *ngIf="!isLoading && !hasLoadError">
-    <ul class="item-list" *ngIf="items.length">
-      <li class="item-row" *ngFor="let item of items">
+    <p class="reorder-hint" *ngIf="items.length">Przeciągnij linki, aby zmienić kolejność wyświetlania w headerze.</p>
+    <ul
+      class="item-list"
+      *ngIf="items.length"
+      cdkDropList
+      (cdkDropListDropped)="drop($event)"
+      [cdkDropListDisabled]="isSavingOrder"
+    >
+      <li
+        class="item-row"
+        *ngFor="let item of items"
+        cdkDrag
+        [cdkDragDisabled]="isSavingOrder"
+      >
+        <div class="link-drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
+        <img
+          class="link-icon-preview"
+          [class.default-icon-preview]="!hasUploadedIcon(item)"
+          [src]="resolveIconPreview(item)"
+          [alt]="platformLabel(item.url)"
+          width="48"
+          height="48"
+        />
         <div class="item-main">
           <span class="item-title">{{ platformLabel(item.url) }}</span>
           <span class="item-meta">{{ item.url }}</span>
@@ -25,6 +46,15 @@
           </div>
         </div>
         <div class="item-actions">
+          <label class="active-toggle" [class.is-disabled]="activeToggleId === item.id">
+            <input
+              type="checkbox"
+              [checked]="item.isActive"
+              (change)="toggleActive(item, $event)"
+              [disabled]="activeToggleId === item.id"
+            />
+            <span>{{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}</span>
+          </label>
           <button type="button" class="item-action" (click)="openEditModal(item)">Edytuj</button>
           <button type="button" class="item-action danger" (click)="openDeleteModal(item)">Usuń</button>
         </div>
@@ -55,6 +85,29 @@
         <input type="checkbox" formControlName="isActive" />
         <span>Aktywny</span>
       </label>
+
+      <div class="file-upload-field">
+        <span class="file-upload-label">Ikona social media</span>
+        <input
+          id="social-link-icon-file"
+          type="file"
+          accept="image/*"
+          class="file-input-hidden"
+          (change)="onImageSelected($event)"
+        />
+        <label class="custom-file-upload" for="social-link-icon-file">
+          <span>Prześlij ikonę</span>
+          <span class="custom-file-upload-name" *ngIf="selectedImageFileName">{{ selectedImageFileName }}</span>
+        </label>
+        <img
+          *ngIf="modalImagePreview()"
+          class="modal-icon-preview"
+          [class.default-icon-preview]="modalUsesDefaultIcon()"
+          [src]="modalImagePreview()!"
+          alt="Obecna ikona social media"
+        />
+        <p class="field-hint">Jeśli nie wgrasz ikony, strona użyje domyślnej ikony na podstawie adresu URL.</p>
+      </div>
 
       <div class="form-actions">
         <button type="button" class="btn-secondary" (click)="closeModal()" [disabled]="isSaving">Anuluj</button>

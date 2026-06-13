@@ -42,4 +42,8 @@ export class HeaderComponent implements OnInit {
   getIconPath(url: string): string {
     return 'assets/icons/' + this.getPlatform(url) + '.png';
   }
+
+  resolveIconPath(link: LinkDTO): string {
+    return this.linkService.resolveIconUrl(link);
+  }
 }

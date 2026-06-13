@@ -20,15 +20,29 @@ export class AdminLinkService {
     return this.http.get<LinkDTO[]>(this.apiUrl);
   }
 
-  create(payload: SaveLinkPayload): Observable<LinkDTO> {
-    return this.http.post<LinkDTO>(this.apiUrl, payload);
+  create(payload: SaveLinkPayload, imageFile: File | null): Observable<LinkDTO> {
+    return this.http.post<LinkDTO>(this.apiUrl, this.buildFormData(payload, imageFile));
   }
 
-  update(id: number, payload: SaveLinkPayload): Observable<LinkDTO> {
-    return this.http.put<LinkDTO>(`${this.apiUrl}/${id}`, payload);
+  update(id: number, payload: SaveLinkPayload, imageFile: File | null): Observable<LinkDTO> {
+    return this.http.put<LinkDTO>(`${this.apiUrl}/${id}`, this.buildFormData(payload, imageFile));
   }
 
   delete(id: number): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
+
+  reorder(orderedIds: number[]): Observable<void> {
+    return this.http.put<void>(`${this.apiUrl}/social/reorder`, orderedIds);
+  }
+
+  private buildFormData(payload: SaveLinkPayload, imageFile: File | null): FormData {
+    const formData = new FormData();
+    formData.append('url', payload.url);
+    formData.append('isActive', String(payload.isActive ?? true));
+    if (imageFile) {
+      formData.append('imageFile', imageFile);
+    }
+    return formData;
   }
 }
