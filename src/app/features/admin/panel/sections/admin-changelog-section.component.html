@@ -67,7 +67,7 @@
         <span class="changelog-action">{{ log.action }}</span>
         <span class="changelog-date">{{ formatDate(log.createdAt) }}</span>
       </div>
-      <p class="changelog-details">{{ log.details }}</p>
+      <p class="changelog-details" [innerHTML]="log.details | urlFormatter"></p>
       <span class="changelog-user">{{ log.userLogin }} (ID: {{ log.userId }})</span>
     </li>
   </ul>

@@ -5,11 +5,12 @@ import { ChangeLog } from '../../models/change-log.model';
 import { ChangeLogService } from '../../services/changelog.service';
 import { AdminUser } from '../../models/admin-user.model';
 import { AdminUserService } from '../../services/admin-user.service';
+import { UrlFormatterPipe } from '../../pipes/url-formatter.pipe';
 
 @Component({
   selector: 'app-admin-changelog-section',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, UrlFormatterPipe],
   templateUrl: './admin-changelog-section.component.html',
   styleUrl: './admin-changelog-section.component.scss'
 })
