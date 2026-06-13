@@ -229,6 +229,53 @@
   z-index: 1100;
 }
 
+.delete-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 1150;
+}
+
+.delete-modal {
+  width: min(100%, 28rem);
+  background: #fff;
+  border-radius: 1rem;
+  padding: 1.25rem;
+  box-shadow: 0 20px 50px rgba(15, 23, 42, 0.25);
+}
+
+.delete-modal h3 {
+  margin: 0 0 0.75rem;
+  font-size: 1.1rem;
+  color: #0f172a;
+}
+
+.delete-modal p {
+  margin: 0 0 1rem;
+  color: #475569;
+  line-height: 1.5;
+}
+
+.delete-modal-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+
+  .secondary-action,
+  .primary-action {
+    flex: 1 1 auto;
+    min-width: 7rem;
+  }
+
+  .danger-action {
+    background: linear-gradient(135deg, #dc2626, #b91c1c);
+  }
+}
+
 .lock-modal {
   width: min(100%, 28rem);
   background: #fff;

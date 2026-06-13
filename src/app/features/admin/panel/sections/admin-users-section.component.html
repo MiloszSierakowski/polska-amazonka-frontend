@@ -5,6 +5,16 @@
     </button>
   </div>
 
+  <label class="users-search">
+    <span>Szukaj użytkownika</span>
+    <input
+      type="text"
+      [(ngModel)]="searchQuery"
+      placeholder="Login, e-mail lub rola"
+      autocomplete="off"
+    />
+  </label>
+
   <p class="users-status" *ngIf="isLoading">Ładowanie użytkowników...</p>
   <p class="users-status users-status-error" *ngIf="!isLoading && hasLoadError">
     Nie udało się pobrać listy użytkowników.
@@ -14,8 +24,8 @@
   </p>
 
   <div class="section-body" *ngIf="!isLoading && !hasLoadError">
-    <ul class="item-list" *ngIf="items.length">
-      <li class="item-row" *ngFor="let item of items" [class.is-blocked]="item.isBlocked">
+    <ul class="item-list" *ngIf="(items | adminUserFilter: searchQuery) as filteredItems">
+      <li class="item-row" *ngFor="let item of filteredItems" [class.is-blocked]="item.isBlocked">
         <div class="item-main">
           <span class="item-title">{{ item.login }}</span>
           <span class="item-meta" *ngIf="item.email">{{ item.email }}</span>
@@ -30,6 +40,15 @@
           </div>
         </div>
         <div class="item-actions">
+          <button
+            *ngIf="item.role !== 'ADMIN'"
+            type="button"
+            class="item-action"
+            [disabled]="isActionPending(item.id)"
+            (click)="resetPassword(item)"
+          >
+            Resetuj hasło
+          </button>
           <button
             type="button"
             class="item-action"
@@ -47,6 +66,9 @@
             Usuń
           </button>
         </div>
+      </li>
+      <li class="users-empty-filter" *ngIf="!filteredItems.length">
+        Brak użytkowników pasujących do wyszukiwania.
       </li>
     </ul>
   </div>
@@ -122,5 +144,43 @@
         </button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="user-confirm-overlay" *ngIf="confirmModalOpen" (click)="cancelConfirmModal()">
+  <div class="user-confirm-modal" (click)="$event.stopPropagation()">
+    <h3>{{ confirmModalTitle() }}</h3>
+    <p>{{ confirmModalMessage() }}</p>
+    <div class="user-confirm-actions">
+      <button type="button" class="secondary-action" (click)="cancelConfirmModal()" [disabled]="confirmTarget ? isActionPending(confirmTarget.id) : false">
+        Anuluj
+      </button>
+      <button
+        type="button"
+        class="primary-action"
+        [class.danger-action]="confirmAction === 'delete' || confirmAction === 'block'"
+        (click)="confirmUserAction()"
+        [disabled]="confirmTarget ? isActionPending(confirmTarget.id) : false"
+      >
+        {{ confirmTarget && isActionPending(confirmTarget.id) ? 'Przetwarzanie...' : confirmModalButtonLabel() }}
+      </button>
+    </div>
+  </div>
+</div>
+
+<div class="reset-password-overlay" *ngIf="resetPasswordModalOpen" (click)="closeResetPasswordModal()">
+  <div class="reset-password-modal" (click)="$event.stopPropagation()">
+    <div class="reset-password-header">
+      <h3>Hasło tymczasowe</h3>
+      <button type="button" class="user-modal-close" (click)="closeResetPasswordModal()" aria-label="Zamknij">×</button>
+    </div>
+    <p class="reset-password-info">
+      Przekaż hasło użytkownikowi {{ resetPasswordUserLogin }} i zamknij okno po skopiowaniu.
+    </p>
+    <div class="generated-password-box">{{ generatedPassword }}</div>
+    <div class="reset-password-actions">
+      <button type="button" class="secondary-action" (click)="closeResetPasswordModal()">Zamknij</button>
+      <button type="button" class="primary-action" (click)="copyGeneratedPassword()">Kopiuj hasło</button>
+    </div>
   </div>
 </div>

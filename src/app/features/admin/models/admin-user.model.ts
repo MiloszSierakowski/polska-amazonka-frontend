@@ -47,3 +47,8 @@ export interface CreateAdminUserPayload {
 export interface UpdateUserBlockedPayload {
   isBlocked: boolean;
 }
+
+export interface ResetUserPasswordResponse {
+  userId: number;
+  generatedPassword: string;
+}

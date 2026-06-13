@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import {
   AbstractControl,
   FormBuilder,
+  FormsModule,
   ReactiveFormsModule,
   ValidationErrors,
   Validators
@@ -12,6 +13,7 @@ import { AdminUser } from '../../models/admin-user.model';
 import { AdminUserService } from '../../services/admin-user.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { parseApiError } from '../../../../core/admin/api-error.util';
+import { AdminUserFilterPipe } from '../../pipes/admin-user-filter.pipe';
 
 function optionalEmailValidator(control: AbstractControl): ValidationErrors | null {
   const value = (control.value as string | null | undefined)?.trim();
@@ -22,10 +24,12 @@ function optionalEmailValidator(control: AbstractControl): ValidationErrors | nu
   return emailPattern.test(value) ? null : { email: true };
 }
 
+type UserConfirmAction = 'delete' | 'block' | 'unblock' | 'resetPassword';
+
 @Component({
   selector: 'app-admin-users-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, AdminUserFilterPipe],
   templateUrl: './admin-users-section.component.html',
   styleUrl: './admin-users-section.component.scss'
 })
@@ -38,6 +42,13 @@ export class AdminUsersSectionComponent implements OnInit {
   formSubmitted = false;
   actionUserId: number | null = null;
   saveError = '';
+  searchQuery = '';
+  resetPasswordModalOpen = false;
+  resetPasswordUserLogin = '';
+  generatedPassword = '';
+  confirmModalOpen = false;
+  confirmAction: UserConfirmAction | null = null;
+  confirmTarget: AdminUser | null = null;
 
   userAddForm = this.fb.group({
     login: ['', [Validators.required, Validators.minLength(3)]],
@@ -131,41 +142,163 @@ export class AdminUsersSectionComponent implements OnInit {
   }
 
   deleteUser(item: AdminUser): void {
-    if (!confirm(`Czy na pewno usunąć użytkownika „${item.login}”?`)) {
+    this.openConfirmModal('delete', item);
+  }
+
+  toggleBlocked(item: AdminUser): void {
+    this.openConfirmModal(item.isBlocked ? 'unblock' : 'block', item);
+  }
+
+  resetPassword(item: AdminUser): void {
+    this.openConfirmModal('resetPassword', item);
+  }
+
+  confirmModalTitle(): string {
+    switch (this.confirmAction) {
+      case 'delete':
+        return 'Usunąć użytkownika?';
+      case 'block':
+        return 'Zablokować konto?';
+      case 'unblock':
+        return 'Odblokować konto?';
+      case 'resetPassword':
+        return 'Zresetować hasło?';
+      default:
+        return 'Potwierdzenie';
+    }
+  }
+
+  confirmModalMessage(): string {
+    const login = this.confirmTarget?.login ?? 'użytkownika';
+    switch (this.confirmAction) {
+      case 'delete':
+        return `Konto „${login}” zostanie zablokowane i nie będzie mogło się zalogować.`;
+      case 'block':
+        return `Użytkownik „${login}” nie będzie mógł zalogować się do panelu.`;
+      case 'unblock':
+        return `Użytkownik „${login}” odzyska dostęp do panelu.`;
+      case 'resetPassword':
+        return `Wygenerujemy nowe hasło tymczasowe dla użytkownika „${login}”.`;
+      default:
+        return '';
+    }
+  }
+
+  confirmModalButtonLabel(): string {
+    switch (this.confirmAction) {
+      case 'delete':
+        return 'Usuń';
+      case 'block':
+        return 'Zablokuj';
+      case 'unblock':
+        return 'Odblokuj';
+      case 'resetPassword':
+        return 'Resetuj hasło';
+      default:
+        return 'Potwierdź';
+    }
+  }
+
+  cancelConfirmModal(): void {
+    if (this.confirmTarget && this.isActionPending(this.confirmTarget.id)) {
       return;
     }
+    this.confirmModalOpen = false;
+    this.confirmAction = null;
+    this.confirmTarget = null;
+  }
+
+  confirmUserAction(): void {
+    const target = this.confirmTarget;
+    if (!target || !this.confirmAction) {
+      return;
+    }
+    if (this.confirmAction === 'delete') {
+      this.performDeleteUser(target);
+      return;
+    }
+    if (this.confirmAction === 'block' || this.confirmAction === 'unblock') {
+      this.performToggleBlocked(target, this.confirmAction === 'block');
+      return;
+    }
+    this.performResetPassword(target);
+  }
+
+  private openConfirmModal(action: UserConfirmAction, item: AdminUser): void {
+    this.confirmAction = action;
+    this.confirmTarget = item;
+    this.confirmModalOpen = true;
+  }
+
+  private performDeleteUser(item: AdminUser): void {
     this.actionUserId = item.id;
     this.adminUserService.delete(item.id).subscribe({
       next: () => {
         this.actionUserId = null;
+        this.confirmModalOpen = false;
+        this.confirmAction = null;
+        this.confirmTarget = null;
         this.items = this.items.filter((user) => user.id !== item.id);
         this.toastService.success('Użytkownik został usunięty.');
       },
       error: (error: HttpErrorResponse) => {
         this.actionUserId = null;
-        this.toastService.error(parseApiError(error).message);
+        this.toastService.error(this.resolveAdminMutationError(error));
       }
     });
   }
 
-  toggleBlocked(item: AdminUser): void {
-    const nextBlocked = !item.isBlocked;
-    const actionLabel = nextBlocked ? 'zablokować' : 'odblokować';
-    if (!confirm(`Czy na pewno ${actionLabel} użytkownika „${item.login}”?`)) {
-      return;
-    }
+  private performToggleBlocked(item: AdminUser, nextBlocked: boolean): void {
     this.actionUserId = item.id;
     this.adminUserService.setBlocked(item.id, { isBlocked: nextBlocked }).subscribe({
       next: (updated) => {
         this.actionUserId = null;
+        this.confirmModalOpen = false;
+        this.confirmAction = null;
+        this.confirmTarget = null;
         this.items = this.items.map((user) => (user.id === updated.id ? updated : user));
         this.toastService.success(nextBlocked ? 'Użytkownik został zablokowany.' : 'Użytkownik został odblokowany.');
       },
       error: (error: HttpErrorResponse) => {
         this.actionUserId = null;
-        this.toastService.error(parseApiError(error).message);
+        this.toastService.error(this.resolveAdminMutationError(error));
       }
     });
+  }
+
+  private performResetPassword(item: AdminUser): void {
+    this.actionUserId = item.id;
+    this.adminUserService.resetPassword(item.id).subscribe({
+      next: (response) => {
+        this.actionUserId = null;
+        this.confirmModalOpen = false;
+        this.confirmAction = null;
+        this.confirmTarget = null;
+        this.resetPasswordUserLogin = item.login;
+        this.generatedPassword = response.generatedPassword;
+        this.resetPasswordModalOpen = true;
+      },
+      error: (error: HttpErrorResponse) => {
+        this.actionUserId = null;
+        this.toastService.error(this.resolveAdminMutationError(error));
+      }
+    });
+  }
+
+  closeResetPasswordModal(): void {
+    this.resetPasswordModalOpen = false;
+    this.resetPasswordUserLogin = '';
+    this.generatedPassword = '';
+  }
+
+  copyGeneratedPassword(): void {
+    if (!this.generatedPassword) {
+      return;
+    }
+    navigator.clipboard.writeText(this.generatedPassword).then(
+      () => this.toastService.success('Hasło zostało skopiowane.'),
+      () => this.toastService.error('Nie udało się skopiować hasła.')
+    );
   }
 
   isActionPending(userId: number): boolean {
@@ -174,6 +307,13 @@ export class AdminUsersSectionComponent implements OnInit {
 
   roleLabel(role: string): string {
     return role === 'ADMIN' ? 'Administrator' : 'Pracownik';
+  }
+
+  private resolveAdminMutationError(error: HttpErrorResponse): string {
+    if (error.status === 403) {
+      return 'Nie możesz modyfikować konta innego administratora';
+    }
+    return parseApiError(error).message;
   }
 
   private resetAddForm(): void {

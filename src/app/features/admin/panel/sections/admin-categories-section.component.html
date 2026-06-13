@@ -122,6 +122,21 @@
   </div>
 </div>
 
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+  <div class="delete-modal" (click)="$event.stopPropagation()">
+    <h3>Usunąć kategorię?</h3>
+    <p *ngIf="deleteTarget as item">
+      Czy na pewno chcesz usunąć kategorię „{{ item.name }}”? Filmy pozostaną w bazie i zostaną tylko odpięte od tej kategorii.
+    </p>
+    <div class="delete-modal-actions">
+      <button type="button" class="secondary-action" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
+      <button type="button" class="primary-action danger-action" (click)="confirmDelete()" [disabled]="isDeleting">
+        {{ isDeleting ? 'Usuwanie...' : 'Usuń kategorię' }}
+      </button>
+    </div>
+  </div>
+</div>
+
 <div class="lock-modal-overlay" *ngIf="shopCategoryLockModalOpen" (click)="closeShopCategoryLockModal()">
   <div class="lock-modal" (click)="$event.stopPropagation()">
     <h3>Kategoria powiązana ze sklepem</h3>

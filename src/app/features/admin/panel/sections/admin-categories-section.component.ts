@@ -30,6 +30,9 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   editPreviewUrl: string | null = null;
   shopCategoryLockModalOpen = false;
   lockedCategoryName = '';
+  deleteModalOpen = false;
+  deleteTarget: Category | null = null;
+  isDeleting = false;
   isSavingOrder = false;
 
   categoryAddForm = this.fb.group({
@@ -152,14 +155,29 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
       this.openShopCategoryLockModal(item.name);
       return;
     }
-    const confirmed = window.confirm(
-      `Czy na pewno usunąć kategorię „${item.name}”? Filmy pozostaną w bazie, zostaną tylko odpięte od tej kategorii.`
-    );
-    if (!confirmed) {
+    this.deleteTarget = item;
+    this.deleteModalOpen = true;
+  }
+
+  cancelDelete(): void {
+    if (this.isDeleting) {
       return;
     }
+    this.deleteModalOpen = false;
+    this.deleteTarget = null;
+  }
+
+  confirmDelete(): void {
+    const item = this.deleteTarget;
+    if (!item || this.isDeleting) {
+      return;
+    }
+    this.isDeleting = true;
     this.categoryService.delete(item.id).subscribe({
       next: () => {
+        this.isDeleting = false;
+        this.deleteModalOpen = false;
+        this.deleteTarget = null;
         this.toastService.success('Kategoria została usunięta.');
         if (this.editingCategoryId === item.id) {
           this.cancelEdit();
@@ -167,7 +185,10 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
         this.loadCategories();
       },
       error: (error: HttpErrorResponse) => {
+        this.isDeleting = false;
         if (this.isShopCategoryLockedError(error)) {
+          this.deleteModalOpen = false;
+          this.deleteTarget = null;
           this.openShopCategoryLockModal(item.name);
         }
       }

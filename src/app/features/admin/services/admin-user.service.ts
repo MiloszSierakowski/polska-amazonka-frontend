@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 import {
   AdminUser,
   CreateAdminUserPayload,
+  ResetUserPasswordResponse,
   UpdateUserBlockedPayload
 } from '../models/admin-user.model';
 
@@ -34,5 +35,9 @@ export class AdminUserService {
 
   setBlocked(id: number, payload: UpdateUserBlockedPayload): Observable<AdminUser> {
     return this.http.patch<AdminUser>(`${this.apiUrl}/${id}/blocked`, payload);
+  }
+
+  resetPassword(id: number): Observable<ResetUserPasswordResponse> {
+    return this.http.post<ResetUserPasswordResponse>(`${this.apiUrl}/${id}/password-reset`, {});
   }
 }
