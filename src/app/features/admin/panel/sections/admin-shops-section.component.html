@@ -60,7 +60,7 @@
   </div>
 </div>
 
-<div class="shop-modal-overlay" *ngIf="isShopModalOpen" (click)="closeShopModal()">
+<div class="shop-modal-overlay" *ngIf="isShopModalOpen">
   <div class="shop-modal" (click)="$event.stopPropagation()">
     <div class="shop-modal-header">
       <h3>Dodaj sklep</h3>
@@ -95,7 +95,7 @@
   </div>
 </div>
 
-<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen">
   <div class="delete-modal" (click)="$event.stopPropagation()">
     <h3>Potwierdzenie usunięcia</h3>
     <p>Czy na pewno chcesz usunąć ten sklep? Powiązana kategoria sklepowa zostanie również usunięta.</p>

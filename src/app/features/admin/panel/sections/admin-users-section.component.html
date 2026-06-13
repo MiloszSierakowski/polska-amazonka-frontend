@@ -74,7 +74,7 @@
   </div>
 </div>
 
-<div class="user-modal-overlay" *ngIf="isUserModalOpen" (click)="closeUserModal()">
+<div class="user-modal-overlay" *ngIf="isUserModalOpen">
   <div class="user-modal" (click)="$event.stopPropagation()">
     <div class="user-modal-header">
       <h3>Dodaj użytkownika</h3>
@@ -147,7 +147,7 @@
   </div>
 </div>
 
-<div class="user-confirm-overlay" *ngIf="confirmModalOpen" (click)="cancelConfirmModal()">
+<div class="user-confirm-overlay" *ngIf="confirmModalOpen">
   <div class="user-confirm-modal" (click)="$event.stopPropagation()">
     <h3>{{ confirmModalTitle() }}</h3>
     <p>{{ confirmModalMessage() }}</p>
@@ -168,7 +168,7 @@
   </div>
 </div>
 
-<div class="reset-password-overlay" *ngIf="resetPasswordModalOpen" (click)="closeResetPasswordModal()">
+<div class="reset-password-overlay" *ngIf="resetPasswordModalOpen">
   <div class="reset-password-modal" (click)="$event.stopPropagation()">
     <div class="reset-password-header">
       <h3>Hasło tymczasowe</h3>

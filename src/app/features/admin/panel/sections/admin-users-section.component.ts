@@ -14,6 +14,7 @@ import { AdminUserService } from '../../services/admin-user.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { parseApiError } from '../../../../core/admin/api-error.util';
 import { AdminUserFilterPipe } from '../../pipes/admin-user-filter.pipe';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 function optionalEmailValidator(control: AbstractControl): ValidationErrors | null {
   const value = (control.value as string | null | undefined)?.trim();
@@ -49,6 +50,9 @@ export class AdminUsersSectionComponent implements OnInit {
   confirmModalOpen = false;
   confirmAction: UserConfirmAction | null = null;
   confirmTarget: AdminUser | null = null;
+  private userModalNavigationId: number | null = null;
+  private confirmModalNavigationId: number | null = null;
+  private resetPasswordModalNavigationId: number | null = null;
 
   userAddForm = this.fb.group({
     login: ['', [Validators.required, Validators.minLength(3)]],
@@ -60,7 +64,8 @@ export class AdminUsersSectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private adminUserService: AdminUserService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -70,9 +75,15 @@ export class AdminUsersSectionComponent implements OnInit {
   openAddUserModal(): void {
     this.resetAddForm();
     this.isUserModalOpen = true;
+    this.userModalNavigationId = this.modalNavigationService.open(() => this.closeUserModal(true));
   }
 
-  closeUserModal(): void {
+  closeUserModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.userModalNavigationId = this.modalNavigationService.close(this.userModalNavigationId);
+    } else {
+      this.userModalNavigationId = null;
+    }
     this.isUserModalOpen = false;
     this.resetAddForm();
   }
@@ -199,9 +210,14 @@ export class AdminUsersSectionComponent implements OnInit {
     }
   }
 
-  cancelConfirmModal(): void {
+  cancelConfirmModal(fromNavigation = false): void {
     if (this.confirmTarget && this.isActionPending(this.confirmTarget.id)) {
       return;
+    }
+    if (!fromNavigation) {
+      this.confirmModalNavigationId = this.modalNavigationService.close(this.confirmModalNavigationId);
+    } else {
+      this.confirmModalNavigationId = null;
     }
     this.confirmModalOpen = false;
     this.confirmAction = null;
@@ -228,6 +244,7 @@ export class AdminUsersSectionComponent implements OnInit {
     this.confirmAction = action;
     this.confirmTarget = item;
     this.confirmModalOpen = true;
+    this.confirmModalNavigationId = this.modalNavigationService.open(() => this.cancelConfirmModal(true));
   }
 
   private performDeleteUser(item: AdminUser): void {
@@ -235,6 +252,7 @@ export class AdminUsersSectionComponent implements OnInit {
     this.adminUserService.delete(item.id).subscribe({
       next: () => {
         this.actionUserId = null;
+        this.confirmModalNavigationId = this.modalNavigationService.close(this.confirmModalNavigationId);
         this.confirmModalOpen = false;
         this.confirmAction = null;
         this.confirmTarget = null;
@@ -253,6 +271,7 @@ export class AdminUsersSectionComponent implements OnInit {
     this.adminUserService.setBlocked(item.id, { isBlocked: nextBlocked }).subscribe({
       next: (updated) => {
         this.actionUserId = null;
+        this.confirmModalNavigationId = this.modalNavigationService.close(this.confirmModalNavigationId);
         this.confirmModalOpen = false;
         this.confirmAction = null;
         this.confirmTarget = null;
@@ -271,12 +290,14 @@ export class AdminUsersSectionComponent implements OnInit {
     this.adminUserService.resetPassword(item.id).subscribe({
       next: (response) => {
         this.actionUserId = null;
+        this.confirmModalNavigationId = this.modalNavigationService.close(this.confirmModalNavigationId);
         this.confirmModalOpen = false;
         this.confirmAction = null;
         this.confirmTarget = null;
         this.resetPasswordUserLogin = item.login;
         this.generatedPassword = response.generatedPassword;
         this.resetPasswordModalOpen = true;
+        this.resetPasswordModalNavigationId = this.modalNavigationService.open(() => this.closeResetPasswordModal(true));
       },
       error: (error: HttpErrorResponse) => {
         this.actionUserId = null;
@@ -285,7 +306,12 @@ export class AdminUsersSectionComponent implements OnInit {
     });
   }
 
-  closeResetPasswordModal(): void {
+  closeResetPasswordModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.resetPasswordModalNavigationId = this.modalNavigationService.close(this.resetPasswordModalNavigationId);
+    } else {
+      this.resetPasswordModalNavigationId = null;
+    }
     this.resetPasswordModalOpen = false;
     this.resetPasswordUserLogin = '';
     this.generatedPassword = '';

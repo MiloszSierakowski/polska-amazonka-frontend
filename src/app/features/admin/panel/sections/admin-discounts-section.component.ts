@@ -9,6 +9,7 @@ import { AffiliateCodeService } from '../../services/affiliate-code.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { Shop } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 type DeleteTargetType = 'discount' | 'affiliate';
 
@@ -37,6 +38,9 @@ export class AdminDiscountsSectionComponent implements OnInit {
   isDeleting = false;
   isSavingDiscountOrder = false;
   isSavingAffiliateOrder = false;
+  private discountModalNavigationId: number | null = null;
+  private affiliateModalNavigationId: number | null = null;
+  private deleteModalNavigationId: number | null = null;
 
   discountAddForm = this.fb.group({
     shopId: [null as number | null, Validators.required],
@@ -69,7 +73,8 @@ export class AdminDiscountsSectionComponent implements OnInit {
     private discountCodeService: DiscountCodeService,
     private affiliateCodeService: AffiliateCodeService,
     private shopService: ShopService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -90,9 +95,15 @@ export class AdminDiscountsSectionComponent implements OnInit {
     this.cancelEditDiscount();
     this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
     this.isDiscountModalOpen = true;
+    this.discountModalNavigationId = this.modalNavigationService.open(() => this.closeDiscountModal(true));
   }
 
-  closeDiscountModal(): void {
+  closeDiscountModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.discountModalNavigationId = this.modalNavigationService.close(this.discountModalNavigationId);
+    } else {
+      this.discountModalNavigationId = null;
+    }
     this.isDiscountModalOpen = false;
     this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
   }
@@ -144,9 +155,15 @@ export class AdminDiscountsSectionComponent implements OnInit {
     this.cancelEditAffiliate();
     this.affiliateAddForm.reset({ shopId: null, codeValue: '', isActive: true });
     this.isAffiliateModalOpen = true;
+    this.affiliateModalNavigationId = this.modalNavigationService.open(() => this.closeAffiliateModal(true));
   }
 
-  closeAffiliateModal(): void {
+  closeAffiliateModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.affiliateModalNavigationId = this.modalNavigationService.close(this.affiliateModalNavigationId);
+    } else {
+      this.affiliateModalNavigationId = null;
+    }
     this.isAffiliateModalOpen = false;
     this.affiliateAddForm.reset({ shopId: null, codeValue: '', isActive: true });
   }
@@ -247,11 +264,17 @@ export class AdminDiscountsSectionComponent implements OnInit {
   openDeleteModal(type: DeleteTargetType, id: number): void {
     this.deleteTarget = { type, id };
     this.deleteModalOpen = true;
+    this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
 
-  cancelDelete(): void {
+  cancelDelete(fromNavigation = false): void {
     if (this.isDeleting) {
       return;
+    }
+    if (!fromNavigation) {
+      this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
+    } else {
+      this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
     this.deleteTarget = null;
@@ -270,6 +293,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
     request$.subscribe({
       next: () => {
         this.isDeleting = false;
+        this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
         this.deleteTarget = null;
         if (target.type === 'discount') {

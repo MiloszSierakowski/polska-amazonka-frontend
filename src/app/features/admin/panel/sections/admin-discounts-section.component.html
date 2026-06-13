@@ -150,7 +150,7 @@
   </section>
 </div>
 
-<div class="code-modal-overlay" *ngIf="isDiscountModalOpen" (click)="closeDiscountModal()">
+<div class="code-modal-overlay" *ngIf="isDiscountModalOpen">
   <div class="code-modal" (click)="$event.stopPropagation()">
     <div class="code-modal-header">
       <h3>Dodaj kod rabatowy</h3>
@@ -187,7 +187,7 @@
   </div>
 </div>
 
-<div class="code-modal-overlay" *ngIf="isAffiliateModalOpen" (click)="closeAffiliateModal()">
+<div class="code-modal-overlay" *ngIf="isAffiliateModalOpen">
   <div class="code-modal" (click)="$event.stopPropagation()">
     <div class="code-modal-header">
       <h3>Dodaj kod afiliacyjny</h3>
@@ -224,7 +224,7 @@
   </div>
 </div>
 
-<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen">
   <div class="delete-modal" (click)="$event.stopPropagation()">
     <h3>Potwierdzenie usunięcia</h3>
     <p>Czy na pewno chcesz usunąć ten kod? Tej operacji nie można cofnąć.</p>

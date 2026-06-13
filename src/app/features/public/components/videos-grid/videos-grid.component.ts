@@ -6,6 +6,7 @@ import { VideoService } from '../../services/video.service';
 import { Video, Product } from '../../models/video.model';
 import { ShopMatcherService } from '../../../../core/services/shop-matcher.service';
 import { Shop } from '../../../../core/models/shop.model';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 @Component({
   selector: 'app-videos-grid',
@@ -25,24 +26,24 @@ export class VideosGridComponent implements OnInit, OnChanges, OnDestroy {
   hasLoadError = false;
   private readonly brokenPreviewUrls = new Set<string>();
   private readonly brokenProductImageIds = new Set<number>();
-  private modalHistoryOpen = false;
+  private modalNavigationId: number | null = null;
 
   constructor(
     private videoService: VideoService,
     private clickStatService: ClickStatService,
     private shopMatcherService: ShopMatcherService,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private modalNavigationService: ModalNavigationService
   ) {
     this.loadVideos();
   }
 
   ngOnInit(): void {
     this.shopMatcherService.loadActiveShops().subscribe();
-    window.addEventListener('popstate', this.handlePopState);
   }
 
   ngOnDestroy(): void {
-    window.removeEventListener('popstate', this.handlePopState);
+    this.modalNavigationId = this.modalNavigationService.unregister(this.modalNavigationId);
     document.body.style.overflow = '';
   }
 
@@ -117,30 +118,16 @@ export class VideosGridComponent implements OnInit, OnChanges, OnDestroy {
     this.selectedVideo = video;
     this.safeVideoUrl = this.getTikTokSafeUrl(video.tiktokUrl);
     document.body.style.overflow = 'hidden';
-    this.pushModalHistoryState();
+    this.modalNavigationId = this.modalNavigationService.open(() => this.closeModal(true));
   }
 
-  closeModal(): void {
-    if (this.modalHistoryOpen) {
-      window.history.back();
-      return;
+  closeModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.modalNavigationId = this.modalNavigationService.close(this.modalNavigationId);
+    } else {
+      this.modalNavigationId = null;
     }
     this.closeModalState();
-  }
-
-  private readonly handlePopState = (): void => {
-    if (this.selectedVideo) {
-      this.closeModalState();
-    }
-    this.modalHistoryOpen = false;
-  };
-
-  private pushModalHistoryState(): void {
-    if (this.modalHistoryOpen) {
-      return;
-    }
-    window.history.pushState({ ...(window.history.state ?? {}), videoModalOpen: true }, '', window.location.href);
-    this.modalHistoryOpen = true;
   }
 
   private closeModalState(): void {

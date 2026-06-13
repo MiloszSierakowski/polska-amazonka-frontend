@@ -63,7 +63,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="isModalOpen" (click)="closeModal()">
+<div class="modal-overlay" *ngIf="isModalOpen">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <div class="modal-header">
       <h3>{{ modalTitle() }}</h3>
@@ -119,7 +119,7 @@
   </div>
 </div>
 
-<div class="modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+<div class="modal-overlay" *ngIf="deleteModalOpen">
   <div class="modal-card" (click)="$event.stopPropagation()">
     <h3>Potwierdzenie usunięcia</h3>
     <p>Czy na pewno chcesz usunąć ten link social media?</p>

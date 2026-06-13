@@ -33,6 +33,7 @@
       <div class="video-editor" *ngIf="isVideoOpen(video)">
         <section class="editor-block">
           <h3>Produkty przypisane do filmu</h3>
+          <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
           <ul class="product-list" *ngIf="video.products.length; else noProducts">
             <li class="product-list-item" *ngFor="let product of video.products">
               <div class="product-card">
@@ -169,15 +170,13 @@
               <button type="submit" class="primary-action" [disabled]="addProductPreviewLoading">Zapisz</button>
             </div>
           </form>
-
-          <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
         </section>
       </div>
     </article>
   </div>
 </div>
 
-<div class="video-modal-overlay" *ngIf="isVideoModalOpen" (click)="closeVideoModal()">
+<div class="video-modal-overlay" *ngIf="isVideoModalOpen">
   <div class="video-modal" (click)="$event.stopPropagation()">
     <div class="video-modal-header">
       <h3>{{ modalVideoId ? 'Edycja filmu' : 'Dodaj film' }}</h3>
@@ -327,7 +326,7 @@
   </div>
 </div>
 
-<div class="video-delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+<div class="video-delete-modal-overlay" *ngIf="deleteModalOpen">
   <div class="video-delete-modal" role="dialog" aria-modal="true" aria-labelledby="video-delete-title" (click)="$event.stopPropagation()">
     <h3 id="video-delete-title">Usunąć film?</h3>
     <p *ngIf="deleteTargetVideo as video">

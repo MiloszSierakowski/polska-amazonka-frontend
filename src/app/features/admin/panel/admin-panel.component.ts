@@ -40,7 +40,7 @@ interface AccordionSection {
   styleUrl: './admin-panel.component.scss'
 })
 export class AdminPanelComponent {
-  activeSectionId: string | null = null;
+  openSectionIds: string[] = [];
   profileModalOpen = false;
   sessionLabel = '';
 
@@ -70,11 +70,15 @@ export class AdminPanelComponent {
   }
 
   toggleSection(sectionId: string): void {
-    this.activeSectionId = this.activeSectionId === sectionId ? null : sectionId;
+    if (this.isOpen(sectionId)) {
+      this.openSectionIds = this.openSectionIds.filter((id) => id !== sectionId);
+      return;
+    }
+    this.openSectionIds = [...this.openSectionIds, sectionId];
   }
 
   isOpen(sectionId: string): boolean {
-    return this.activeSectionId === sectionId;
+    return this.openSectionIds.includes(sectionId);
   }
 
   openProfileModal(): void {

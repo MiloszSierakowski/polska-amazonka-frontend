@@ -22,7 +22,7 @@
   </ng-template>
 </section>
 
-<div class="video-modal-overlay" *ngIf="selectedVideo" (click)="closeModal()">
+<div class="video-modal-overlay" *ngIf="selectedVideo">
   <div class="video-modal" (click)="$event.stopPropagation()">
     <button class="close-button" (click)="closeModal()">✕</button>
 

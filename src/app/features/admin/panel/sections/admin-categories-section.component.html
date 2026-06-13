@@ -87,7 +87,7 @@
   </div>
 </div>
 
-<div class="category-modal-overlay" *ngIf="isCategoryModalOpen" (click)="closeCategoryModal()">
+<div class="category-modal-overlay" *ngIf="isCategoryModalOpen">
   <div class="category-modal" (click)="$event.stopPropagation()">
     <div class="category-modal-header">
       <h3>Dodaj kategorię</h3>
@@ -122,7 +122,7 @@
   </div>
 </div>
 
-<div class="delete-modal-overlay" *ngIf="deleteModalOpen" (click)="cancelDelete()">
+<div class="delete-modal-overlay" *ngIf="deleteModalOpen">
   <div class="delete-modal" (click)="$event.stopPropagation()">
     <h3>Usunąć kategorię?</h3>
     <p *ngIf="deleteTarget as item">
@@ -137,7 +137,7 @@
   </div>
 </div>
 
-<div class="lock-modal-overlay" *ngIf="shopCategoryLockModalOpen" (click)="closeShopCategoryLockModal()">
+<div class="lock-modal-overlay" *ngIf="shopCategoryLockModalOpen">
   <div class="lock-modal" (click)="$event.stopPropagation()">
     <h3>Kategoria powiązana ze sklepem</h3>
     <p>

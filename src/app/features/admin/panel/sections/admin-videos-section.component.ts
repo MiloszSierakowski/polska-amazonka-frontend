@@ -9,6 +9,7 @@ import { Category } from '../../../public/models/category.model';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
 import { ProductImageUploadService } from '../../services/product-image-upload.service';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -40,6 +41,8 @@ export class AdminVideosSectionComponent implements OnInit {
   newProductPreview: Record<number, ProductPreview | null> = {};
 
   private readonly previewTimers = new Map<string, ReturnType<typeof setTimeout>>();
+  private videoModalNavigationId: number | null = null;
+  private deleteModalNavigationId: number | null = null;
 
   videoForm = this.fb.group({
     title: ['', Validators.required],
@@ -73,7 +76,8 @@ export class AdminVideosSectionComponent implements OnInit {
     private categoryService: CategoryService,
     private toastService: ToastService,
     private productPreviewService: ProductPreviewService,
-    private productImageUploadService: ProductImageUploadService
+    private productImageUploadService: ProductImageUploadService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -128,6 +132,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.newProductPreview = {};
     this.newProductSelectedFileNames = {};
     this.isVideoModalOpen = true;
+    this.videoModalNavigationId = this.modalNavigationService.open(() => this.closeVideoModal(true));
   }
 
   openEditVideoModal(video: AdminVideoMock): void {
@@ -139,9 +144,15 @@ export class AdminVideosSectionComponent implements OnInit {
       isActive: video.isActive
     });
     this.isVideoModalOpen = true;
+    this.videoModalNavigationId = this.modalNavigationService.open(() => this.closeVideoModal(true));
   }
 
-  closeVideoModal(): void {
+  closeVideoModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.videoModalNavigationId = this.modalNavigationService.close(this.videoModalNavigationId);
+    } else {
+      this.videoModalNavigationId = null;
+    }
     this.isVideoModalOpen = false;
     this.modalVideoId = null;
     this.resetNewVideoForm(false);
@@ -176,11 +187,17 @@ export class AdminVideosSectionComponent implements OnInit {
   openDeleteModal(video: AdminVideoMock): void {
     this.deleteTargetVideo = video;
     this.deleteModalOpen = true;
+    this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
 
-  cancelDelete(): void {
+  cancelDelete(fromNavigation = false): void {
     if (this.isDeleting) {
       return;
+    }
+    if (!fromNavigation) {
+      this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
+    } else {
+      this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
     this.deleteTargetVideo = null;
@@ -195,6 +212,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.videoService.delete(video.id).subscribe({
       next: () => {
         this.isDeleting = false;
+        this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
         this.deleteTargetVideo = null;
         this.toastService.success('Film został usunięty.');

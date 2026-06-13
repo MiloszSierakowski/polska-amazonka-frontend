@@ -6,6 +6,7 @@ import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
 import { ToastService } from '../../../../core/admin/toast.service';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 interface ApiErrorBody {
   errorCode?: string;
@@ -34,6 +35,9 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   deleteTarget: Category | null = null;
   isDeleting = false;
   isSavingOrder = false;
+  private categoryModalNavigationId: number | null = null;
+  private deleteModalNavigationId: number | null = null;
+  private lockModalNavigationId: number | null = null;
 
   categoryAddForm = this.fb.group({
     name: ['', Validators.required]
@@ -47,6 +51,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     private fb: FormBuilder,
     private categoryService: CategoryService,
     private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService,
     @Inject('BACKEND_URL') private backendUrl: string
   ) {}
 
@@ -57,6 +62,9 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.revokeAddPreview();
     this.revokeEditPreview();
+    this.categoryModalNavigationId = this.modalNavigationService.unregister(this.categoryModalNavigationId);
+    this.deleteModalNavigationId = this.modalNavigationService.unregister(this.deleteModalNavigationId);
+    this.lockModalNavigationId = this.modalNavigationService.unregister(this.lockModalNavigationId);
   }
 
   openAddCategoryModal(): void {
@@ -64,9 +72,15 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     this.categoryAddForm.reset({ name: '' });
     this.clearAddImageSelection();
     this.isCategoryModalOpen = true;
+    this.categoryModalNavigationId = this.modalNavigationService.open(() => this.closeCategoryModal(true));
   }
 
-  closeCategoryModal(): void {
+  closeCategoryModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.categoryModalNavigationId = this.modalNavigationService.close(this.categoryModalNavigationId);
+    } else {
+      this.categoryModalNavigationId = null;
+    }
     this.isCategoryModalOpen = false;
     this.categoryAddForm.reset({ name: '' });
     this.clearAddImageSelection();
@@ -157,11 +171,17 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     }
     this.deleteTarget = item;
     this.deleteModalOpen = true;
+    this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
 
-  cancelDelete(): void {
+  cancelDelete(fromNavigation = false): void {
     if (this.isDeleting) {
       return;
+    }
+    if (!fromNavigation) {
+      this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
+    } else {
+      this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
     this.deleteTarget = null;
@@ -176,6 +196,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     this.categoryService.delete(item.id).subscribe({
       next: () => {
         this.isDeleting = false;
+        this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
         this.deleteTarget = null;
         this.toastService.success('Kategoria została usunięta.');
@@ -187,6 +208,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
       error: (error: HttpErrorResponse) => {
         this.isDeleting = false;
         if (this.isShopCategoryLockedError(error)) {
+          this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
           this.deleteModalOpen = false;
           this.deleteTarget = null;
           this.openShopCategoryLockModal(item.name);
@@ -195,7 +217,12 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
     });
   }
 
-  closeShopCategoryLockModal(): void {
+  closeShopCategoryLockModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.lockModalNavigationId = this.modalNavigationService.close(this.lockModalNavigationId);
+    } else {
+      this.lockModalNavigationId = null;
+    }
     this.shopCategoryLockModalOpen = false;
     this.lockedCategoryName = '';
   }
@@ -216,6 +243,7 @@ export class AdminCategoriesSectionComponent implements OnInit, OnDestroy {
   private openShopCategoryLockModal(categoryName: string): void {
     this.lockedCategoryName = categoryName;
     this.shopCategoryLockModalOpen = true;
+    this.lockModalNavigationId = this.modalNavigationService.open(() => this.closeShopCategoryLockModal(true));
   }
 
   private isShopCategoryLockedError(error: HttpErrorResponse): boolean {

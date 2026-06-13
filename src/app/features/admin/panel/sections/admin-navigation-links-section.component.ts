@@ -7,6 +7,7 @@ import { LinkDTO, LinkService, SaveLinkPayload } from '../../../../core/services
 import { AdminLinkService } from '../../services/admin-link.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { parseApiError } from '../../../../core/admin/api-error.util';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 @Component({
   selector: 'app-admin-navigation-links-section',
@@ -33,6 +34,8 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
   currentImagePath: string | null = null;
   activeToggleId: number | null = null;
   isSavingOrder = false;
+  private editModalNavigationId: number | null = null;
+  private deleteModalNavigationId: number | null = null;
 
   linkForm = this.fb.group({
     url: ['', Validators.required],
@@ -43,7 +46,8 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     private fb: FormBuilder,
     private adminLinkService: AdminLinkService,
     private linkService: LinkService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -54,6 +58,7 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     this.editingLinkId = null;
     this.resetForm();
     this.isModalOpen = true;
+    this.editModalNavigationId = this.modalNavigationService.open(() => this.closeModal(true));
   }
 
   openEditModal(item: LinkDTO): void {
@@ -69,9 +74,15 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     this.revokeSelectedImagePreview();
     this.currentImagePath = item.imagePath ?? null;
     this.isModalOpen = true;
+    this.editModalNavigationId = this.modalNavigationService.open(() => this.closeModal(true));
   }
 
-  closeModal(): void {
+  closeModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.editModalNavigationId = this.modalNavigationService.close(this.editModalNavigationId);
+    } else {
+      this.editModalNavigationId = null;
+    }
     this.isModalOpen = false;
     this.editingLinkId = null;
     this.resetForm();
@@ -168,11 +179,17 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
   openDeleteModal(item: LinkDTO): void {
     this.deleteTargetId = item.id;
     this.deleteModalOpen = true;
+    this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
 
-  cancelDelete(): void {
+  cancelDelete(fromNavigation = false): void {
     if (this.isDeleting) {
       return;
+    }
+    if (!fromNavigation) {
+      this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
+    } else {
+      this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
     this.deleteTargetId = null;
@@ -187,6 +204,7 @@ export class AdminNavigationLinksSectionComponent implements OnInit {
     this.adminLinkService.delete(targetId).subscribe({
       next: () => {
         this.isDeleting = false;
+        this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
         this.deleteTargetId = null;
         this.loadLinks();

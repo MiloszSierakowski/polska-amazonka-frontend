@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Shop, SaveShopPayload } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ToastService } from '../../../../core/admin/toast.service';
+import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 
 @Component({
   selector: 'app-admin-shops-section',
@@ -20,6 +21,8 @@ export class AdminShopsSectionComponent implements OnInit {
   deleteModalOpen = false;
   deleteTargetId: number | null = null;
   isDeleting = false;
+  private shopModalNavigationId: number | null = null;
+  private deleteModalNavigationId: number | null = null;
 
   private readonly shopDeleteBlockedMessage =
     'Nie można usunąć sklepu. Najpierw usuń lub przypisz do innego sklepu powiązane z nim kody rabatowe/afiliacyjne.';
@@ -41,7 +44,8 @@ export class AdminShopsSectionComponent implements OnInit {
   constructor(
     private fb: FormBuilder,
     private shopService: ShopService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
@@ -57,9 +61,15 @@ export class AdminShopsSectionComponent implements OnInit {
       isActive: true
     });
     this.isShopModalOpen = true;
+    this.shopModalNavigationId = this.modalNavigationService.open(() => this.closeShopModal(true));
   }
 
-  closeShopModal(): void {
+  closeShopModal(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.shopModalNavigationId = this.modalNavigationService.close(this.shopModalNavigationId);
+    } else {
+      this.shopModalNavigationId = null;
+    }
     this.isShopModalOpen = false;
     this.shopAddForm.reset({
       name: '',
@@ -126,11 +136,17 @@ export class AdminShopsSectionComponent implements OnInit {
   openDeleteModal(item: Shop): void {
     this.deleteTargetId = item.id;
     this.deleteModalOpen = true;
+    this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
 
-  cancelDelete(): void {
+  cancelDelete(fromNavigation = false): void {
     if (this.isDeleting) {
       return;
+    }
+    if (!fromNavigation) {
+      this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
+    } else {
+      this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
     this.deleteTargetId = null;
@@ -145,6 +161,7 @@ export class AdminShopsSectionComponent implements OnInit {
     this.shopService.delete(targetId).subscribe({
       next: () => {
         this.isDeleting = false;
+        this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
         this.deleteTargetId = null;
         if (this.editingShopId === targetId) {

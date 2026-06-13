@@ -1,10 +1,11 @@
-import { Component, EventEmitter, OnInit, Output } from '@angular/core';
+import { Component, EventEmitter, OnDestroy, OnInit, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AuthService } from '../services/auth.service';
 import { UserProfileService } from '../services/user-profile.service';
 import { UserProfile } from '../models/admin-user.model';
 import { ToastService } from '../../../core/admin/toast.service';
+import { ModalNavigationService } from '../../../core/services/modal-navigation.service';
 
 @Component({
   selector: 'app-admin-user-profile-modal',
@@ -13,7 +14,7 @@ import { ToastService } from '../../../core/admin/toast.service';
   templateUrl: './admin-user-profile-modal.component.html',
   styleUrl: './admin-user-profile-modal.component.scss'
 })
-export class AdminUserProfileModalComponent implements OnInit {
+export class AdminUserProfileModalComponent implements OnInit, OnDestroy {
   @Output() closed = new EventEmitter<void>();
   @Output() saved = new EventEmitter<UserProfile>();
 
@@ -21,6 +22,7 @@ export class AdminUserProfileModalComponent implements OnInit {
   isSaving = false;
   loadError = '';
   private originalLogin = '';
+  private modalNavigationId: number | null = null;
 
   profileForm = this.fb.group({
     login: ['', [Validators.required, Validators.minLength(3)]],
@@ -36,14 +38,25 @@ export class AdminUserProfileModalComponent implements OnInit {
     private fb: FormBuilder,
     private userProfileService: UserProfileService,
     private authService: AuthService,
-    private toastService: ToastService
+    private toastService: ToastService,
+    private modalNavigationService: ModalNavigationService
   ) {}
 
   ngOnInit(): void {
+    this.modalNavigationId = this.modalNavigationService.open(() => this.close(true));
     this.loadProfile();
   }
 
-  close(): void {
+  ngOnDestroy(): void {
+    this.modalNavigationId = this.modalNavigationService.unregister(this.modalNavigationId);
+  }
+
+  close(fromNavigation = false): void {
+    if (!fromNavigation) {
+      this.modalNavigationId = this.modalNavigationService.close(this.modalNavigationId);
+    } else {
+      this.modalNavigationId = null;
+    }
     this.closed.emit();
   }
 
@@ -100,7 +113,7 @@ export class AdminUserProfileModalComponent implements OnInit {
           this.authService.updateProfileState(profile);
           this.toastService.success('Profil użytkownika został zapisany.');
           this.saved.emit(profile);
-          this.closed.emit();
+          this.close();
         },
         error: () => {
           this.isSaving = false;
