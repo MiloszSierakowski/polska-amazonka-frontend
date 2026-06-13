@@ -1,3 +1,57 @@
+<section class="changelog-filters" aria-label="Filtry historii zmian">
+  <label class="filter-field">
+    <span>Użytkownik</span>
+    <input
+      type="text"
+      list="changelog-users"
+      [(ngModel)]="selectedUserLabel"
+      (change)="applyFilters()"
+      placeholder="Wszyscy użytkownicy"
+      [disabled]="isLoadingUsers"
+    />
+    <datalist id="changelog-users">
+      <option *ngFor="let user of users" [value]="userOptionLabel(user)"></option>
+    </datalist>
+  </label>
+
+  <div class="date-filter-shell">
+    <button
+      type="button"
+      class="date-filter-toggle"
+      [class.is-active]="isDateMenuOpen || !!activeDatePreset"
+      (click)="toggleDateMenu()"
+    >
+      <span class="date-filter-icon">▦</span>
+      {{ dateRangeLabel() }}
+    </button>
+    <button type="button" class="reset-filter" (click)="clearFilters()">Wyczyść filtry</button>
+  </div>
+
+  <div class="date-filter-panel" *ngIf="isDateMenuOpen">
+    <div class="quick-filters" aria-label="Szybkie filtry czasu">
+      <button type="button" [class.is-active]="activeDatePreset === 'today'" (click)="applyToday()">Dzisiaj</button>
+      <button type="button" [class.is-active]="activeDatePreset === 'yesterday'" (click)="applyYesterday()">Wczoraj</button>
+      <button type="button" [class.is-active]="activeDatePreset === 'last7'" (click)="applyLastSevenDays()">Ostatnie 7 dni</button>
+      <button type="button" [class.is-active]="activeDatePreset === 'currentMonth'" (click)="applyCurrentMonth()">Bieżący miesiąc</button>
+      <button type="button" [class.is-active]="activeDatePreset === 'custom'" (click)="openCustomRange()">Zakres dat</button>
+    </div>
+
+    <div class="custom-date-range" *ngIf="isCustomRangeOpen">
+      <label class="filter-field">
+        <span>Od</span>
+        <input type="date" [(ngModel)]="dateFrom" />
+      </label>
+
+      <label class="filter-field">
+        <span>Do</span>
+        <input type="date" [(ngModel)]="dateTo" />
+      </label>
+
+      <button type="button" class="apply-date-range" (click)="applyCustomRange()">Zastosuj</button>
+    </div>
+  </div>
+</section>
+
 <p class="changelog-status" *ngIf="isLoading">Ładowanie dziennika aktywności...</p>
 <p class="changelog-status changelog-status-error" *ngIf="!isLoading && hasLoadError">
   Nie udało się pobrać dziennika aktywności.

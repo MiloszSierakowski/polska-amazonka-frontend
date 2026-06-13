@@ -1,3 +1,137 @@
+.changelog-filters {
+  margin: 0 0 1rem;
+  padding: 0.9rem 1rem;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  display: grid;
+  grid-template-columns: minmax(12rem, 1fr) max-content;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+
+  span {
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: #475569;
+  }
+
+  input {
+    width: 100%;
+    max-width: 18rem;
+    min-height: 2.6rem;
+    border: 1px solid #cbd5e1;
+    border-radius: 0.7rem;
+    padding: 0 0.75rem;
+    background: #fff;
+    color: #0f172a;
+    font: inherit;
+  }
+
+  input:disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+  }
+}
+
+.quick-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+
+  button {
+    min-height: 2.6rem;
+    border: 1px solid #bfdbfe;
+    border-radius: 0.7rem;
+    padding: 0 0.75rem;
+    background: #eff6ff;
+    color: #1a7bb8;
+    font-size: 0.85rem;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  button.is-active {
+    border-color: #1a7bb8;
+    background: linear-gradient(135deg, #1a7bb8, #309fe5);
+    color: #fff;
+  }
+}
+
+.date-filter-shell {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 0.4rem;
+  justify-content: flex-end;
+  align-items: end;
+}
+
+.date-filter-toggle,
+.reset-filter,
+.apply-date-range {
+  min-height: 2.8rem;
+  border-radius: 999px;
+  padding: 0 1rem;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.date-filter-toggle {
+  border: 1px solid #bfdbfe;
+  background: #eff6ff;
+  color: #1a7bb8;
+}
+
+.date-filter-toggle.is-active {
+  border-color: #1a7bb8;
+  background: linear-gradient(135deg, #1a7bb8, #309fe5);
+  color: #fff;
+}
+
+.date-filter-icon {
+  margin-right: 0.35rem;
+}
+
+.reset-filter {
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  color: #334155;
+  padding: 0 0.75rem;
+  font-size: 0.84rem;
+}
+
+.date-filter-panel {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.custom-date-range {
+  padding: 0.85rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 0.85rem;
+  background: #fff;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(10rem, 1fr)) auto;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.apply-date-range {
+  border: 0;
+  background: linear-gradient(135deg, #1a7bb8, #309fe5);
+  color: #fff;
+}
+
 .changelog-status {
   margin: 0 0 0.75rem;
   font-size: 0.9rem;
@@ -67,5 +201,25 @@
     flex-direction: row;
     justify-content: space-between;
     align-items: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .changelog-filters {
+    grid-template-columns: 1fr;
+  }
+
+  .date-filter-shell {
+    justify-content: stretch;
+  }
+
+  .date-filter-toggle,
+  .reset-filter,
+  .quick-filters button {
+    flex: 1 1 100%;
+  }
+
+  .custom-date-range {
+    grid-template-columns: 1fr;
   }
 }
