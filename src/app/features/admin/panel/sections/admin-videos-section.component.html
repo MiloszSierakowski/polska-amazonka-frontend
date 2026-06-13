@@ -34,6 +34,61 @@
         <section class="editor-block">
           <h3>Produkty przypisane do filmu</h3>
           <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
+
+          <form
+            class="mobile-form compact"
+            *ngIf="isAddingNewProduct"
+            [formGroup]="productAddForm"
+            (ngSubmit)="saveProduct(video)"
+          >
+            <h3>Nowy produkt</h3>
+            <label>
+              <span>URL do sklepu</span>
+              <input type="url" formControlName="shopUrl" (input)="onAddProductUrlInput()" />
+            </label>
+            <div class="product-preview" *ngIf="addProductPreviewLoading || addProductPreview">
+              <p class="empty-state" *ngIf="addProductPreviewLoading">Pobieranie podglądu produktu...</p>
+              <div class="product-card product-card--preview" *ngIf="!addProductPreviewLoading && addProductPreview">
+                <div class="product-card-body">
+                  <img class="product-thumb" [src]="productPreviewImageSrc(addProductPreview.imageUrl)" [alt]="addProductPreview.name" />
+                  <div class="product-info">
+                    <span class="product-name">{{ addProductPreview.name }}</span>
+                    <span class="product-link">{{ addProductPreview.platform }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <p class="empty-state" *ngIf="isAllegroShopUrl(productAddForm.get('shopUrl')?.value)">
+              Allegro: otwórz ofertę w przeglądarce, kliknij PPM na zdjęciu → Kopiuj adres obrazu i wklej poniżej.
+            </p>
+            <label>
+              <span>Nazwa</span>
+              <input type="text" formControlName="name" />
+            </label>
+            <label>
+              <span>URL obrazka</span>
+              <input type="url" formControlName="imageUrl" />
+            </label>
+            <div class="file-upload-field">
+              <span class="file-upload-label">Prześlij zdjęcie</span>
+              <input
+                id="add-product-image-file"
+                type="file"
+                accept="image/*"
+                class="file-input-hidden"
+                (change)="onAddProductImageSelected($event)"
+              />
+              <label class="custom-file-upload" for="add-product-image-file">
+                <span>Wybierz plik</span>
+                <span class="custom-file-upload-name" *ngIf="addProductSelectedFileName">{{ addProductSelectedFileName }}</span>
+              </label>
+            </div>
+            <div class="form-actions">
+              <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
+              <button type="submit" class="primary-action" [disabled]="addProductPreviewLoading">Zapisz</button>
+            </div>
+          </form>
+
           <ul class="product-list" *ngIf="video.products.length; else noProducts">
             <li class="product-list-item" *ngFor="let product of video.products">
               <div class="product-card">
@@ -116,60 +171,6 @@
           <ng-template #noProducts>
             <p class="empty-state">Brak produktów dla tego filmu.</p>
           </ng-template>
-
-          <form
-            class="mobile-form compact"
-            *ngIf="isAddingNewProduct"
-            [formGroup]="productAddForm"
-            (ngSubmit)="saveProduct(video)"
-          >
-            <h3>Nowy produkt</h3>
-            <label>
-              <span>URL do sklepu</span>
-              <input type="url" formControlName="shopUrl" (input)="onAddProductUrlInput()" />
-            </label>
-            <div class="product-preview" *ngIf="addProductPreviewLoading || addProductPreview">
-              <p class="empty-state" *ngIf="addProductPreviewLoading">Pobieranie podglądu produktu...</p>
-              <div class="product-card product-card--preview" *ngIf="!addProductPreviewLoading && addProductPreview">
-                <div class="product-card-body">
-                  <img class="product-thumb" [src]="productPreviewImageSrc(addProductPreview.imageUrl)" [alt]="addProductPreview.name" />
-                  <div class="product-info">
-                    <span class="product-name">{{ addProductPreview.name }}</span>
-                    <span class="product-link">{{ addProductPreview.platform }}</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <p class="empty-state" *ngIf="isAllegroShopUrl(productAddForm.get('shopUrl')?.value)">
-              Allegro: otwórz ofertę w przeglądarce, kliknij PPM na zdjęciu → Kopiuj adres obrazu i wklej poniżej.
-            </p>
-            <label>
-              <span>Nazwa</span>
-              <input type="text" formControlName="name" />
-            </label>
-            <label>
-              <span>URL obrazka</span>
-              <input type="url" formControlName="imageUrl" />
-            </label>
-            <div class="file-upload-field">
-              <span class="file-upload-label">Prześlij zdjęcie</span>
-              <input
-                id="add-product-image-file"
-                type="file"
-                accept="image/*"
-                class="file-input-hidden"
-                (change)="onAddProductImageSelected($event)"
-              />
-              <label class="custom-file-upload" for="add-product-image-file">
-                <span>Wybierz plik</span>
-                <span class="custom-file-upload-name" *ngIf="addProductSelectedFileName">{{ addProductSelectedFileName }}</span>
-              </label>
-            </div>
-            <div class="form-actions">
-              <button type="button" class="secondary-action" (click)="cancelProductForm()">Anuluj</button>
-              <button type="submit" class="primary-action" [disabled]="addProductPreviewLoading">Zapisz</button>
-            </div>
-          </form>
         </section>
       </div>
     </article>
