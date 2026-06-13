@@ -643,6 +643,7 @@ export class AdminVideosSectionComponent implements OnInit {
       previewImageUrl: video.previewImageUrl,
       isActive: video.isActive,
       categoryIds: [...video.categoryIds],
+      blockReasons: [...(video.blockReasons ?? [])],
       products: video.products.map((product) => ({
         id: product.id,
         name: product.name,

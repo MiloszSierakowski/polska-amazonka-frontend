@@ -20,4 +20,5 @@ export interface Video {
   createdAt: string;
   categoryIds: number[];
   products: Product[];
+  blockReasons?: string[];
 }

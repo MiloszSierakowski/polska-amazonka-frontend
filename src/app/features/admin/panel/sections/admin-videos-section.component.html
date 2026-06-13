@@ -32,6 +32,13 @@
 
       <div class="video-editor" *ngIf="isVideoOpen(video)">
         <section class="editor-block">
+          <div class="video-diagnostics-alert" *ngIf="video.blockReasons.length">
+            <h4>Film może być niewidoczny na stronie publicznej</h4>
+            <ul>
+              <li *ngFor="let reason of video.blockReasons">{{ reason }}</li>
+            </ul>
+          </div>
+
           <h3>Produkty przypisane do filmu</h3>
           <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
 

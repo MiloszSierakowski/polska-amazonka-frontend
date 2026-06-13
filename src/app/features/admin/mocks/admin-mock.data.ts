@@ -17,6 +17,7 @@ export interface AdminVideoMock {
   previewImageUrl: string;
   isActive: boolean;
   categoryIds: number[];
+  blockReasons: string[];
   products: AdminVideoProductMock[];
 }
 
@@ -46,6 +47,7 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
     previewImageUrl: 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok',
     isActive: true,
     categoryIds: [1, 4],
+    blockReasons: [],
     products: [
       {
         id: 1,
@@ -68,6 +70,7 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
     previewImageUrl: 'https://placehold.co/160x220/0f172a/ffffff?text=TikTok',
     isActive: true,
     categoryIds: [1, 5],
+    blockReasons: [],
     products: [
       {
         id: 3,

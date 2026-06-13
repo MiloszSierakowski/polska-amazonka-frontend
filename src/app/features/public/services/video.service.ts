@@ -11,6 +11,7 @@ interface VideoApiResponse {
   title: string | null;
   isActive: boolean | null;
   products: ProductApiResponse[] | null;
+  blockReasons?: string[] | null;
 }
 
 interface ProductApiResponse {
@@ -190,6 +191,7 @@ export class VideoService {
       isActive: row.isActive ?? true,
       createdAt: '',
       categoryIds: [],
+      blockReasons: row.blockReasons ?? [],
       products: (row.products ?? []).map((product) => ({
         id: product.id,
         name: product.name,
