@@ -24,6 +24,7 @@ export class VideosGridComponent implements OnInit, OnChanges, OnDestroy {
   safeVideoUrl: SafeResourceUrl | null = null;
   isLoadingVideo = false;
   hasLoadError = false;
+  isLoadingVideos = false;
   private readonly brokenPreviewUrls = new Set<string>();
   private readonly brokenProductImageIds = new Set<number>();
   private modalNavigationId: number | null = null;
@@ -53,15 +54,25 @@ export class VideosGridComponent implements OnInit, OnChanges, OnDestroy {
     }
   }
 
+  get emptyStateMessage(): string {
+    if (this.selectedCategoryId != null) {
+      return 'Brak filmów dla tej kategorii.';
+    }
+    return 'Brak filmów do wyświetlenia.';
+  }
+
   loadVideos(): void {
+    this.isLoadingVideos = true;
     this.videoService.getPublicVideos(this.selectedCategoryId).subscribe({
       next: (videos) => {
         this.hasLoadError = false;
+        this.isLoadingVideos = false;
         this.videos = videos.filter((v) => v.isActive);
         this.brokenPreviewUrls.clear();
       },
       error: () => {
         this.hasLoadError = true;
+        this.isLoadingVideos = false;
         this.videos = [];
         this.loadFailed.emit();
       }

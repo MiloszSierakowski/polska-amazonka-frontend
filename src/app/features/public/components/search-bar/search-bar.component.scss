@@ -1,10 +1,15 @@
 @import "../../../../../styles/breakpoints";
 @import "../../../../../styles/scaling";
 
-.search-container {
+.search-bar-wrapper {
+  position: relative;
   width: min(100%, calc(100vw - (2 * $space-lg)));
   max-width: $search-max-width;
   margin: $space-xl auto $space-md auto;
+}
+
+.search-container {
+  width: 100%;
   display: flex;
   align-items: center;
   gap: $space-sm;
@@ -39,9 +44,16 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  cursor: pointer;
   padding: 0;
   transition: 0.2s;
+}
+
+.search-btn-decorative {
+  cursor: default;
+}
+
+.search-btn-clear {
+  cursor: pointer;
 
   &:hover {
     background: #1277d5;
@@ -51,6 +63,77 @@
 .search-icon {
   width: $search-icon-size;
   height: $search-icon-size;
+}
+
+.search-clear-icon {
+  color: #ffffff;
+  font-size: 1.65rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.search-results-dropdown {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  max-height: 20rem;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 2px solid #1e90ff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  text-decoration: none;
+  color: #222;
+  border-bottom: 1px solid #eef2f7;
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &:hover {
+    background: #f0f7ff;
+  }
+}
+
+.search-result-thumb {
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 0.5rem;
+  object-fit: cover;
+  flex: 0 0 auto;
+  background: #f1f5f9;
+}
+
+.search-result-name {
+  font-size: $font-md;
+  font-weight: 600;
+  line-height: 1.35;
+}
+
+.search-results-empty {
+  position: absolute;
+  top: calc(100% + 0.35rem);
+  left: 0;
+  right: 0;
+  z-index: 50;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  background: #ffffff;
+  border: 2px solid #1e90ff;
+  border-radius: 1rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.18);
+  color: #64748b;
+  font-size: $font-md;
+  text-align: center;
 }
 
 .welcome-text {
@@ -70,6 +153,10 @@
 }
 
 @media (max-width: $mobile) {
+  .search-bar-wrapper {
+    width: min(100%, calc(100vw - (2 * $space-md)));
+  }
+
   .search-container {
     gap: $space-xs;
     padding: $space-xs $space-sm;

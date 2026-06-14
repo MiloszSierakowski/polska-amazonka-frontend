@@ -1,13 +1,49 @@
-<div class="search-container">
-  <input
-    type="text"
-    placeholder="Znajd produkt po nazwie"
-    class="search-input"
-  />
+<div class="search-bar-wrapper">
+  <div class="search-container">
+    <input
+      type="text"
+      placeholder="Znajd produkt po nazwie"
+      class="search-input"
+      [formControl]="searchControl"
+      (keydown.enter)="$event.preventDefault()"
+    />
 
-  <button class="search-btn">
-    <img src="assets/icons/lupa.png" alt="Szukaj" class="search-icon" />
-  </button>
+    <span class="search-btn search-btn-decorative" *ngIf="!hasSearchText" aria-hidden="true">
+      <img src="assets/icons/lupa.png" alt="" class="search-icon" />
+    </span>
+
+    <button
+      type="button"
+      class="search-btn search-btn-clear"
+      *ngIf="hasSearchText"
+      aria-label="Wyczyść wyszukiwanie"
+      (click)="clearSearch()"
+    >
+      <span class="search-clear-icon" aria-hidden="true">×</span>
+    </button>
+  </div>
+
+  <div class="search-results-dropdown" *ngIf="searchResults.length">
+    <a
+      class="search-result-item"
+      *ngFor="let product of searchResults"
+      [href]="productRedirectUrl(product.id)"
+      target="_blank"
+      rel="noopener noreferrer"
+      (click)="onProductClick(product.id)"
+    >
+      <img
+        class="search-result-thumb"
+        [src]="productImageSrc(product.imageUrl)"
+        [alt]="product.name"
+      />
+      <span class="search-result-name">{{ product.name }}</span>
+    </a>
+  </div>
+
+  <p class="search-results-empty" *ngIf="!isSearching && searchControl.value.trim() && !searchResults.length">
+    Brak produktów pasujących do wyszukiwania.
+  </p>
 </div>
 
 <p class="welcome-text">

@@ -1,5 +1,7 @@
 <section class="videos-section" *ngIf="!hasLoadError">
-  <div class="videos-grid" *ngIf="videos.length; else noVideos">
+  <p class="videos-loading" *ngIf="isLoadingVideos">Ładowanie filmów...</p>
+
+  <div class="videos-grid" *ngIf="!isLoadingVideos && videos.length; else noVideos">
     <button
       type="button"
       class="video-tile"
@@ -18,7 +20,7 @@
   </div>
 
   <ng-template #noVideos>
-    <div class="no-videos">Brak filmów dla tej kategorii.</div>
+    <div class="no-videos" *ngIf="!isLoadingVideos">{{ emptyStateMessage }}</div>
   </ng-template>
 </section>
 
