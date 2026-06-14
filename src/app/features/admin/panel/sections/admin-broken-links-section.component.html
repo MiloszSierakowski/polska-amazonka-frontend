@@ -1,97 +1,213 @@
 <div class="broken-links-admin">
-  <div class="broken-links-header">
-    <h2 class="broken-links-title">Uszkodzone linki</h2>
-    <p class="broken-links-subtitle">Produkty z niedziałającymi adresami URL wymagające naprawy.</p>
-  </div>
+  <p class="broken-links-intro">
+    Filmy z produktami wymagającymi uwagi. Rozwiń film, otwórz link w sklepie, zweryfikuj go automatycznie albo ustaw status ręcznie.
+  </p>
 
-  <p class="broken-links-status" *ngIf="isLoading">Ładowanie uszkodzonych linków...</p>
+  <p class="broken-links-status" *ngIf="isLoading">Ładowanie listy...</p>
   <p class="broken-links-status broken-links-status-error" *ngIf="!isLoading && hasLoadError">
-    Nie udało się pobrać listy uszkodzonych linków.
+    Nie udało się pobrać listy linków wymagających sprawdzenia.
   </p>
-  <p class="broken-links-status" *ngIf="!isLoading && !hasLoadError && !items.length">
-    Brak uszkodzonych linków. Wszystko działa poprawnie.
+  <p class="broken-links-status" *ngIf="!isLoading && !hasLoadError && !productCount">
+    Brak linków wymagających sprawdzenia.
   </p>
 
-  <div class="section-body" *ngIf="!isLoading && !hasLoadError && items.length">
-    <ul class="item-list">
-      <li class="broken-link-list-item" *ngFor="let item of items; trackBy: trackByItem">
-        <div class="broken-link-card">
-          <div class="broken-link-card-body">
-            <img
-              class="broken-link-thumb"
-              [src]="productImageSrc(item.imageUrl)"
-              [alt]="item.productName"
-            />
-            <div class="broken-link-info">
-              <span class="broken-link-product-name">{{ item.productName }}</span>
-              <span class="broken-link-video-title">Film: {{ item.videoTitle }}</span>
-              <span class="broken-link-url">{{ item.shopUrl }}</span>
-            </div>
-          </div>
-          <div class="broken-link-action-group">
-            <span class="broken-link-badge">Uszkodzony</span>
-            <button type="button" class="broken-link-action" (click)="startEdit(item)">
-              {{ isEditing(item) ? 'Anuluj edycję' : 'Napraw' }}
-            </button>
+  <div class="video-list" *ngIf="!isLoading && !hasLoadError && productCount">
+    <article
+      class="video-card"
+      *ngFor="let group of groups; trackBy: trackGroup"
+      [class.is-open]="isVideoOpen(group)"
+    >
+      <div class="video-list-card">
+        <img class="video-list-thumb" [src]="videoPreviewSrc(group)" [alt]="group.videoTitle" />
+        <div class="video-list-main">
+          <span class="video-list-title">{{ group.videoTitle }}</span>
+          <div class="video-list-meta-row">
+            <span class="broken-links-video-meta">
+              {{ group.products.length }}
+              {{ group.products.length === 1 ? 'produkt' : 'produkty' }}
+            </span>
+            <span class="review-alert-badge">
+              <span class="badge-short">Uwaga</span>
+              <span class="badge-full">Wymaga uwagi</span>
+            </span>
           </div>
         </div>
-
-        <form
-          class="item-form broken-link-edit-form"
-          *ngIf="isEditing(item)"
-          [formGroup]="productEditForm"
-          (ngSubmit)="saveEdit(item)"
+        <button
+          type="button"
+          class="video-list-action video-list-action-chevron"
+          (click)="toggleVideo(group)"
+          [attr.aria-expanded]="isVideoOpen(group)"
+          [attr.aria-label]="isVideoOpen(group) ? 'Zwiń produkty' : 'Rozwiń produkty'"
         >
-          <h3>Naprawa linku produktu</h3>
-          <p class="broken-link-form-error" *ngIf="saveError">{{ saveError }}</p>
-          <label>
-            <span>URL do sklepu</span>
-            <input type="url" formControlName="shopUrl" (input)="onEditUrlInput()" />
-          </label>
-          <div *ngIf="editPreviewLoading || editPreview">
-            <p class="empty-state" *ngIf="editPreviewLoading">Pobieranie podglądu produktu...</p>
-            <div class="broken-link-preview" *ngIf="!editPreviewLoading && editPreview">
-              <img
-                class="broken-link-thumb"
-                [src]="productPreviewImageSrc(editPreview.imageUrl)"
-                [alt]="editPreview.name"
-              />
-              <div class="broken-link-info">
-                <span class="broken-link-product-name">{{ editPreview.name }}</span>
-                <span class="broken-link-video-title">{{ editPreview.platform }}</span>
+          <span class="video-chevron" [class.is-open]="isVideoOpen(group)"></span>
+        </button>
+      </div>
+
+      <div class="video-editor" *ngIf="isVideoOpen(group)">
+        <section class="editor-block">
+          <h3>Produkty z problematycznym linkiem</h3>
+          <ul class="product-list">
+            <li class="product-list-item" *ngFor="let item of group.products; trackBy: trackProduct">
+              <div class="product-card">
+                <div class="product-card-body">
+                  <img
+                    class="product-thumb"
+                    [src]="productImageSrc(item.imageUrl)"
+                    [alt]="item.productName"
+                  />
+                  <div class="product-info">
+                    <span class="product-name">{{ item.productName }}</span>
+                    <span class="product-link-label">{{ linkPlatformLabel(item.shopUrl) }}</span>
+                    <a
+                      class="product-shop-link"
+                      *ngIf="item.shopUrl"
+                      [href]="item.shopUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Przejdź do sklepu
+                    </a>
+                  </div>
+                </div>
+
+                <div class="product-review-panel">
+                  <div class="product-review-actions">
+                    <button type="button" class="product-action" (click)="openVerifyModal(item)">
+                      <span class="action-label-short">Weryfikuj</span>
+                      <span class="action-label-full">Zweryfikuj link</span>
+                    </button>
+                  </div>
+
+                  <div class="link-status-switch" [class.is-saving]="isFlagging(item)">
+                    <span class="link-status-switch-label">
+                      <span class="label-short">Werdykt</span>
+                      <span class="label-full">Twój werdykt</span>
+                    </span>
+                    <div class="link-status-switch-track" role="group" aria-label="Status linku produktu">
+                      <button
+                        type="button"
+                        class="link-status-option link-status-option--ok"
+                        [class.is-active]="linkStatus(item) === 'working'"
+                        [disabled]="isFlagging(item)"
+                        (click)="setLinkStatus(item, 'working')"
+                        aria-label="Oznacz jako sprawny"
+                      >
+                        OK
+                      </button>
+                      <button
+                        type="button"
+                        class="link-status-option link-status-option--review"
+                        [class.is-active]="linkStatus(item) === 'needs_review'"
+                        [disabled]="isFlagging(item)"
+                        (click)="setLinkStatus(item, 'needs_review')"
+                        aria-label="Oznacz jako niepewny"
+                      >
+                        <span class="opt-short">Niep.</span>
+                        <span class="opt-full">Niepewny</span>
+                      </button>
+                      <button
+                        type="button"
+                        class="link-status-option link-status-option--bad"
+                        [class.is-active]="linkStatus(item) === 'broken'"
+                        [disabled]="isFlagging(item)"
+                        (click)="setLinkStatus(item, 'broken')"
+                        aria-label="Oznacz jako niesprawny"
+                      >
+                        Zły
+                      </button>
+                    </div>
+                    <ul class="link-status-legend">
+                      <li class="link-status-legend-item link-status-legend-item--ok">
+                        <strong>OK</strong> — link działa, znika z listy (automat sprawdzi go ponownie w nocy).
+                      </li>
+                      <li class="link-status-legend-item link-status-legend-item--review">
+                        <strong>Niep.</strong> — automat nie był pewien; zostaje do ręcznej oceny.
+                      </li>
+                      <li class="link-status-legend-item link-status-legend-item--bad">
+                        <strong>Zły</strong> — link nie działa, trzeba go naprawić.
+                      </li>
+                    </ul>
+                  </div>
+                </div>
               </div>
-            </div>
-          </div>
-          <label>
-            <span>Nazwa</span>
-            <input type="text" formControlName="name" />
-          </label>
-          <label>
-            <span>URL obrazka</span>
-            <input type="url" formControlName="imageUrl" />
-          </label>
-          <div class="file-upload-field">
-            <span class="file-upload-label">Prześlij zdjęcie</span>
-            <input
-              [id]="'broken-link-image-' + item.productId"
-              type="file"
-              accept="image/*"
-              class="file-input-hidden"
-              (change)="onEditImageSelected($event)"
-            />
-            <label class="custom-file-upload" [attr.for]="'broken-link-image-' + item.productId">
-              <span>Wybierz plik</span>
-              <span class="custom-file-upload-name" *ngIf="editSelectedFileName">{{ editSelectedFileName }}</span>
-            </label>
-          </div>
-          <div class="form-actions">
-            <button type="button" class="secondary-action" (click)="cancelEdit()" [disabled]="isSaving">Anuluj</button>
-            <button type="submit" class="primary-action" [disabled]="isSaving">
-              {{ isSaving ? 'Zapisywanie...' : 'Zapisz' }}
-            </button>
-          </div>
-        </form>
-      </li>
-    </ul>
+            </li>
+          </ul>
+        </section>
+      </div>
+    </article>
+  </div>
+</div>
+
+<div class="review-modal-overlay" *ngIf="verifyModalOpen">
+  <div
+    class="review-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="review-verify-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="review-modal-header">
+      <h3 id="review-verify-title">Weryfikacja linku produktu</h3>
+      <button type="button" class="review-modal-close" (click)="closeVerifyModal()" aria-label="Zamknij">×</button>
+    </div>
+
+    <p class="verify-link-loading" *ngIf="verifyLoading">Sprawdzanie linku...</p>
+
+    <ng-container *ngIf="!verifyLoading && verifyResult as result">
+      <div
+        class="verify-link-status"
+        [class.verify-link-status-ok]="result.linkWorking"
+        [class.verify-link-status-bad]="!result.linkWorking && !result.verificationUncertain"
+        [class.verify-link-status-uncertain]="result.verificationUncertain"
+      >
+        {{
+          result.verificationUncertain
+            ? 'Automatyczna weryfikacja nadal niedostępna'
+            : result.linkWorking
+              ? 'Link jest sprawny'
+              : 'Link jest niesprawny'
+        }}
+      </div>
+
+      <p class="verify-link-hint">
+        {{
+          result.verificationUncertain
+            ? 'Ustaw status ręcznie albo sprawdź link w przeglądarce.'
+            : result.linkWorking
+              ? 'Link sprawny — zniknie z tej listy po zamknięciu okna.'
+              : 'Link niesprawny — pozostaje na liście do naprawy.'
+        }}
+      </p>
+
+      <div class="verify-link-field">
+        <span class="verify-link-field-label">Tytuł — teraz masz</span>
+        <span class="verify-link-field-value">{{ result.currentTitle || '—' }}</span>
+        <span class="verify-link-field-label">Tytuł — ze sklepu</span>
+        <span class="verify-link-field-value">{{ result.storeTitle || 'Brak danych ze sklepu' }}</span>
+      </div>
+
+      <div class="verify-link-field">
+        <span class="verify-link-field-label">Obrazek — teraz masz</span>
+        <img
+          class="verify-link-image"
+          [src]="verifyStoreImageSrc(result.currentImageUrl)"
+          alt="Obecny obrazek produktu"
+        />
+        <span class="verify-link-field-label">Obrazek — ze sklepu</span>
+        <img
+          class="verify-link-image"
+          *ngIf="result.storeImageUrl; else verifyStoreImageMissing"
+          [src]="verifyStoreImageSrc(result.storeImageUrl)"
+          alt="Obrazek produktu ze sklepu"
+        />
+        <ng-template #verifyStoreImageMissing>
+          <span class="verify-link-field-value">Brak danych ze sklepu</span>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <div class="review-modal-footer">
+      <button type="button" class="secondary-action" (click)="closeVerifyModal()">Wróć</button>
+    </div>
   </div>
 </div>

@@ -33,7 +33,10 @@
         <app-admin-shops-section *ngIf="section.id === 'shops'"></app-admin-shops-section>
         <app-admin-discounts-section *ngIf="section.id === 'discounts'"></app-admin-discounts-section>
         <app-admin-analytics-section *ngIf="section.id === 'analytics'"></app-admin-analytics-section>
-        <app-admin-broken-links-section *ngIf="section.id === 'broken-links'"></app-admin-broken-links-section>
+        <app-admin-broken-links-section
+          *ngIf="section.id === 'broken-links'"
+          [active]="isOpen('broken-links')"
+        ></app-admin-broken-links-section>
         <app-admin-navigation-links-section *ngIf="section.id === 'navigation-links'"></app-admin-navigation-links-section>
         <app-admin-users-section *ngIf="section.id === 'users'"></app-admin-users-section>
         <app-admin-changelog-section *ngIf="section.id === 'changelog'"></app-admin-changelog-section>

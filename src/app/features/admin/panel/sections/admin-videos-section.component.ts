@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminVideoMock, AdminVideoProductMock } from '../../mocks/admin-mock.data';
-import { VideoService } from '../../../public/services/video.service';
+import { VideoService, ProductLinkVerifyResult } from '../../../public/services/video.service';
 import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
@@ -10,6 +10,7 @@ import { ToastService } from '../../../../core/admin/toast.service';
 import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
 import { ProductImageUploadService } from '../../services/product-image-upload.service';
 import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
+import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -39,10 +40,18 @@ export class AdminVideosSectionComponent implements OnInit {
   newProductSelectedFileNames: Record<number, string> = {};
   newProductPreviewLoading: Record<number, boolean> = {};
   newProductPreview: Record<number, ProductPreview | null> = {};
+  verifyModalOpen = false;
+  verifyLoading = false;
+  verifyApplyingTitle = false;
+  verifyApplyingImage = false;
+  verifyResult: ProductLinkVerifyResult | null = null;
+  verifyVideoId: number | null = null;
+  verifyProductId: number | null = null;
 
   private readonly previewTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private videoModalNavigationId: number | null = null;
   private deleteModalNavigationId: number | null = null;
+  private verifyModalNavigationId: number | null = null;
 
   videoForm = this.fb.group({
     title: ['', Validators.required],
@@ -77,7 +86,8 @@ export class AdminVideosSectionComponent implements OnInit {
     private toastService: ToastService,
     private productPreviewService: ProductPreviewService,
     private productImageUploadService: ProductImageUploadService,
-    private modalNavigationService: ModalNavigationService
+    private modalNavigationService: ModalNavigationService,
+    private brokenLinkRefreshService: BrokenLinkRefreshService
   ) {}
 
   ngOnInit(): void {
@@ -108,6 +118,27 @@ export class AdminVideosSectionComponent implements OnInit {
 
   productPreviewImageSrc(imageUrl: string | null | undefined): string {
     return this.videoService.resolveProductImageUrl(imageUrl);
+  }
+
+  linkPlatformLabel(url: string): string {
+    try {
+      const host = new URL(url).hostname.replace(/^www\./i, '').toLowerCase();
+      if (host.includes('aliexpress')) {
+        return 'AliExpress';
+      }
+      if (host.includes('allegro')) {
+        return 'Allegro';
+      }
+      if (host.includes('temu')) {
+        return 'Temu';
+      }
+      if (host.includes('amazon')) {
+        return 'Amazon';
+      }
+      return host;
+    } catch {
+      return 'Sklep';
+    }
   }
 
   toggleProductsPanel(video: AdminVideoMock): void {
@@ -427,11 +458,103 @@ export class AdminVideosSectionComponent implements OnInit {
     });
   }
 
-  resyncProduct(video: AdminVideoMock, productId: number): void {
-    this.videoService.resyncProduct(video.id, productId).subscribe(() => {
-      this.toastService.success('Dane produktu zostały odświeżone.');
-      this.refreshVideo(video.id);
+  openVerifyProductModal(videoId: number, productId: number): void {
+    this.verifyVideoId = videoId;
+    this.verifyProductId = productId;
+    this.verifyResult = null;
+    this.verifyLoading = true;
+    this.verifyModalOpen = true;
+    this.verifyModalNavigationId = this.modalNavigationService.open(() => this.closeVerifyModal(true));
+    this.videoService.verifyProductLink(videoId, productId).subscribe({
+      next: (result) => {
+        this.verifyLoading = false;
+        this.verifyResult = result;
+        this.refreshVideo(videoId);
+        this.brokenLinkRefreshService.requestRefresh();
+      },
+      error: () => {
+        this.verifyLoading = false;
+        this.toastService.warning('Nie udało się zweryfikować linku produktu.');
+        this.closeVerifyModal();
+      }
     });
+  }
+
+  closeVerifyModal(fromNavigation = false): void {
+    if (fromNavigation) {
+      this.verifyModalNavigationId = this.modalNavigationService.close(this.verifyModalNavigationId);
+    } else {
+      this.verifyModalNavigationId = null;
+    }
+    this.verifyModalOpen = false;
+    this.verifyLoading = false;
+    this.verifyApplyingTitle = false;
+    this.verifyApplyingImage = false;
+    this.verifyResult = null;
+    this.verifyVideoId = null;
+    this.verifyProductId = null;
+  }
+
+  applyVerifyStoreTitle(): void {
+    if (this.verifyVideoId == null || this.verifyProductId == null || this.verifyApplyingTitle) {
+      return;
+    }
+    this.verifyApplyingTitle = true;
+    this.videoService.applyStoreTitleToProduct(this.verifyVideoId, this.verifyProductId).subscribe({
+      next: (video) => {
+        this.verifyApplyingTitle = false;
+        this.syncVideoFromResponse(video);
+        const product = video.products.find((item) => item.id === this.verifyProductId);
+        if (this.verifyResult && product) {
+          this.verifyResult = {
+            ...this.verifyResult,
+            currentTitle: product.name
+          };
+        }
+        this.toastService.success('Tytuł produktu został nadpisany.');
+      },
+      error: () => {
+        this.verifyApplyingTitle = false;
+        this.toastService.warning('Nie udało się nadpisać tytułu produktu.');
+      }
+    });
+  }
+
+  applyVerifyStoreImage(): void {
+    if (this.verifyVideoId == null || this.verifyProductId == null || this.verifyApplyingImage) {
+      return;
+    }
+    this.verifyApplyingImage = true;
+    this.videoService.applyStoreImageToProduct(this.verifyVideoId, this.verifyProductId).subscribe({
+      next: (video) => {
+        this.verifyApplyingImage = false;
+        this.syncVideoFromResponse(video);
+        const product = video.products.find((item) => item.id === this.verifyProductId);
+        if (this.verifyResult && product) {
+          this.verifyResult = {
+            ...this.verifyResult,
+            currentImageUrl: product.imageUrl
+          };
+        }
+        this.toastService.success('Obrazek produktu został nadpisany.');
+      },
+      error: () => {
+        this.verifyApplyingImage = false;
+        this.toastService.warning('Nie udało się nadpisać obrazka produktu.');
+      }
+    });
+  }
+
+  verifyStoreImageSrc(imageUrl: string | null | undefined): string {
+    return this.videoService.resolveProductImageUrl(imageUrl ?? null);
+  }
+
+  canApplyVerifyStoreTitle(): boolean {
+    return !!this.verifyResult?.storeTitle?.trim();
+  }
+
+  canApplyVerifyStoreImage(): boolean {
+    return !!this.verifyResult?.storeImageUrl?.trim();
   }
 
   toggleNewVideoCategory(categoryId: number): void {
@@ -610,23 +733,27 @@ export class AdminVideosSectionComponent implements OnInit {
 
   private refreshVideo(videoId: number): void {
     this.videoService.getById(videoId).subscribe((video) => {
-      const updated = this.toAdminVideo(video);
-      this.videos = this.videos.map((item) => (item.id === videoId ? updated : item));
+      this.syncVideoFromResponse(video);
       if (this.openedVideoId === videoId) {
         this.videoForm.reset({
-          title: updated.title,
-          tiktokUrl: updated.tiktokUrl,
-          isActive: updated.isActive
+          title: video.title,
+          tiktokUrl: video.tiktokUrl,
+          isActive: video.isActive
         });
       }
       if (this.modalVideoId === videoId) {
         this.videoForm.reset({
-          title: updated.title,
-          tiktokUrl: updated.tiktokUrl,
-          isActive: updated.isActive
+          title: video.title,
+          tiktokUrl: video.tiktokUrl,
+          isActive: video.isActive
         });
       }
     });
+  }
+
+  private syncVideoFromResponse(video: Video): void {
+    const updated = this.toAdminVideo(video);
+    this.videos = this.videos.map((item) => (item.id === video.id ? updated : item));
   }
 
   private loadVideos(): void {

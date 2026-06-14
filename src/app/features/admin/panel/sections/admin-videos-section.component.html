@@ -107,11 +107,23 @@
                   />
                   <div class="product-info">
                     <span class="product-name">{{ product.name }}</span>
-                    <span class="product-link">{{ product.shopUrl }}</span>
+                    <span class="product-link product-link--short">{{ linkPlatformLabel(product.shopUrl) }}</span>
+                    <span class="product-link product-link--full">{{ product.shopUrl }}</span>
+                    <a
+                      class="product-shop-link"
+                      *ngIf="product.shopUrl"
+                      [href]="product.shopUrl"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Przejdź do sklepu
+                    </a>
                   </div>
                 </div>
                 <div class="product-action-group">
-                  <button type="button" class="product-action" (click)="resyncProduct(video, product.id)">Odśwież</button>
+                  <button type="button" class="product-action" (click)="openVerifyProductModal(video.id, product.id)">
+                    Zweryfikuj link
+                  </button>
                   <button type="button" class="product-action" (click)="startEditProduct(product)">Edytuj</button>
                   <button
                     type="button"
@@ -346,6 +358,100 @@
       <button type="button" class="video-form-btn video-form-btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
         {{ isDeleting ? 'Usuwanie…' : 'Usuń film' }}
       </button>
+    </div>
+  </div>
+</div>
+
+<div class="video-modal-overlay" *ngIf="verifyModalOpen">
+  <div
+    class="video-modal verify-link-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="verify-link-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="video-modal-header">
+      <h3 id="verify-link-title">Weryfikacja linku produktu</h3>
+      <button type="button" class="video-modal-close" (click)="closeVerifyModal()" aria-label="Zamknij">×</button>
+    </div>
+
+    <p class="verify-link-loading" *ngIf="verifyLoading">Sprawdzanie linku...</p>
+
+    <ng-container *ngIf="!verifyLoading && verifyResult as result">
+      <div
+        class="verify-link-status"
+        [class.verify-link-status-ok]="result.linkWorking"
+        [class.verify-link-status-bad]="!result.linkWorking && !result.verificationUncertain"
+        [class.verify-link-status-uncertain]="result.verificationUncertain"
+      >
+        {{
+          result.verificationUncertain
+            ? 'Automatyczna weryfikacja niedostępna'
+            : result.linkWorking
+              ? 'Link jest sprawny'
+              : 'Link jest niesprawny'
+        }}
+      </div>
+
+      <p class="verify-link-hint">
+        {{
+          result.verificationUncertain
+            ? 'Automatyczna weryfikacja niedostępna — link trafi do „Linki wymagające sprawdzenia”. Otwórz adres ręcznie w przeglądarce.'
+            : result.linkWorking
+              ? 'Link potwierdzony jako sprawny — zniknie z listy.'
+              : 'Link potwierdzony jako niesprawny — pojawi się w „Linki wymagające sprawdzenia”.'
+        }}
+      </p>
+
+      <div class="verify-link-field">
+        <div class="verify-link-field-content">
+          <span class="verify-link-field-label">Tytuł — teraz masz</span>
+          <span class="verify-link-field-value">{{ result.currentTitle || '—' }}</span>
+          <span class="verify-link-field-label">Tytuł — ze sklepu</span>
+          <span class="verify-link-field-value">{{ result.storeTitle || 'Brak danych ze sklepu' }}</span>
+        </div>
+        <button
+          type="button"
+          class="product-action verify-link-apply-btn"
+          (click)="applyVerifyStoreTitle()"
+          [disabled]="verifyApplyingTitle || !canApplyVerifyStoreTitle()"
+        >
+          {{ verifyApplyingTitle ? 'Zapisywanie…' : 'Napisz' }}
+        </button>
+      </div>
+
+      <div class="verify-link-field">
+        <div class="verify-link-field-content">
+          <span class="verify-link-field-label">Obrazek — teraz masz</span>
+          <img
+            class="verify-link-image"
+            [src]="verifyStoreImageSrc(result.currentImageUrl)"
+            alt="Obecny obrazek produktu"
+          />
+          <span class="verify-link-field-label">Obrazek — ze sklepu</span>
+          <img
+            class="verify-link-image"
+            *ngIf="result.storeImageUrl; else verifyStoreImageMissing"
+            [src]="verifyStoreImageSrc(result.storeImageUrl)"
+            alt="Obrazek produktu ze sklepu"
+          />
+          <ng-template #verifyStoreImageMissing>
+            <span class="verify-link-field-value">Brak danych ze sklepu</span>
+          </ng-template>
+        </div>
+        <button
+          type="button"
+          class="product-action verify-link-apply-btn"
+          (click)="applyVerifyStoreImage()"
+          [disabled]="verifyApplyingImage || !canApplyVerifyStoreImage()"
+        >
+          {{ verifyApplyingImage ? 'Zapisywanie…' : 'Napisz' }}
+        </button>
+      </div>
+    </ng-container>
+
+    <div class="video-modal-footer verify-link-footer">
+      <button type="button" class="secondary-action" (click)="closeVerifyModal()">Wróć</button>
     </div>
   </div>
 </div>

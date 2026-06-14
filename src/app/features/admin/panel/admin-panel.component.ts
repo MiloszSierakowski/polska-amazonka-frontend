@@ -50,7 +50,7 @@ export class AdminPanelComponent {
     { id: 'shops', title: 'Sklepy', adminOnly: false },
     { id: 'discounts', title: 'Kody rabatowe i afiliacyjne', adminOnly: false },
     { id: 'analytics', title: 'Statystyki', adminOnly: false },
-    { id: 'broken-links', title: 'Uszkodzone linki', adminOnly: false },
+    { id: 'broken-links', title: 'Linki wymagające sprawdzenia', adminOnly: false },
     { id: 'navigation-links', title: 'Linki', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
     { id: 'changelog', title: 'Historia zmian', adminOnly: true }

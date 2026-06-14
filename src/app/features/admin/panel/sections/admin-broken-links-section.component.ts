@@ -1,208 +1,260 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnDestroy, OnInit, SimpleChanges } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { HttpErrorResponse } from '@angular/common/http';
-import { BrokenLinkProduct } from '../../models/broken-link.model';
+import { Subject, takeUntil } from 'rxjs';
+import {
+  BrokenLinkProduct,
+  BrokenLinkVideoGroup,
+  ProductLinkReviewStatus
+} from '../../models/broken-link.model';
 import { BrokenLinkService } from '../../services/broken-link.service';
-import { VideoService } from '../../../public/services/video.service';
+import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
+import { VideoService, ProductLinkVerifyResult } from '../../../public/services/video.service';
 import { ToastService } from '../../../../core/admin/toast.service';
-import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
-import { ProductImageUploadService } from '../../services/product-image-upload.service';
 
 @Component({
   selector: 'app-admin-broken-links-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule],
   templateUrl: './admin-broken-links-section.component.html',
   styleUrl: './admin-broken-links-section.component.scss'
 })
-export class AdminBrokenLinksSectionComponent implements OnInit {
-  items: BrokenLinkProduct[] = [];
+export class AdminBrokenLinksSectionComponent implements OnInit, OnChanges, OnDestroy {
+  @Input() active = false;
+
+  groups: BrokenLinkVideoGroup[] = [];
+  productCount = 0;
+  openedVideoId: number | null = null;
   isLoading = false;
   hasLoadError = false;
-  editingKey: string | null = null;
-  saveError = '';
-  isSaving = false;
-  editPreviewLoading = false;
-  editPreview: ProductPreview | null = null;
-  editSelectedFileName = '';
+  flaggingKey: string | null = null;
+  verifyModalOpen = false;
+  verifyLoading = false;
+  verifyResult: ProductLinkVerifyResult | null = null;
+  verifyVideoId: number | null = null;
+  verifyProductId: number | null = null;
 
-  productEditForm = this.fb.group({
-    name: ['', Validators.required],
-    imageUrl: [''],
-    shopUrl: ['', Validators.required]
-  });
-
-  private previewTimer: ReturnType<typeof setTimeout> | null = null;
+  private readonly destroy$ = new Subject<void>();
 
   constructor(
-    private fb: FormBuilder,
     private brokenLinkService: BrokenLinkService,
+    private brokenLinkRefreshService: BrokenLinkRefreshService,
     private videoService: VideoService,
-    private toastService: ToastService,
-    private productPreviewService: ProductPreviewService,
-    private productImageUploadService: ProductImageUploadService
+    private toastService: ToastService
   ) {}
 
   ngOnInit(): void {
-    this.loadBrokenLinks();
+    this.brokenLinkRefreshService.refreshRequested$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(() => this.loadItems());
+    this.loadItems();
   }
 
-  trackKey(item: BrokenLinkProduct): string {
-    return `${item.videoId}-${item.productId}`;
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes['active']?.currentValue === true && !changes['active'].firstChange) {
+      this.loadItems();
+    }
   }
 
-  trackByItem(_index: number, item: BrokenLinkProduct): string {
-    return this.trackKey(item);
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  trackGroup(_index: number, group: BrokenLinkVideoGroup): number {
+    return group.videoId;
+  }
+
+  trackProduct(_index: number, item: BrokenLinkProduct): number {
+    return item.productId;
+  }
+
+  isVideoOpen(group: BrokenLinkVideoGroup): boolean {
+    return this.openedVideoId === group.videoId;
+  }
+
+  toggleVideo(group: BrokenLinkVideoGroup): void {
+    this.openedVideoId = this.isVideoOpen(group) ? null : group.videoId;
+  }
+
+  videoPreviewSrc(group: BrokenLinkVideoGroup): string {
+    return this.videoService.resolvePreviewImageUrl(group.videoPreviewImageUrl);
   }
 
   productImageSrc(imageUrl: string | null): string {
     return this.videoService.resolveProductImageUrl(imageUrl);
   }
 
-  productPreviewImageSrc(imageUrl: string | null | undefined): string {
-    return this.videoService.resolveProductImageUrl(imageUrl ?? null);
+  linkPlatformLabel(url: string): string {
+    try {
+      const host = new URL(url).hostname.replace(/^www\./i, '').toLowerCase();
+      if (host.includes('aliexpress')) {
+        return 'AliExpress';
+      }
+      if (host.includes('allegro')) {
+        return 'Allegro';
+      }
+      if (host.includes('temu')) {
+        return 'Temu';
+      }
+      if (host.includes('amazon')) {
+        return 'Amazon';
+      }
+      return host;
+    } catch {
+      return 'Sklep';
+    }
   }
 
-  isEditing(item: BrokenLinkProduct): boolean {
-    return this.editingKey === this.trackKey(item);
+  linkStatus(item: BrokenLinkProduct): ProductLinkReviewStatus {
+    if (item.isBroken) {
+      return 'broken';
+    }
+    if (item.needsReview) {
+      return 'needs_review';
+    }
+    return 'working';
   }
 
-  startEdit(item: BrokenLinkProduct): void {
-    if (this.editingKey === this.trackKey(item)) {
-      this.cancelEdit();
+  isFlagging(item: BrokenLinkProduct): boolean {
+    return this.flaggingKey === this.itemKey(item);
+  }
+
+  setLinkStatus(item: BrokenLinkProduct, status: ProductLinkReviewStatus): void {
+    if (this.linkStatus(item) === status || this.isFlagging(item)) {
       return;
     }
-    this.editingKey = this.trackKey(item);
-    this.saveError = '';
-    this.editPreview = null;
-    this.editPreviewLoading = false;
-    this.editSelectedFileName = '';
-    this.productEditForm.reset({
-      name: item.productName,
-      imageUrl: item.imageUrl ?? '',
-      shopUrl: item.shopUrl
-    });
-  }
-
-  cancelEdit(): void {
-    this.editingKey = null;
-    this.saveError = '';
-    this.editPreview = null;
-    this.editPreviewLoading = false;
-    this.editSelectedFileName = '';
-    this.productEditForm.reset({
-      name: '',
-      imageUrl: '',
-      shopUrl: ''
-    });
-  }
-
-  onEditUrlInput(): void {
-    const url = this.productEditForm.get('shopUrl')?.value ?? '';
-    if (this.previewTimer) {
-      clearTimeout(this.previewTimer);
-    }
-    if (!url.trim()) {
-      this.editPreviewLoading = false;
-      this.editPreview = null;
-      return;
-    }
-    this.editPreviewLoading = true;
-    this.previewTimer = setTimeout(() => {
-      this.productPreviewService.preview(url.trim()).subscribe({
-        next: (preview) => {
-          this.editPreviewLoading = false;
-          this.editPreview = preview;
-          if (preview) {
-            this.productEditForm.patchValue({
-              name: preview.name,
-              imageUrl: preview.imageUrl ?? ''
-            });
-          }
-        },
-        error: () => {
-          this.editPreviewLoading = false;
-          this.editPreview = null;
+    const key = this.itemKey(item);
+    this.flaggingKey = key;
+    this.videoService.setProductLinkReviewStatus(item.videoId, item.productId, status).subscribe({
+      next: () => {
+        this.flaggingKey = null;
+        if (status === 'working') {
+          this.removeProduct(item);
+          this.toastService.success(
+            'Oznaczono jako sprawny. Automat ponownie sprawdzi link podczas nocnej weryfikacji.'
+          );
+        } else {
+          item.isBroken = status === 'broken';
+          item.needsReview = status === 'needs_review';
+          const message =
+            status === 'broken'
+              ? 'Oznaczono link jako niesprawny.'
+              : 'Oznaczono link jako wymagający ręcznej weryfikacji.';
+          this.toastService.success(message);
         }
-      });
-    }, 400);
-  }
-
-  onEditImageSelected(event: Event): void {
-    const input = event.target as HTMLInputElement;
-    const file = input.files?.[0];
-    if (!file) {
-      return;
-    }
-    this.productImageUploadService.upload(file).subscribe({
-      next: (response) => {
-        this.productEditForm.patchValue({ imageUrl: response.imageUrl });
-        this.editSelectedFileName = file.name;
+        this.brokenLinkRefreshService.requestRefresh();
       },
       error: () => {
-        this.toastService.warning('Nie udało się przesłać zdjęcia produktu.');
+        this.flaggingKey = null;
+        this.toastService.warning('Nie udało się zapisać statusu linku.');
       }
     });
   }
 
-  saveEdit(item: BrokenLinkProduct): void {
-    if (this.productEditForm.invalid || this.isSaving) {
-      this.productEditForm.markAllAsTouched();
-      return;
-    }
-    const value = this.productEditForm.getRawValue();
-    this.isSaving = true;
-    this.saveError = '';
-    this.videoService
-      .updateProduct(item.videoId, item.productId, {
-        name: value.name!.trim(),
-        imageUrl: value.imageUrl?.trim() || undefined,
-        productLink: {
-          url: value.shopUrl!.trim(),
-          type: 'product'
+  openVerifyModal(item: BrokenLinkProduct): void {
+    this.verifyVideoId = item.videoId;
+    this.verifyProductId = item.productId;
+    this.verifyResult = null;
+    this.verifyLoading = true;
+    this.verifyModalOpen = true;
+    this.videoService.verifyProductLink(item.videoId, item.productId).subscribe({
+      next: (result) => {
+        this.verifyLoading = false;
+        this.verifyResult = result;
+        if (result.linkWorking) {
+          this.removeProduct(item);
+        } else if (result.verificationUncertain) {
+          item.isBroken = false;
+          item.needsReview = true;
+        } else {
+          item.isBroken = true;
+          item.needsReview = false;
         }
-      })
-      .subscribe({
-        next: () => {
-          this.isSaving = false;
-          this.items = this.items.filter(
-            (entry) => entry.videoId !== item.videoId || entry.productId !== item.productId
-          );
-          this.cancelEdit();
-          this.toastService.success('Link został naprawiony.');
-        },
-        error: (error: HttpErrorResponse) => {
-          this.isSaving = false;
-          this.saveError = this.resolveErrorMessage(error);
-        }
-      });
+        this.brokenLinkRefreshService.requestRefresh();
+      },
+      error: () => {
+        this.verifyLoading = false;
+        this.toastService.warning('Nie udało się zweryfikować linku produktu.');
+        this.closeVerifyModal();
+      }
+    });
   }
 
-  private loadBrokenLinks(): void {
+  closeVerifyModal(): void {
+    this.verifyModalOpen = false;
+    this.verifyLoading = false;
+    this.verifyResult = null;
+    this.verifyVideoId = null;
+    this.verifyProductId = null;
+    this.loadItems();
+  }
+
+  verifyStoreImageSrc(imageUrl: string | null | undefined): string {
+    return this.videoService.resolveProductImageUrl(imageUrl ?? null);
+  }
+
+  private itemKey(item: BrokenLinkProduct): string {
+    return `${item.videoId}-${item.productId}`;
+  }
+
+  private removeProduct(item: BrokenLinkProduct): void {
+    this.groups = this.groups
+      .map((group) => ({
+        ...group,
+        products: group.products.filter(
+          (entry) => entry.videoId !== item.videoId || entry.productId !== item.productId
+        )
+      }))
+      .filter((group) => group.products.length > 0);
+    this.productCount = this.countProducts(this.groups);
+    if (this.openedVideoId === item.videoId && !this.groups.some((g) => g.videoId === item.videoId)) {
+      this.openedVideoId = null;
+    }
+  }
+
+  private loadItems(): void {
     this.isLoading = true;
     this.hasLoadError = false;
     this.brokenLinkService.getAll().subscribe({
       next: (items) => {
         this.isLoading = false;
-        this.items = items;
+        this.groups = this.buildGroups(items);
+        this.productCount = this.countProducts(this.groups);
+        if (this.openedVideoId != null && !this.groups.some((g) => g.videoId === this.openedVideoId)) {
+          this.openedVideoId = null;
+        }
       },
       error: () => {
         this.isLoading = false;
         this.hasLoadError = true;
-        this.items = [];
+        this.groups = [];
+        this.productCount = 0;
+        this.openedVideoId = null;
       }
     });
   }
 
-  private resolveErrorMessage(error: HttpErrorResponse): string {
-    const body = error.error;
-    if (typeof body === 'string' && body.trim()) {
-      return body.trim();
+  private buildGroups(items: BrokenLinkProduct[]): BrokenLinkVideoGroup[] {
+    const byVideo = new Map<number, BrokenLinkVideoGroup>();
+    for (const item of items) {
+      let group = byVideo.get(item.videoId);
+      if (!group) {
+        group = {
+          videoId: item.videoId,
+          videoTitle: item.videoTitle,
+          videoPreviewImageUrl: item.videoPreviewImageUrl,
+          products: []
+        };
+        byVideo.set(item.videoId, group);
+      }
+      group.products.push(item);
     }
-    if (body && typeof body.message === 'string' && body.message.trim()) {
-      return body.message.trim();
-    }
-    return 'Błąd zapisu: Serwer docelowy nie odpowiada lub link jest martwy';
+    return Array.from(byVideo.values()).sort((left, right) =>
+      left.videoTitle.localeCompare(right.videoTitle, 'pl', { sensitivity: 'base' })
+    );
+  }
+
+  private countProducts(groups: BrokenLinkVideoGroup[]): number {
+    return groups.reduce((total, group) => total + group.products.length, 0);
   }
 }

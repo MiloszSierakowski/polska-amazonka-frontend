@@ -62,6 +62,19 @@ export interface AddVideoProductPayload {
   };
 }
 
+export interface ProductLinkVerifyResult {
+  videoId: number;
+  productId: number;
+  linkWorking: boolean;
+  isBroken: boolean;
+  verificationUncertain?: boolean;
+  needsReview?: boolean;
+  currentTitle: string | null;
+  currentImageUrl: string | null;
+  storeTitle: string | null;
+  storeImageUrl: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -136,6 +149,50 @@ export class VideoService {
   resyncProduct(videoId: number, productId: number): Observable<Video> {
     return this.http
       .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}/resync`, {})
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  verifyProductLink(videoId: number, productId: number): Observable<ProductLinkVerifyResult> {
+    return this.http.post<ProductLinkVerifyResult>(
+      `${this.backendUrl}/api/videos/${videoId}/products/${productId}/verify-link`,
+      {}
+    );
+  }
+
+  setProductLinkFlag(videoId: number, productId: number, isBroken: boolean): Observable<void> {
+    return this.setProductLinkReviewStatus(
+      videoId,
+      productId,
+      isBroken ? 'broken' : 'working'
+    );
+  }
+
+  setProductLinkReviewStatus(
+    videoId: number,
+    productId: number,
+    status: 'working' | 'broken' | 'needs_review'
+  ): Observable<void> {
+    const payload =
+      status === 'working'
+        ? { isBroken: false, needsReview: false }
+        : status === 'broken'
+          ? { isBroken: true, needsReview: false }
+          : { isBroken: false, needsReview: true };
+    return this.http.post<void>(
+      `${this.backendUrl}/api/videos/${videoId}/products/${productId}/link-flag`,
+      payload
+    );
+  }
+
+  applyStoreTitleToProduct(videoId: number, productId: number): Observable<Video> {
+    return this.http
+      .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}/apply-store-title`, {})
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  applyStoreImageToProduct(videoId: number, productId: number): Observable<Video> {
+    return this.http
+      .post<VideoApiResponse>(`${this.backendUrl}/api/videos/${videoId}/products/${productId}/apply-store-image`, {})
       .pipe(map((row) => this.mapRow(row)));
   }
 
