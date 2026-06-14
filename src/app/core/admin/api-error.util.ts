@@ -15,6 +15,20 @@ interface ApiErrorBody {
   fieldErrors?: Record<string, string>;
 }
 
+const PRODUCT_LINK_SAVE_FALLBACK =
+  'Nie udało się zapisać produktu. Sprawdź, czy link prowadzi bezpośrednio do produktu z Allegro, AliExpress, Temu albo Amazon.';
+
+export function resolveProductLinkSaveError(error: HttpErrorResponse): string {
+  const body = (error.error ?? {}) as ApiErrorBody;
+  if (error.status === 400) {
+    if (body.message && String(body.message).trim()) {
+      return String(body.message).trim();
+    }
+    return PRODUCT_LINK_SAVE_FALLBACK;
+  }
+  return parseApiError(error).message;
+}
+
 export function parseApiError(error: HttpErrorResponse): ParsedApiError {
   const body = (error.error ?? {}) as ApiErrorBody;
   const fieldMessage = formatFieldErrors(body.fieldErrors);

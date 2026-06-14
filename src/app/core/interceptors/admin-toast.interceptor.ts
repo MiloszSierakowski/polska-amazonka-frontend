@@ -61,5 +61,19 @@ function shouldSkipHandledAdminError(error: HttpErrorResponse, method: string, u
   if (method.toUpperCase() === 'POST' && /\/api\/auth\/login$/.test(url)) {
     return true;
   }
+  if (isProductSaveRequest(method, url)) {
+    return true;
+  }
   return false;
+}
+
+function isProductSaveRequest(method: string, url: string): boolean {
+  const normalizedMethod = method.toUpperCase();
+  if (normalizedMethod === 'POST' && /\/api\/videos\/\d+\/products$/.test(url)) {
+    return true;
+  }
+  if (normalizedMethod === 'PUT' && /\/api\/videos\/\d+\/products\/\d+$/.test(url)) {
+    return true;
+  }
+  return normalizedMethod === 'POST' && /\/api\/videos$/.test(url);
 }

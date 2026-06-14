@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminVideoMock, AdminVideoProductMock } from '../../mocks/admin-mock.data';
 import { VideoService, ProductLinkVerifyResult } from '../../../public/services/video.service';
 import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
+import { resolveProductLinkSaveError } from '../../../../core/admin/api-error.util';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
 import { ProductImageUploadService } from '../../services/product-image-upload.service';
@@ -415,10 +417,13 @@ export class AdminVideosSectionComponent implements OnInit {
             type: 'product'
           }
         })
-        .subscribe(() => {
-          this.toastService.success('Produkt został zapisany.');
-          this.cancelProductForm();
-          this.refreshVideo(video.id);
+        .subscribe({
+          next: () => {
+            this.toastService.success('Produkt został zapisany.');
+            this.cancelProductForm();
+            this.refreshVideo(video.id);
+          },
+          error: (error: HttpErrorResponse) => this.handleProductSaveError(error)
         });
       return;
     }
@@ -441,10 +446,13 @@ export class AdminVideosSectionComponent implements OnInit {
           type: 'product'
         }
       })
-      .subscribe(() => {
-        this.toastService.success('Produkt został dodany do filmu.');
-        this.cancelProductForm();
-        this.refreshVideo(video.id);
+      .subscribe({
+        next: () => {
+          this.toastService.success('Produkt został dodany do filmu.');
+          this.cancelProductForm();
+          this.refreshVideo(video.id);
+        },
+        error: (error: HttpErrorResponse) => this.handleProductSaveError(error)
       });
   }
 
@@ -626,10 +634,13 @@ export class AdminVideosSectionComponent implements OnInit {
         isActive: value.isActive ?? true,
         products
       })
-      .subscribe(() => {
-        this.toastService.success('Film został dodany.');
-        this.closeVideoModal();
-        this.loadVideos();
+      .subscribe({
+        next: () => {
+          this.toastService.success('Film został dodany.');
+          this.closeVideoModal();
+          this.loadVideos();
+        },
+        error: (error: HttpErrorResponse) => this.handleProductSaveError(error)
       });
   }
 
@@ -760,6 +771,10 @@ export class AdminVideosSectionComponent implements OnInit {
     this.videoService.getVideos().subscribe((videos) => {
       this.videos = videos.map((video) => this.toAdminVideo(video));
     });
+  }
+
+  private handleProductSaveError(error: HttpErrorResponse): void {
+    this.toastService.warning(resolveProductLinkSaveError(error));
   }
 
   private toAdminVideo(video: Video): AdminVideoMock {
