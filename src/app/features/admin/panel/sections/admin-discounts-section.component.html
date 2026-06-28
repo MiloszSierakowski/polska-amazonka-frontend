@@ -1,89 +1,15 @@
-<div class="section-body">
-  <section class="code-block">
-    <div class="code-block-header">
-      <h2 class="block-title">Kody rabatowe</h2>
-      <button type="button" class="primary-action code-add-toggle" (click)="openAddDiscountModal()">
-        Dodaj kod rabatowy
-      </button>
-    </div>
-    <p class="reorder-hint">Przeciągnij kody, aby zmienić kolejność wyświetlania na stronie publicznej.</p>
-    <ul
-      class="item-list"
-      cdkDropList
-      (cdkDropListDropped)="dropDiscount($event)"
-      [cdkDropListDisabled]="isSavingDiscountOrder"
-    >
-      <li
-        class="code-list-item"
-        *ngFor="let item of discountItems"
-        cdkDrag
-        [cdkDragDisabled]="isSavingDiscountOrder || editingDiscountId === item.id"
-      >
-        <div class="code-card">
-          <div class="code-card-body">
-            <div class="code-drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
-            <div class="code-card-info">
-              <span class="code-name">{{ item.shopName }} — {{ item.codeValue }}</span>
-              <span class="code-meta">{{ item.description }}</span>
-            </div>
-          </div>
-          <div class="code-action-group">
-            <span class="code-status" [class.inactive]="!item.isActive">
-              {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
-            </span>
-            <button type="button" class="code-action" (click)="startEditDiscount(item)">Edytuj</button>
-            <button type="button" class="code-action code-action-danger" (click)="openDeleteModal('discount', item.id)">
-              Usuń
-            </button>
-          </div>
-        </div>
+<div class="affiliates-admin">
+  <div class="affiliates-admin-toolbar">
+    <button type="button" class="primary-action affiliates-add-toggle" (click)="openAddAffiliateModal()">
+      Dodaj kod afiliacyjny
+    </button>
+  </div>
 
-        <form
-          class="item-form code-data-form code-inline-edit-form"
-          *ngIf="editingDiscountId === item.id"
-          [formGroup]="discountEditForm"
-          (ngSubmit)="saveEditDiscount(item)"
-        >
-          <h3>Edycja kodu rabatowego</h3>
-          <label>
-            <span>Sklep</span>
-            <select formControlName="shopId">
-              <option [ngValue]="null" disabled>Wybierz sklep</option>
-              <option *ngFor="let shop of shops" [ngValue]="shop.id">{{ shop.name }}</option>
-            </select>
-          </label>
-          <label>
-            <span>Wartość kodu</span>
-            <input type="text" formControlName="codeValue" />
-          </label>
-          <label>
-            <span>Opis promocji</span>
-            <textarea formControlName="description" rows="3"></textarea>
-          </label>
-          <label class="code-form-toggle">
-            <span class="code-form-toggle-label">Aktywny</span>
-            <span class="code-form-switch">
-              <input type="checkbox" class="code-form-switch-input" formControlName="isActive" />
-              <span class="code-form-switch-slider" aria-hidden="true"></span>
-            </span>
-          </label>
-          <div class="form-actions code-form-actions">
-            <button type="button" class="secondary-action" (click)="cancelEditDiscount()">Anuluj</button>
-            <button type="submit" class="primary-action">Zapisz</button>
-          </div>
-        </form>
-      </li>
-    </ul>
-  </section>
+  <div class="section-body">
+    <p class="reorder-hint" *ngIf="affiliateItems.length > 0">Przeciągnij kody, aby zmienić ich kolejność w panelu.</p>
 
-  <section class="code-block affiliate-block">
-    <div class="code-block-header">
-      <h2 class="block-title">Kody afiliacyjne</h2>
-      <button type="button" class="primary-action code-add-toggle" (click)="openAddAffiliateModal()">
-        Dodaj kod afiliacyjny
-      </button>
-    </div>
-    <p class="reorder-hint">Przeciągnij kody, aby zmienić ich kolejność w panelu.</p>
+    <p class="empty-state" *ngIf="affiliateItems.length === 0">Brak kodów afiliacyjnych.</p>
+
     <ul
       class="item-list"
       cdkDropList
@@ -91,32 +17,32 @@
       [cdkDropListDisabled]="isSavingAffiliateOrder"
     >
       <li
-        class="code-list-item"
+        class="affiliate-list-item"
         *ngFor="let item of affiliateItems"
         cdkDrag
         [cdkDragDisabled]="isSavingAffiliateOrder || editingAffiliateId === item.id"
       >
-        <div class="code-card">
-          <div class="code-card-body">
-            <div class="code-drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
-            <div class="code-card-info">
-              <span class="code-name">{{ item.shopName }} — {{ item.codeValue }}</span>
-              <span class="code-meta">Kod afiliacyjny</span>
+        <div class="affiliate-card">
+          <div class="affiliate-card-body">
+            <div class="affiliate-drag-handle" cdkDragHandle aria-hidden="true">⋮⋮</div>
+            <div class="affiliate-card-info">
+              <span class="affiliate-name">{{ item.shopName }}</span>
+              <span class="affiliate-meta">{{ item.codeValue }}</span>
             </div>
           </div>
-          <div class="code-action-group">
-            <span class="code-status" [class.inactive]="!item.isActive">
+          <div class="affiliate-action-group">
+            <span class="affiliate-status" [class.inactive]="!item.isActive">
               {{ item.isActive ? 'Aktywny' : 'Nieaktywny' }}
             </span>
-            <button type="button" class="code-action" (click)="startEditAffiliate(item)">Edytuj</button>
-            <button type="button" class="code-action code-action-danger" (click)="openDeleteModal('affiliate', item.id)">
+            <button type="button" class="affiliate-action" (click)="startEditAffiliate(item)">Edytuj</button>
+            <button type="button" class="affiliate-action affiliate-action-danger" (click)="openDeleteModal(item.id)">
               Usuń
             </button>
           </div>
         </div>
 
         <form
-          class="item-form code-data-form code-inline-edit-form"
+          class="item-form affiliate-data-form affiliate-inline-edit-form"
           *ngIf="editingAffiliateId === item.id"
           [formGroup]="affiliateEditForm"
           (ngSubmit)="saveEditAffiliate(item)"
@@ -133,67 +59,30 @@
             <span>Wartość kodu / linku</span>
             <input type="text" formControlName="codeValue" />
           </label>
-          <label class="code-form-toggle">
-            <span class="code-form-toggle-label">Aktywny</span>
-            <span class="code-form-switch">
-              <input type="checkbox" class="code-form-switch-input" formControlName="isActive" />
-              <span class="code-form-switch-slider" aria-hidden="true"></span>
+          <label class="affiliate-form-toggle">
+            <span class="affiliate-form-toggle-label">Aktywny</span>
+            <span class="affiliate-form-switch">
+              <input type="checkbox" class="affiliate-form-switch-input" formControlName="isActive" />
+              <span class="affiliate-form-switch-slider" aria-hidden="true"></span>
             </span>
           </label>
-          <div class="form-actions code-form-actions">
+          <div class="form-actions affiliate-form-actions">
             <button type="button" class="secondary-action" (click)="cancelEditAffiliate()">Anuluj</button>
             <button type="submit" class="primary-action">Zapisz</button>
           </div>
         </form>
       </li>
     </ul>
-  </section>
-</div>
-
-<div class="code-modal-overlay" *ngIf="isDiscountModalOpen">
-  <div class="code-modal" (click)="$event.stopPropagation()">
-    <div class="code-modal-header">
-      <h3>Dodaj kod rabatowy</h3>
-      <button type="button" class="code-modal-close" (click)="closeDiscountModal()" aria-label="Zamknij">×</button>
-    </div>
-    <form class="item-form code-data-form code-modal-form" [formGroup]="discountAddForm" (ngSubmit)="saveNewDiscount()">
-      <label>
-        <span>Sklep</span>
-        <select formControlName="shopId">
-          <option [ngValue]="null" disabled>Wybierz sklep</option>
-          <option *ngFor="let shop of shops" [ngValue]="shop.id">{{ shop.name }}</option>
-        </select>
-      </label>
-      <label>
-        <span>Wartość kodu</span>
-        <input type="text" formControlName="codeValue" />
-      </label>
-      <label>
-        <span>Opis promocji</span>
-        <textarea formControlName="description" rows="3"></textarea>
-      </label>
-      <label class="code-form-toggle">
-        <span class="code-form-toggle-label">Aktywny</span>
-        <span class="code-form-switch">
-          <input type="checkbox" class="code-form-switch-input" formControlName="isActive" />
-          <span class="code-form-switch-slider" aria-hidden="true"></span>
-        </span>
-      </label>
-      <div class="code-modal-footer">
-        <button type="button" class="secondary-action" (click)="closeDiscountModal()">Anuluj</button>
-        <button type="submit" class="primary-action">Zapisz</button>
-      </div>
-    </form>
   </div>
 </div>
 
-<div class="code-modal-overlay" *ngIf="isAffiliateModalOpen">
-  <div class="code-modal" (click)="$event.stopPropagation()">
-    <div class="code-modal-header">
+<div class="affiliate-modal-overlay" *ngIf="isAffiliateModalOpen">
+  <div class="affiliate-modal" (click)="$event.stopPropagation()">
+    <div class="affiliate-modal-header">
       <h3>Dodaj kod afiliacyjny</h3>
-      <button type="button" class="code-modal-close" (click)="closeAffiliateModal()" aria-label="Zamknij">×</button>
+      <button type="button" class="affiliate-modal-close" (click)="closeAffiliateModal()" aria-label="Zamknij">×</button>
     </div>
-    <form class="item-form code-data-form code-modal-form" [formGroup]="affiliateAddForm" (ngSubmit)="saveNewAffiliate()">
+    <form class="item-form affiliate-data-form affiliate-modal-form" [formGroup]="affiliateAddForm" (ngSubmit)="saveNewAffiliate()">
       <label>
         <span>Sklep</span>
         <select formControlName="shopId">
@@ -209,14 +98,14 @@
         <span>Wartość kodu / linku</span>
         <input type="text" formControlName="codeValue" />
       </label>
-      <label class="code-form-toggle">
-        <span class="code-form-toggle-label">Aktywny</span>
-        <span class="code-form-switch">
-          <input type="checkbox" class="code-form-switch-input" formControlName="isActive" />
-          <span class="code-form-switch-slider" aria-hidden="true"></span>
+      <label class="affiliate-form-toggle">
+        <span class="affiliate-form-toggle-label">Aktywny</span>
+        <span class="affiliate-form-switch">
+          <input type="checkbox" class="affiliate-form-switch-input" formControlName="isActive" />
+          <span class="affiliate-form-switch-slider" aria-hidden="true"></span>
         </span>
       </label>
-      <div class="code-modal-footer">
+      <div class="affiliate-modal-footer">
         <button type="button" class="secondary-action" (click)="closeAffiliateModal()">Anuluj</button>
         <button type="submit" class="primary-action">Zapisz</button>
       </div>
@@ -230,7 +119,7 @@
     <p>Czy na pewno chcesz usunąć ten kod? Tej operacji nie można cofnąć.</p>
     <div class="delete-modal-actions">
       <button type="button" class="secondary-action" (click)="cancelDelete()" [disabled]="isDeleting">Anuluj</button>
-      <button type="button" class="code-form-btn code-form-btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
+      <button type="button" class="affiliate-form-btn affiliate-form-btn-danger" (click)="confirmDelete()" [disabled]="isDeleting">
         {{ isDeleting ? 'Usuwanie...' : 'Potwierdź usunięcie' }}
       </button>
     </div>

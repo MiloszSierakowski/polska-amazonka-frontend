@@ -2,21 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { DiscountCode } from '../../models/discount-code.model';
 import { AffiliateCode } from '../../models/affiliate-code.model';
-import { DiscountCodeService } from '../../services/discount-code.service';
 import { AffiliateCodeService } from '../../services/affiliate-code.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { Shop } from '../../../../core/models/shop.model';
 import { ShopService } from '../../../../core/services/shop.service';
 import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
-
-type DeleteTargetType = 'discount' | 'affiliate';
-
-interface DeleteTarget {
-  type: DeleteTargetType;
-  id: number;
-}
 
 @Component({
   selector: 'app-admin-discounts-section',
@@ -26,35 +17,16 @@ interface DeleteTarget {
   styleUrl: './admin-discounts-section.component.scss'
 })
 export class AdminDiscountsSectionComponent implements OnInit {
-  discountItems: DiscountCode[] = [];
   affiliateItems: AffiliateCode[] = [];
   shops: Shop[] = [];
-  editingDiscountId: number | null = null;
   editingAffiliateId: number | null = null;
-  isDiscountModalOpen = false;
   isAffiliateModalOpen = false;
   deleteModalOpen = false;
-  deleteTarget: DeleteTarget | null = null;
+  deleteTargetId: number | null = null;
   isDeleting = false;
-  isSavingDiscountOrder = false;
   isSavingAffiliateOrder = false;
-  private discountModalNavigationId: number | null = null;
   private affiliateModalNavigationId: number | null = null;
   private deleteModalNavigationId: number | null = null;
-
-  discountAddForm = this.fb.group({
-    shopId: [null as number | null, Validators.required],
-    codeValue: ['', Validators.required],
-    description: ['', Validators.required],
-    isActive: [true]
-  });
-
-  discountEditForm = this.fb.group({
-    shopId: [null as number | null, Validators.required],
-    codeValue: ['', Validators.required],
-    description: ['', Validators.required],
-    isActive: [true]
-  });
 
   affiliateAddForm = this.fb.group({
     shopId: [null as number | null, Validators.required],
@@ -70,7 +42,6 @@ export class AdminDiscountsSectionComponent implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private discountCodeService: DiscountCodeService,
     private affiliateCodeService: AffiliateCodeService,
     private shopService: ShopService,
     private toastService: ToastService,
@@ -79,76 +50,7 @@ export class AdminDiscountsSectionComponent implements OnInit {
 
   ngOnInit(): void {
     this.loadShops();
-    this.loadDiscountCodes();
     this.loadAffiliateCodes();
-  }
-
-  get canAddDiscountCode(): boolean {
-    return this.discountItems.length < this.shops.length;
-  }
-
-  openAddDiscountModal(): void {
-    if (!this.canAddDiscountCode) {
-      this.toastService.warning('Każdy sklep ma już przypisany kod rabatowy.');
-      return;
-    }
-    this.cancelEditDiscount();
-    this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
-    this.isDiscountModalOpen = true;
-    this.discountModalNavigationId = this.modalNavigationService.open(() => this.closeDiscountModal(true));
-  }
-
-  closeDiscountModal(fromNavigation = false): void {
-    if (!fromNavigation) {
-      this.discountModalNavigationId = this.modalNavigationService.close(this.discountModalNavigationId);
-    } else {
-      this.discountModalNavigationId = null;
-    }
-    this.isDiscountModalOpen = false;
-    this.discountAddForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
-  }
-
-  startEditDiscount(item: DiscountCode): void {
-    if (this.editingDiscountId === item.id) {
-      this.cancelEditDiscount();
-      return;
-    }
-    this.editingDiscountId = item.id;
-    this.discountEditForm.reset({
-      shopId: item.shopId,
-      codeValue: item.codeValue,
-      description: item.description,
-      isActive: item.isActive
-    });
-  }
-
-  cancelEditDiscount(): void {
-    this.editingDiscountId = null;
-    this.discountEditForm.reset({ shopId: null, codeValue: '', description: '', isActive: true });
-  }
-
-  saveNewDiscount(): void {
-    const payload = this.buildDiscountPayload(this.discountAddForm);
-    if (!payload) {
-      return;
-    }
-    this.discountCodeService.create(payload).subscribe(() => {
-      this.toastService.success('Kod rabatowy został zapisany.');
-      this.closeDiscountModal();
-      this.loadDiscountCodes();
-    });
-  }
-
-  saveEditDiscount(item: DiscountCode): void {
-    const payload = this.buildDiscountPayload(this.discountEditForm);
-    if (!payload) {
-      return;
-    }
-    this.discountCodeService.update(item.id, payload).subscribe(() => {
-      this.toastService.success('Kod rabatowy został zaktualizowany.');
-      this.cancelEditDiscount();
-      this.loadDiscountCodes();
-    });
   }
 
   openAddAffiliateModal(): void {
@@ -223,25 +125,6 @@ export class AdminDiscountsSectionComponent implements OnInit {
     });
   }
 
-  dropDiscount(event: CdkDragDrop<DiscountCode[]>): void {
-    if (event.previousIndex === event.currentIndex || this.isSavingDiscountOrder) {
-      return;
-    }
-    moveItemInArray(this.discountItems, event.previousIndex, event.currentIndex);
-    this.isSavingDiscountOrder = true;
-    const orderedIds = this.discountItems.map((item) => item.id);
-    this.discountCodeService.reorder(orderedIds).subscribe({
-      next: () => {
-        this.isSavingDiscountOrder = false;
-        this.toastService.success('Kolejność kodów rabatowych została zapisana.');
-      },
-      error: () => {
-        this.isSavingDiscountOrder = false;
-        this.loadDiscountCodes();
-      }
-    });
-  }
-
   dropAffiliate(event: CdkDragDrop<AffiliateCode[]>): void {
     if (event.previousIndex === event.currentIndex || this.isSavingAffiliateOrder) {
       return;
@@ -261,8 +144,8 @@ export class AdminDiscountsSectionComponent implements OnInit {
     });
   }
 
-  openDeleteModal(type: DeleteTargetType, id: number): void {
-    this.deleteTarget = { type, id };
+  openDeleteModal(id: number): void {
+    this.deleteTargetId = id;
     this.deleteModalOpen = true;
     this.deleteModalNavigationId = this.modalNavigationService.open(() => this.cancelDelete(true));
   }
@@ -277,34 +160,22 @@ export class AdminDiscountsSectionComponent implements OnInit {
       this.deleteModalNavigationId = null;
     }
     this.deleteModalOpen = false;
-    this.deleteTarget = null;
+    this.deleteTargetId = null;
   }
 
   confirmDelete(): void {
-    if (!this.deleteTarget || this.isDeleting) {
+    if (this.deleteTargetId == null || this.isDeleting) {
       return;
     }
     this.isDeleting = true;
-    const target = this.deleteTarget;
-    const request$ = target.type === 'discount'
-      ? this.discountCodeService.delete(target.id)
-      : this.affiliateCodeService.delete(target.id);
-
-    request$.subscribe({
+    const targetId = this.deleteTargetId;
+    this.affiliateCodeService.delete(targetId).subscribe({
       next: () => {
         this.isDeleting = false;
         this.deleteModalNavigationId = this.modalNavigationService.close(this.deleteModalNavigationId);
         this.deleteModalOpen = false;
-        this.deleteTarget = null;
-        if (target.type === 'discount') {
-          if (this.editingDiscountId === target.id) {
-            this.cancelEditDiscount();
-          }
-          this.loadDiscountCodes();
-          this.toastService.success('Kod rabatowy został usunięty.');
-          return;
-        }
-        if (this.editingAffiliateId === target.id) {
+        this.deleteTargetId = null;
+        if (this.editingAffiliateId === targetId) {
           this.cancelEditAffiliate();
         }
         this.loadAffiliateCodes();
@@ -314,21 +185,6 @@ export class AdminDiscountsSectionComponent implements OnInit {
         this.isDeleting = false;
       }
     });
-  }
-
-  private buildDiscountPayload(form: typeof this.discountAddForm) {
-    if (form.invalid) {
-      form.markAllAsTouched();
-      this.toastService.warning('Uzupełnij wymagane pola formularza kodu rabatowego.');
-      return null;
-    }
-    const value = form.getRawValue();
-    return {
-      shopId: value.shopId!,
-      codeValue: value.codeValue!,
-      description: value.description!,
-      isActive: value.isActive ?? true
-    };
   }
 
   private buildAffiliatePayload(form: typeof this.affiliateAddForm) {
@@ -348,12 +204,6 @@ export class AdminDiscountsSectionComponent implements OnInit {
   private loadShops(): void {
     this.shopService.getAllActive().subscribe((shops) => {
       this.shops = shops;
-    });
-  }
-
-  private loadDiscountCodes(): void {
-    this.discountCodeService.getAll().subscribe((items) => {
-      this.discountItems = items;
     });
   }
 

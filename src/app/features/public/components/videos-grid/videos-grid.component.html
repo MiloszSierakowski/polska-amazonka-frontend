@@ -6,7 +6,7 @@
       type="button"
       class="video-tile"
       *ngFor="let video of videos"
-      (click)="openModal(video)"
+      (click)="selectVideo(video)"
       [attr.aria-label]="video.title"
     >
       <img
@@ -23,64 +23,3 @@
     <div class="no-videos" *ngIf="!isLoadingVideos">{{ emptyStateMessage }}</div>
   </ng-template>
 </section>
-
-<div class="video-modal-overlay" *ngIf="selectedVideo">
-  <div class="video-modal" (click)="$event.stopPropagation()">
-    <button class="close-button" (click)="closeModal()">✕</button>
-
-    <div class="video-pane">
-      <div class="video-loader" *ngIf="isLoadingVideo">
-        <div class="spinner"></div>
-      </div>
-
-      <div class="tiktok-frame" [class.is-loading]="isLoadingVideo">
-        <iframe
-          *ngIf="safeVideoUrl"
-          [src]="safeVideoUrl"
-          (load)="isLoadingVideo = false"
-          title="TikTok video"
-          allow="encrypted-media"
-          allowfullscreen
-        ></iframe>
-      </div>
-    </div>
-
-    <aside class="products-pane">
-      <div class="products-grid" *ngIf="selectedVideo.products.length; else noProducts">
-        <a
-          class="product-card"
-          *ngFor="let product of selectedVideo.products"
-          [href]="productRedirectUrl(product.id)"
-          target="_blank"
-          rel="noopener noreferrer"
-          (click)="onProductClick(product.id)"
-        >
-          <div class="product-image-wrapper">
-            <img
-              [src]="productImageSrc(product.id, product.imageUrl)"
-              alt=""
-              width="400"
-              height="400"
-              (error)="onProductImageError(product.id)"
-            />
-            <span
-              class="product-shop-badge"
-              *ngIf="detectProductShop(product) as shop"
-              [style.background-color]="shopBadgeBackground(product)"
-              [style.color]="shopBadgeTextColor(product)"
-            >
-              {{ shop.name }}
-            </span>
-          </div>
-          <div class="product-info">
-            <span class="product-name">{{ product.name }}</span>
-          </div>
-        </a>
-      </div>
-
-      <ng-template #noProducts>
-        <div class="no-products">Brak produktów przypisanych do filmu.</div>
-      </ng-template>
-    </aside>
-  </div>
-</div>

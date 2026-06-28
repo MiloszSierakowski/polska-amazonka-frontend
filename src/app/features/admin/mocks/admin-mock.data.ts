@@ -8,6 +8,7 @@ export interface AdminVideoProductMock {
   name: string;
   imageUrl: string;
   shopUrl: string;
+  promoCode?: string | null;
 }
 
 export interface AdminVideoMock {
@@ -16,17 +17,11 @@ export interface AdminVideoMock {
   tiktokUrl: string;
   previewImageUrl: string;
   isActive: boolean;
+  promotionStartAt: string | null;
+  promotionEndAt: string | null;
   categoryIds: number[];
   blockReasons: string[];
   products: AdminVideoProductMock[];
-}
-
-export interface AdminDiscountMock {
-  id: number;
-  platform: string;
-  codeValue: string;
-  type: 'AFFILIATE' | 'DISCOUNT';
-  isActive: boolean;
 }
 
 export const MOCK_ADMIN_CATEGORIES: AdminCategoryMock[] = [
@@ -46,6 +41,8 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
     tiktokUrl: 'https://www.tiktok.com/@polskaamazonka/video/7575195848292715779',
     previewImageUrl: 'https://placehold.co/160x220/1a7bb8/ffffff?text=TikTok',
     isActive: true,
+    promotionStartAt: null,
+    promotionEndAt: null,
     categoryIds: [1, 4],
     blockReasons: [],
     products: [
@@ -69,6 +66,8 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
     tiktokUrl: 'https://www.tiktok.com/@polskaamazonka/video/7571815645281701142',
     previewImageUrl: 'https://placehold.co/160x220/0f172a/ffffff?text=TikTok',
     isActive: true,
+    promotionStartAt: null,
+    promotionEndAt: null,
     categoryIds: [1, 5],
     blockReasons: [],
     products: [
@@ -82,7 +81,3 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
   }
 ];
 
-export const MOCK_ADMIN_DISCOUNTS: AdminDiscountMock[] = [
-  { id: 1, platform: 'ALIEXPRESS', codeValue: 'IFP9MDH', type: 'DISCOUNT', isActive: true },
-  { id: 2, platform: 'TEMU', codeValue: 'apk84760', type: 'DISCOUNT', isActive: true }
-];

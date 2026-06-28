@@ -10,6 +10,8 @@ interface VideoApiResponse {
   previewImageUrl: string | null;
   title: string | null;
   isActive: boolean | null;
+  promotionStartAt: string | null;
+  promotionEndAt: string | null;
   products: ProductApiResponse[] | null;
   blockReasons?: string[] | null;
 }
@@ -20,6 +22,7 @@ interface ProductApiResponse {
   imageUrl: string | null;
   productLinkId: number | null;
   productLink: ProductLinkApiResponse | null;
+  promoCode: string | null;
 }
 
 interface ProductLinkApiResponse {
@@ -32,6 +35,7 @@ interface ProductLinkApiResponse {
 export interface CreateVideoProductPayload {
   name?: string | null;
   imageUrl?: string | null;
+  promoCode?: string | null;
   productLink: {
     url: string;
     type: 'product';
@@ -43,6 +47,8 @@ export interface CreateVideoPayload {
   tiktokUrl: string;
   isActive: boolean;
   localMp4Url?: string | null;
+  promotionStartAt?: string | null;
+  promotionEndAt?: string | null;
   products?: CreateVideoProductPayload[];
 }
 
@@ -51,11 +57,14 @@ export interface UpdateVideoPayload {
   tiktokUrl: string;
   isActive: boolean;
   localMp4Url?: string | null;
+  promotionStartAt?: string | null;
+  promotionEndAt?: string | null;
 }
 
 export interface AddVideoProductPayload {
   name?: string | null;
   imageUrl?: string | null;
+  promoCode?: string | null;
   productLink: {
     url: string;
     type: 'product';
@@ -101,6 +110,12 @@ export class VideoService {
     }
     return this.http
       .get<VideoApiResponse[]>(`${this.backendUrl}/api/public/videos`, { params })
+      .pipe(map((rows) => rows.map((row) => this.mapRow(row))));
+  }
+
+  getPromotedPublicVideos(): Observable<Video[]> {
+    return this.http
+      .get<VideoApiResponse[]>(`${this.backendUrl}/api/public/videos/promoted`)
       .pipe(map((rows) => rows.map((row) => this.mapRow(row))));
   }
 
@@ -247,12 +262,15 @@ export class VideoService {
       previewImageUrl: this.resolvePreviewImageUrl(row.previewImageUrl),
       isActive: row.isActive ?? true,
       createdAt: '',
+      promotionStartAt: row.promotionStartAt ?? null,
+      promotionEndAt: row.promotionEndAt ?? null,
       categoryIds: [],
       blockReasons: row.blockReasons ?? [],
       products: (row.products ?? []).map((product) => ({
         id: product.id,
         name: product.name,
         imageUrl: this.resolveProductImageUrl(product.imageUrl),
+        promoCode: product.promoCode ?? null,
         productLink: {
           id: product.productLink?.id ?? product.productLinkId ?? 0,
           url: product.productLink?.url ?? '#',

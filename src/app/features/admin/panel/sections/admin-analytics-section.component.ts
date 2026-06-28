@@ -5,8 +5,6 @@ import { ChartConfiguration } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
 import { forkJoin } from 'rxjs';
 import { AnalyticsService, ClickStatAggregation } from '../../services/analytics.service';
-import { DiscountCodeService } from '../../services/discount-code.service';
-import { DiscountCode } from '../../models/discount-code.model';
 import { VideoService } from '../../../public/services/video.service';
 import { CategoryService } from '../../../../services/category.service';
 import { ShopService } from '../../../../core/services/shop.service';
@@ -58,7 +56,6 @@ export class AdminAnalyticsSectionComponent implements OnInit {
   private videoImages = new Map<number, string>();
   private categoryNames = new Map<number, string>();
   private shopNames = new Map<number, string>();
-  private discountCodes: DiscountCode[] = [];
   private readonly brokenImages = new Set<string>();
   private customRangeFrom: Date | null = null;
   private customRangeTo: Date | null = null;
@@ -67,8 +64,7 @@ export class AdminAnalyticsSectionComponent implements OnInit {
     private analyticsService: AnalyticsService,
     private videoService: VideoService,
     private categoryService: CategoryService,
-    private shopService: ShopService,
-    private discountCodeService: DiscountCodeService
+    private shopService: ShopService
   ) {}
 
   ngOnInit(): void {
@@ -132,10 +128,9 @@ export class AdminAnalyticsSectionComponent implements OnInit {
     forkJoin({
       categories: this.categoryService.getCategories(),
       videos: this.videoService.getVideos(),
-      shops: this.shopService.getAll(),
-      discountCodes: this.discountCodeService.getAll()
+      shops: this.shopService.getAll()
     }).subscribe({
-      next: ({ categories, videos, shops, discountCodes }) => {
+      next: ({ categories, videos, shops }) => {
         this.productNames.clear();
         this.productImages.clear();
         this.videoNames.clear();
@@ -143,7 +138,6 @@ export class AdminAnalyticsSectionComponent implements OnInit {
         this.categoryNames.clear();
         this.shopNames.clear();
         this.brokenImages.clear();
-        this.discountCodes = discountCodes;
 
         for (const category of categories) {
           this.categoryNames.set(category.id, category.name);
@@ -256,13 +250,6 @@ export class AdminAnalyticsSectionComponent implements OnInit {
     const shopTotals = new Map<string, number>();
 
     for (const row of rows) {
-      if (this.matchesEntityType(row, 'discount_code')) {
-        const discountCode = this.discountCodes.find((code) => code.id === row.entityId);
-        const shopLabel = discountCode?.shopName?.trim() || `Sklep #${discountCode?.shopId ?? row.entityId}`;
-        shopTotals.set(shopLabel, (shopTotals.get(shopLabel) ?? 0) + row.clickCount);
-        continue;
-      }
-
       if (this.matchesEntityType(row, 'shop') && this.shopNames.has(row.entityId)) {
         const shopLabel = this.shopLabel(row.entityId);
         shopTotals.set(shopLabel, (shopTotals.get(shopLabel) ?? 0) + row.clickCount);

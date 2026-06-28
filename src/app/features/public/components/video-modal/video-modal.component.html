@@ -1,0 +1,84 @@
+<div class="video-modal-overlay">
+  <div
+    class="video-modal"
+    [class.video-modal-promoted]="variant === 'promoted'"
+    (click)="$event.stopPropagation()"
+  >
+    <span class="video-modal-promo-label" *ngIf="variant === 'promoted'">PROMKA</span>
+    <button class="close-button" (click)="close()">✕</button>
+
+    <div class="video-pane">
+      <div class="video-loader" *ngIf="isLoadingVideo">
+        <div class="spinner"></div>
+      </div>
+
+      <div class="tiktok-frame" [class.is-loading]="isLoadingVideo">
+        <iframe
+          *ngIf="safeVideoUrl"
+          [src]="safeVideoUrl"
+          (load)="isLoadingVideo = false"
+          title="TikTok video"
+          allow="encrypted-media"
+          allowfullscreen
+        ></iframe>
+      </div>
+    </div>
+
+    <aside class="products-pane">
+      <div class="products-grid" *ngIf="video.products.length; else noProducts">
+        <a
+          class="product-card"
+          *ngFor="let product of video.products"
+          [href]="productRedirectUrl(product.id)"
+          target="_blank"
+          rel="noopener noreferrer"
+          (click)="onProductClick(product.id)"
+        >
+          <div class="product-image-wrapper">
+            <img
+              [src]="productImageSrc(product.id, product.imageUrl)"
+              alt=""
+              width="400"
+              height="400"
+              (error)="onProductImageError(product.id)"
+            />
+            <span
+              class="product-shop-badge"
+              *ngIf="detectProductShop(product) as shop"
+              [style.background-color]="shopBadgeBackground(product)"
+              [style.color]="shopBadgeTextColor(product)"
+            >
+              {{ shop.name }}
+            </span>
+          </div>
+          <div class="product-info">
+            <span class="product-name">{{ product.name }}</span>
+            <div
+              class="product-promo-code"
+              *ngIf="hasPromoCode(product)"
+              (click)="$event.preventDefault(); $event.stopPropagation()"
+            >
+              <span class="product-promo-title">Kod rabatowy</span>
+              <div class="product-promo-row">
+                <span class="product-promo-value">{{ product.promoCode }}</span>
+                <button
+                  type="button"
+                  class="product-promo-copy"
+                  [class.is-copied]="isPromoCodeCopied(product.id)"
+                  (click)="copyPromoCode($event, product)"
+                  [attr.aria-label]="'Kopiuj kod ' + product.promoCode"
+                >
+                  {{ isPromoCodeCopied(product.id) ? 'Skopiowano ✓' : 'Kopiuj kod' }}
+                </button>
+              </div>
+            </div>
+          </div>
+        </a>
+      </div>
+
+      <ng-template #noProducts>
+        <div class="no-products">Brak produktów przypisanych do filmu.</div>
+      </ng-template>
+    </aside>
+  </div>
+</div>

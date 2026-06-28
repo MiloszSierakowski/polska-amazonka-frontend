@@ -1,0 +1,46 @@
+<section class="promoted-section" *ngIf="shouldRender">
+  <div class="promoted-header">
+    <h2>🔥 Promki od Amazonki</h2>
+  </div>
+
+  <div class="promoted-track">
+    <button
+      type="button"
+      class="promoted-nav promoted-nav-prev"
+      *ngIf="hasOverflow && canScrollLeft"
+      (click)="scrollByDirection(-1)"
+      aria-label="Przewiń promki w lewo"
+    >
+      ‹
+    </button>
+
+    <div class="promoted-scroll" #scrollContainer>
+      <button
+        type="button"
+        class="promoted-video-tile"
+        *ngFor="let video of promotedVideos"
+        (click)="selectVideo(video)"
+        [attr.aria-label]="video.title"
+      >
+        <span class="promoted-badge">PROMKA</span>
+        <img
+          class="promoted-video-thumb"
+          [src]="previewSrc(video)"
+          [alt]="video.title"
+          loading="lazy"
+          (error)="onPreviewError(video)"
+        />
+      </button>
+    </div>
+
+    <button
+      type="button"
+      class="promoted-nav promoted-nav-next"
+      *ngIf="hasOverflow && canScrollRight"
+      (click)="scrollByDirection(1)"
+      aria-label="Przewiń promki w prawo"
+    >
+      ›
+    </button>
+  </div>
+</section>

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -14,6 +14,8 @@ import { ProductImageUploadService } from '../../services/product-image-upload.s
 import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
 
+type AdminVideosViewMode = 'all' | 'promoted';
+
 @Component({
   selector: 'app-admin-videos-section',
   standalone: true,
@@ -22,6 +24,8 @@ import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.ser
   styleUrl: './admin-videos-section.component.scss'
 })
 export class AdminVideosSectionComponent implements OnInit {
+  @Input() viewMode: AdminVideosViewMode = 'all';
+
   videos: AdminVideoMock[] = [];
   categories: Category[] = [];
   openedVideoId: number | null = null;
@@ -58,25 +62,33 @@ export class AdminVideosSectionComponent implements OnInit {
   videoForm = this.fb.group({
     title: ['', Validators.required],
     tiktokUrl: ['', Validators.required],
-    isActive: [true]
+    isActive: [true],
+    promotionEnabled: [false],
+    promotionStartAt: [{ value: '', disabled: true }],
+    promotionEndAt: [{ value: '', disabled: true }]
   });
 
   productAddForm = this.fb.group({
     shopUrl: ['', Validators.required],
     name: [''],
-    imageUrl: ['']
+    imageUrl: [''],
+    promoCode: ['']
   });
 
   productEditForm = this.fb.group({
     name: ['', Validators.required],
     imageUrl: [''],
-    shopUrl: ['', Validators.required]
+    shopUrl: ['', Validators.required],
+    promoCode: ['']
   });
 
   newVideoForm = this.fb.group({
     title: ['', Validators.required],
     tiktokUrl: ['', Validators.required],
     isActive: [true],
+    promotionEnabled: [false],
+    promotionStartAt: [{ value: '', disabled: true }],
+    promotionEndAt: [{ value: '', disabled: true }],
     categoryIds: this.fb.array<number>([]),
     products: this.fb.array<FormGroup>([])
   });
@@ -112,6 +124,23 @@ export class AdminVideosSectionComponent implements OnInit {
       return null;
     }
     return this.videos.find((video) => video.id === this.modalVideoId) ?? null;
+  }
+
+  get visibleVideos(): AdminVideoMock[] {
+    if (this.viewMode !== 'promoted') {
+      return this.videos;
+    }
+    return this.videos
+      .filter((video) => this.isPromotionVisible(video))
+      .sort((a, b) => this.promotionStartTime(b) - this.promotionStartTime(a));
+  }
+
+  get isPromotionListView(): boolean {
+    return this.viewMode === 'promoted';
+  }
+
+  get emptyVideosMessage(): string {
+    return this.isPromotionListView ? 'Brak filmów promowanych.' : 'Brak filmów.';
   }
 
   previewImageSrc(video: AdminVideoMock): string {
@@ -157,7 +186,15 @@ export class AdminVideosSectionComponent implements OnInit {
     this.openedVideoId = null;
     this.cancelProductForm();
     this.modalVideoId = null;
-    this.newVideoForm.reset({ title: '', tiktokUrl: '', isActive: true });
+    this.newVideoForm.reset({
+      title: '',
+      tiktokUrl: '',
+      isActive: true,
+      promotionEnabled: false,
+      promotionStartAt: '',
+      promotionEndAt: ''
+    });
+    this.configurePromotionControls(this.newVideoForm, false, false);
     this.newVideoCategoryIds.clear();
     this.newVideoProducts.clear();
     this.showNewProductForm = false;
@@ -171,11 +208,7 @@ export class AdminVideosSectionComponent implements OnInit {
   openEditVideoModal(video: AdminVideoMock): void {
     this.cancelProductForm();
     this.modalVideoId = video.id;
-    this.videoForm.reset({
-      title: video.title,
-      tiktokUrl: video.tiktokUrl,
-      isActive: video.isActive
-    });
+    this.patchVideoFormFromVideo(this.videoForm, video);
     this.isVideoModalOpen = true;
     this.videoModalNavigationId = this.modalNavigationService.open(() => this.closeVideoModal(true));
   }
@@ -189,24 +222,69 @@ export class AdminVideosSectionComponent implements OnInit {
     this.isVideoModalOpen = false;
     this.modalVideoId = null;
     this.resetNewVideoForm(false);
-    this.videoForm.reset({ title: '', tiktokUrl: '', isActive: true });
+    this.videoForm.reset({
+      title: '',
+      tiktokUrl: '',
+      isActive: true,
+      promotionEnabled: false,
+      promotionStartAt: '',
+      promotionEndAt: ''
+    });
+    this.configurePromotionControls(this.videoForm, false, false);
   }
 
   isVideoOpen(video: AdminVideoMock): boolean {
     return this.openedVideoId === video.id;
   }
 
+  onPromotionToggle(form: FormGroup): void {
+    const enabled = !!form.get('promotionEnabled')?.value;
+    this.configurePromotionControls(form, enabled, true);
+  }
+
+  isPromotionEnabled(form: FormGroup): boolean {
+    return !!form.get('promotionEnabled')?.value;
+  }
+
+  promotionStartError(form: FormGroup): string | null {
+    const control = form.get('promotionStartAt');
+    if (!this.isPromotionEnabled(form) || !control?.touched) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'Podaj datę rozpoczęcia promocji.';
+    }
+    return null;
+  }
+
+  promotionEndError(form: FormGroup): string | null {
+    const control = form.get('promotionEndAt');
+    if (!this.isPromotionEnabled(form) || !control?.touched) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'Podaj datę zakończenia promocji.';
+    }
+    if (control.hasError('dateOrder')) {
+      return 'Data zakończenia musi być późniejsza niż data rozpoczęcia.';
+    }
+    return null;
+  }
+
   saveVideo(video: AdminVideoMock): void {
-    if (this.videoForm.invalid) {
+    if (this.videoForm.invalid || !this.validatePromotionForm(this.videoForm)) {
       this.videoForm.markAllAsTouched();
       return;
     }
     const value = this.videoForm.getRawValue();
+    const promotionPayload = this.buildPromotionPayload(this.videoForm);
     this.videoService
       .update(video.id, {
         title: value.title!,
         tiktokUrl: value.tiktokUrl!,
-        isActive: value.isActive ?? true
+        isActive: value.isActive ?? true,
+        promotionStartAt: promotionPayload.promotionStartAt,
+        promotionEndAt: promotionPayload.promotionEndAt
       })
       .subscribe((updated) => {
         const adminVideo = this.toAdminVideo(updated);
@@ -278,7 +356,8 @@ export class AdminVideosSectionComponent implements OnInit {
     this.productEditForm.reset({
       name: product.name,
       imageUrl: product.imageUrl,
-      shopUrl: product.shopUrl
+      shopUrl: product.shopUrl,
+      promoCode: product.promoCode ?? ''
     });
     this.editProductSelectedFileName = '';
   }
@@ -288,7 +367,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.isAddingNewProduct = true;
     this.addProductPreview = null;
     this.addProductPreviewLoading = false;
-    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '' });
     this.addProductSelectedFileName = '';
   }
 
@@ -302,8 +381,8 @@ export class AdminVideosSectionComponent implements OnInit {
     this.addProductSelectedFileName = '';
     this.editProductSelectedFileName = '';
     this.newProductSelectedFileNames = {};
-    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '' });
-    this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '' });
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '' });
+    this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '', promoCode: '' });
   }
 
   onAddProductUrlInput(): void {
@@ -412,6 +491,7 @@ export class AdminVideosSectionComponent implements OnInit {
         .updateProduct(video.id, productId, {
           name: value.name || undefined,
           imageUrl: value.imageUrl || undefined,
+          promoCode: this.normalizeOptionalText(value.promoCode),
           productLink: {
             url: value.shopUrl!,
             type: 'product'
@@ -441,6 +521,7 @@ export class AdminVideosSectionComponent implements OnInit {
       .addProduct(video.id, {
         name: value.name || undefined,
         imageUrl: value.imageUrl || undefined,
+        promoCode: this.normalizeOptionalText(value.promoCode),
         productLink: {
           url: value.shopUrl!,
           type: 'product'
@@ -585,7 +666,8 @@ export class AdminVideosSectionComponent implements OnInit {
       this.fb.group({
         shopUrl: ['', Validators.required],
         name: [''],
-        imageUrl: ['']
+        imageUrl: [''],
+        promoCode: ['']
       })
     );
     this.newProductPreviewLoading[index] = false;
@@ -610,17 +692,19 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   saveNewVideo(): void {
-    if (this.newVideoForm.invalid) {
+    if (this.newVideoForm.invalid || !this.validatePromotionForm(this.newVideoForm)) {
       this.newVideoForm.markAllAsTouched();
       this.toastService.warning('Uzupełnij wymagane pola nowego filmu.');
       return;
     }
     const value = this.newVideoForm.getRawValue();
+    const promotionPayload = this.buildPromotionPayload(this.newVideoForm);
     const products = this.newVideoProducts.controls.map((group) => {
       const product = group.getRawValue();
       return {
         name: product['name'] as string | undefined,
         imageUrl: product['imageUrl'] as string | undefined,
+        promoCode: this.normalizeOptionalText(product['promoCode'] as string | null | undefined),
         productLink: {
           url: product['shopUrl'] as string,
           type: 'product' as const
@@ -632,6 +716,8 @@ export class AdminVideosSectionComponent implements OnInit {
         title: value.title!,
         tiktokUrl: value.tiktokUrl!,
         isActive: value.isActive ?? true,
+        promotionStartAt: promotionPayload.promotionStartAt,
+        promotionEndAt: promotionPayload.promotionEndAt,
         products
       })
       .subscribe({
@@ -645,7 +731,15 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   resetNewVideoForm(closeModal = true): void {
-    this.newVideoForm.reset({ title: '', tiktokUrl: '', isActive: true });
+    this.newVideoForm.reset({
+      title: '',
+      tiktokUrl: '',
+      isActive: true,
+      promotionEnabled: false,
+      promotionStartAt: '',
+      promotionEndAt: ''
+    });
+    this.configurePromotionControls(this.newVideoForm, false, false);
     this.newVideoCategoryIds.clear();
     this.newVideoProducts.clear();
     this.showNewProductForm = false;
@@ -746,20 +840,145 @@ export class AdminVideosSectionComponent implements OnInit {
     this.videoService.getById(videoId).subscribe((video) => {
       this.syncVideoFromResponse(video);
       if (this.openedVideoId === videoId) {
-        this.videoForm.reset({
-          title: video.title,
-          tiktokUrl: video.tiktokUrl,
-          isActive: video.isActive
-        });
+        this.patchVideoFormFromVideo(this.videoForm, this.toAdminVideo(video));
       }
       if (this.modalVideoId === videoId) {
-        this.videoForm.reset({
-          title: video.title,
-          tiktokUrl: video.tiktokUrl,
-          isActive: video.isActive
-        });
+        this.patchVideoFormFromVideo(this.videoForm, this.toAdminVideo(video));
       }
     });
+  }
+
+  private patchVideoFormFromVideo(form: FormGroup, video: AdminVideoMock): void {
+    const promotionEnabled = !!video.promotionStartAt && !!video.promotionEndAt;
+    form.reset({
+      title: video.title,
+      tiktokUrl: video.tiktokUrl,
+      isActive: video.isActive,
+      promotionEnabled,
+      promotionStartAt: this.toDateTimeLocalValue(video.promotionStartAt),
+      promotionEndAt: this.toDateTimeLocalValue(video.promotionEndAt)
+    });
+    this.configurePromotionControls(form, promotionEnabled, false);
+  }
+
+  private configurePromotionControls(form: FormGroup, enabled: boolean, fillDefaultStart: boolean): void {
+    const startControl = form.get('promotionStartAt');
+    const endControl = form.get('promotionEndAt');
+    if (!startControl || !endControl) {
+      return;
+    }
+
+    if (enabled) {
+      startControl.enable({ emitEvent: false });
+      endControl.enable({ emitEvent: false });
+      startControl.setValidators([Validators.required]);
+      endControl.setValidators([Validators.required]);
+      if (fillDefaultStart && !startControl.value) {
+        startControl.setValue(this.toDateTimeLocalValue(new Date().toISOString()));
+      }
+    } else {
+      startControl.clearValidators();
+      endControl.clearValidators();
+      startControl.setValue('');
+      endControl.setValue('');
+      startControl.disable({ emitEvent: false });
+      endControl.disable({ emitEvent: false });
+    }
+
+    startControl.updateValueAndValidity({ emitEvent: false });
+    endControl.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private validatePromotionForm(form: FormGroup): boolean {
+    const startControl = form.get('promotionStartAt');
+    const endControl = form.get('promotionEndAt');
+    if (!this.isPromotionEnabled(form) || !startControl || !endControl) {
+      return true;
+    }
+
+    const startValue = startControl.value;
+    const endValue = endControl.value;
+    startControl.setErrors(this.withoutError(startControl.errors, 'dateOrder'));
+    endControl.setErrors(this.withoutError(endControl.errors, 'dateOrder'));
+
+    if (!startValue || !endValue) {
+      startControl.updateValueAndValidity({ emitEvent: false });
+      endControl.updateValueAndValidity({ emitEvent: false });
+      return false;
+    }
+
+    const startTime = new Date(startValue).getTime();
+    const endTime = new Date(endValue).getTime();
+    if (!Number.isFinite(startTime) || !Number.isFinite(endTime) || endTime <= startTime) {
+      endControl.setErrors({ ...(endControl.errors ?? {}), dateOrder: true });
+      return false;
+    }
+
+    return true;
+  }
+
+  private withoutError(errors: Record<string, unknown> | null, key: string): Record<string, unknown> | null {
+    if (!errors || !errors[key]) {
+      return errors;
+    }
+    const next = { ...errors };
+    delete next[key];
+    return Object.keys(next).length ? next : null;
+  }
+
+  private buildPromotionPayload(form: FormGroup): { promotionStartAt: string | null; promotionEndAt: string | null } {
+    if (!this.isPromotionEnabled(form)) {
+      return {
+        promotionStartAt: null,
+        promotionEndAt: null
+      };
+    }
+    const value = form.getRawValue();
+    return {
+      promotionStartAt: this.toIsoString(value['promotionStartAt']),
+      promotionEndAt: this.toIsoString(value['promotionEndAt'])
+    };
+  }
+
+  private toIsoString(value: string | null | undefined): string | null {
+    if (!value) {
+      return null;
+    }
+    const date = new Date(value);
+    return Number.isFinite(date.getTime()) ? date.toISOString() : null;
+  }
+
+  private toDateTimeLocalValue(value: string | null | undefined): string {
+    if (!value) {
+      return '';
+    }
+    const date = new Date(value);
+    if (!Number.isFinite(date.getTime())) {
+      return '';
+    }
+    const offsetMs = date.getTimezoneOffset() * 60_000;
+    return new Date(date.getTime() - offsetMs).toISOString().slice(0, 16);
+  }
+
+  private normalizeOptionalText(value: string | null | undefined): string | null {
+    const trimmed = value?.trim();
+    return trimmed ? trimmed : null;
+  }
+
+  private isPromotionVisible(video: AdminVideoMock): boolean {
+    if (!video.promotionStartAt || !video.promotionEndAt) {
+      return false;
+    }
+    const endTime = new Date(video.promotionEndAt).getTime();
+    return Number.isFinite(endTime) && endTime > Date.now();
+  }
+
+  private promotionStartTime(video: AdminVideoMock): number {
+    if (!video.promotionStartAt) {
+      return 0;
+    }
+    const startTime = new Date(video.promotionStartAt).getTime();
+    return Number.isFinite(startTime) ? startTime : 0;
   }
 
   private syncVideoFromResponse(video: Video): void {
@@ -784,13 +1003,16 @@ export class AdminVideosSectionComponent implements OnInit {
       tiktokUrl: video.tiktokUrl,
       previewImageUrl: video.previewImageUrl,
       isActive: video.isActive,
+      promotionStartAt: video.promotionStartAt,
+      promotionEndAt: video.promotionEndAt,
       categoryIds: [...video.categoryIds],
       blockReasons: [...(video.blockReasons ?? [])],
       products: video.products.map((product) => ({
         id: product.id,
         name: product.name,
         imageUrl: product.imageUrl,
-        shopUrl: product.productLink.url
+        shopUrl: product.productLink.url,
+        promoCode: product.promoCode ?? null
       }))
     };
   }

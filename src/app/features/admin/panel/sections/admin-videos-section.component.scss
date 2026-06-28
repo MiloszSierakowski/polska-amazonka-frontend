@@ -227,6 +227,12 @@
     padding: 0 0.9rem;
     font-size: 1rem;
     background: #fff;
+
+    &:disabled {
+      background: #e2e8f0;
+      color: #64748b;
+      cursor: not-allowed;
+    }
   }
 
   &.compact {
@@ -240,6 +246,37 @@
   &.nested {
     background: $admin-card-bg;
   }
+}
+
+.promotion-fields {
+  gap: 0.75rem;
+}
+
+.promotion-date-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.75rem;
+
+  &.disabled {
+    opacity: 0.72;
+  }
+}
+
+.form-error {
+  font-size: 0.76rem !important;
+  font-weight: 700 !important;
+  color: #b91c1c !important;
+}
+
+.product-promo-code {
+  display: inline-flex;
+  width: fit-content;
+  padding: 0.2rem 0.5rem;
+  border-radius: 999px;
+  background: #fef3c7;
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .video-data-form {

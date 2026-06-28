@@ -1,11 +1,11 @@
 <div class="videos-admin">
-  <div class="videos-admin-toolbar">
+  <div class="videos-admin-toolbar" *ngIf="!isPromotionListView">
     <button type="button" class="primary-action videos-add-toggle" (click)="openAddVideoModal()">
       Dodaj film
     </button>
   </div>
-  <div class="video-list">
-    <article class="video-card" *ngFor="let video of videos" [class.is-open]="isVideoOpen(video)">
+  <div class="video-list" *ngIf="visibleVideos.length; else noAdminVideos">
+    <article class="video-card" *ngFor="let video of visibleVideos" [class.is-open]="isVideoOpen(video)">
       <div class="video-list-card">
         <div class="video-list-card-body">
           <img class="video-list-thumb" [src]="previewImageSrc(video)" [alt]="video.title" />
@@ -76,6 +76,10 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
+            <label>
+              <span>Kod promocyjny</span>
+              <input type="text" formControlName="promoCode" placeholder="Opcjonalnie" />
+            </label>
             <div class="file-upload-field">
               <span class="file-upload-label">Prześlij zdjęcie</span>
               <input
@@ -109,6 +113,7 @@
                     <span class="product-name">{{ product.name }}</span>
                     <span class="product-link product-link--short">{{ linkPlatformLabel(product.shopUrl) }}</span>
                     <span class="product-link product-link--full">{{ product.shopUrl }}</span>
+                    <span class="product-promo-code" *ngIf="product.promoCode">Kod promocyjny: {{ product.promoCode }}</span>
                     <a
                       class="product-shop-link"
                       *ngIf="product.shopUrl"
@@ -166,6 +171,10 @@
                   <span>URL obrazka</span>
                   <input type="url" formControlName="imageUrl" />
                 </label>
+                <label>
+                  <span>Kod promocyjny</span>
+                  <input type="text" formControlName="promoCode" placeholder="Opcjonalnie" />
+                </label>
                 <div class="file-upload-field">
                   <span class="file-upload-label">Prześlij zdjęcie</span>
                   <input
@@ -194,6 +203,9 @@
       </div>
     </article>
   </div>
+  <ng-template #noAdminVideos>
+    <p class="empty-state">{{ emptyVideosMessage }}</p>
+  </ng-template>
 </div>
 
 <div class="video-modal-overlay" *ngIf="isVideoModalOpen">
@@ -224,6 +236,33 @@
           <span class="video-form-switch-slider" aria-hidden="true"></span>
         </span>
       </label>
+
+      <section class="editor-block embedded promotion-fields">
+        <label class="video-form-toggle">
+          <span class="video-form-toggle-label">Film promowany</span>
+          <span class="video-form-switch">
+            <input
+              type="checkbox"
+              class="video-form-switch-input"
+              formControlName="promotionEnabled"
+              (change)="onPromotionToggle(newVideoForm)"
+            />
+            <span class="video-form-switch-slider" aria-hidden="true"></span>
+          </span>
+        </label>
+        <div class="promotion-date-grid" [class.disabled]="!isPromotionEnabled(newVideoForm)">
+          <label>
+            <span>Data rozpoczęcia promocji</span>
+            <input type="datetime-local" formControlName="promotionStartAt" />
+            <span class="form-error" *ngIf="promotionStartError(newVideoForm) as error">{{ error }}</span>
+          </label>
+          <label>
+            <span>Data zakończenia promocji</span>
+            <input type="datetime-local" formControlName="promotionEndAt" />
+            <span class="form-error" *ngIf="promotionEndError(newVideoForm) as error">{{ error }}</span>
+          </label>
+        </div>
+      </section>
 
       <section class="editor-block embedded">
         <h3>Kategorie</h3>
@@ -275,6 +314,10 @@
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
             </label>
+            <label>
+              <span>Kod promocyjny</span>
+              <input type="text" formControlName="promoCode" placeholder="Opcjonalnie" />
+            </label>
             <div class="file-upload-field">
               <span class="file-upload-label">Prześlij zdjęcie</span>
               <input
@@ -321,6 +364,33 @@
           <span class="video-form-switch-slider" aria-hidden="true"></span>
         </span>
       </label>
+
+      <section class="editor-block embedded promotion-fields">
+        <label class="video-form-toggle">
+          <span class="video-form-toggle-label">Film promowany</span>
+          <span class="video-form-switch">
+            <input
+              type="checkbox"
+              class="video-form-switch-input"
+              formControlName="promotionEnabled"
+              (change)="onPromotionToggle(videoForm)"
+            />
+            <span class="video-form-switch-slider" aria-hidden="true"></span>
+          </span>
+        </label>
+        <div class="promotion-date-grid" [class.disabled]="!isPromotionEnabled(videoForm)">
+          <label>
+            <span>Data rozpoczęcia promocji</span>
+            <input type="datetime-local" formControlName="promotionStartAt" />
+            <span class="form-error" *ngIf="promotionStartError(videoForm) as error">{{ error }}</span>
+          </label>
+          <label>
+            <span>Data zakończenia promocji</span>
+            <input type="datetime-local" formControlName="promotionEndAt" />
+            <span class="form-error" *ngIf="promotionEndError(videoForm) as error">{{ error }}</span>
+          </label>
+        </div>
+      </section>
 
       <section class="editor-block embedded">
         <h3>Kategorie</h3>

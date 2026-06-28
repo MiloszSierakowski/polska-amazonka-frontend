@@ -46,9 +46,10 @@ export class AdminPanelComponent {
 
   readonly sections: AccordionSection[] = [
     { id: 'videos', title: 'Filmy', adminOnly: false },
+    { id: 'promoted-videos', title: 'Promowane filmy', adminOnly: false },
     { id: 'categories', title: 'Kategorie', adminOnly: false },
     { id: 'shops', title: 'Sklepy', adminOnly: false },
-    { id: 'discounts', title: 'Kody rabatowe i afiliacyjne', adminOnly: false },
+    { id: 'discounts', title: 'Kody afiliacyjne', adminOnly: false },
     { id: 'analytics', title: 'Statystyki', adminOnly: false },
     { id: 'broken-links', title: 'Linki wymagające sprawdzenia', adminOnly: false },
     { id: 'navigation-links', title: 'Linki', adminOnly: false },

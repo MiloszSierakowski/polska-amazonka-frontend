@@ -9,6 +9,7 @@ export interface Product {
   name: string;
   imageUrl: string;
   productLink: ProductLink;
+  promoCode?: string | null;
 }
 
 export interface Video {
@@ -18,6 +19,8 @@ export interface Video {
   previewImageUrl: string;
   isActive: boolean;
   createdAt: string;
+  promotionStartAt: string | null;
+  promotionEndAt: string | null;
   categoryIds: number[];
   products: Product[];
   blockReasons?: string[];

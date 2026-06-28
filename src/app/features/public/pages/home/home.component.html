@@ -2,9 +2,12 @@
 
   <app-search-bar></app-search-bar>
 
-  <p class="outage-notice" *ngIf="showOutageNotice">{{ outageMessage }}</p>
+  <app-promoted-videos-section
+    (videoSelected)="openVideoModal($event, 'promoted')"
+    (loadFailed)="onSectionLoadFailed()"
+  ></app-promoted-videos-section>
 
-  <app-discount-section (loadFailed)="onSectionLoadFailed()"></app-discount-section>
+  <p class="outage-notice" *ngIf="showOutageNotice">{{ outageMessage }}</p>
 
   <div class="separator-line"></div>
 
@@ -15,7 +18,15 @@
 
   <app-videos-grid
     [selectedCategoryId]="selectedCategoryId"
+    (videoSelected)="openVideoModal($event, 'regular')"
     (loadFailed)="onSectionLoadFailed()"
   ></app-videos-grid>
+
+  <app-video-modal
+    *ngIf="selectedVideo"
+    [video]="selectedVideo"
+    [variant]="modalVariant"
+    (closed)="closeModal()"
+  ></app-video-modal>
 
 </div>
