@@ -22,35 +22,90 @@
   line-height: 1.45;
 }
 
-.direct-link-notice.direct-link-error {
-  background: #fff1f2;
-  border-color: #fecdd3;
-  color: #9f1239;
+.unavailable-video-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  z-index: 1000;
 }
 
-.direct-link-error-panel {
-  margin: $space-md $space-sm 0;
+.unavailable-video-modal {
+  box-sizing: border-box;
+  width: min(560px, calc(100vw - 32px));
+  max-width: 560px;
+  height: auto;
+  min-height: 0;
+  padding: 36px 40px 32px;
+  border: 3px solid #f4511e;
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
   text-align: center;
 }
 
-.direct-link-error-panel .outage-notice {
+.unavailable-video-modal-message {
   margin: 0;
+  max-width: 100%;
+  color: #9f1239;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.3;
+  text-align: center;
 }
 
-.direct-link-home-button {
-  margin-top: 0.75rem;
-  padding: 0.55rem 1.1rem;
-  border: 1px solid #fecdd3;
-  border-radius: 0.65rem;
-  background: #fff;
-  color: #9f1239;
-  font-size: 0.92rem;
+.unavailable-video-modal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 130px;
+  height: 48px;
+  margin-top: 30px;
+  padding: 0 30px;
+  border: none;
+  border-radius: 12px;
+  background: #f4511e;
+  color: #fff;
+  font-size: 18px;
   font-weight: 600;
   cursor: pointer;
+  transition: background 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+
+  &:hover {
+    background: #e64a19;
+    box-shadow: 0 4px 12px rgba(244, 81, 30, 0.35);
+    transform: translateY(-1px);
+  }
+
+  &:focus-visible {
+    outline: 2px solid #f4511e;
+    outline-offset: 2px;
+  }
 }
 
-.direct-link-home-button:hover {
-  background: #fff1f2;
+@media (max-width: 600px) {
+  .unavailable-video-modal {
+    width: calc(100vw - 24px);
+    max-width: calc(100vw - 24px);
+    padding: 28px 20px 24px;
+    border-radius: 18px;
+  }
+
+  .unavailable-video-modal-message {
+    font-size: 23px;
+  }
+
+  .unavailable-video-modal-button {
+    min-height: 44px;
+    height: 44px;
+    margin-top: 28px;
+    padding: 0 26px;
+    font-size: 17px;
+  }
 }
 
 .separator-line {

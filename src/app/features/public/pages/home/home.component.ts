@@ -19,7 +19,11 @@ import {
   VideoRouteNavigationState
 } from '../../utils/video-open-stat.util';
 
-const DIRECT_LINK_ERROR_MESSAGE = 'Film nie istnieje lub link jest nieaktualny.';
+const UNAVAILABLE_VIDEO_MESSAGE = 'Film jest niedostępny lub został usunięty.';
+
+interface UnavailableVideoNavigationState {
+  showUnavailableVideoModal?: boolean;
+}
 
 @Component({
   selector: 'app-home',
@@ -41,8 +45,9 @@ export class HomeComponent implements OnInit, OnDestroy {
   modalVariant: VideoModalVariant = 'regular';
   showOutageNotice = false;
   directLinkLoading = false;
-  directLinkError: string | null = null;
+  showUnavailableVideoModal = false;
   readonly outageMessage = PUBLIC_OUTAGE_MESSAGE;
+  readonly unavailableVideoMessage = UNAVAILABLE_VIDEO_MESSAGE;
   private readonly destroy$ = new Subject<void>();
   private videoStatRecordedForNavigationId: number | null = null;
 
@@ -55,6 +60,8 @@ export class HomeComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.consumeUnavailableVideoModalFlag();
+
     this.route.paramMap
       .pipe(
         takeUntil(this.destroy$),
@@ -62,18 +69,16 @@ export class HomeComponent implements OnInit, OnDestroy {
           const publicCode = params.get('publicCode')?.trim();
           if (!publicCode) {
             this.clearVideoRouteState();
+            this.consumeUnavailableVideoModalFlag();
             return EMPTY;
           }
           this.directLinkLoading = true;
-          this.directLinkError = null;
+          this.showUnavailableVideoModal = false;
           this.selectedVideo = null;
           this.modalVariant = 'regular';
           return this.videoService.getPublicByCode(publicCode).pipe(
             catchError(() => {
-              this.directLinkLoading = false;
-              this.selectedVideo = null;
-              this.modalVariant = 'regular';
-              this.directLinkError = DIRECT_LINK_ERROR_MESSAGE;
+              this.handleUnavailableVideo();
               return EMPTY;
             })
           );
@@ -81,7 +86,7 @@ export class HomeComponent implements OnInit, OnDestroy {
       )
       .subscribe((video) => {
         this.directLinkLoading = false;
-        this.directLinkError = null;
+        this.showUnavailableVideoModal = false;
         this.maybeRecordVideoOpenStat(video);
         this.displayVideoModal(video, this.resolveModalVariantFromNavigation());
       });
@@ -97,10 +102,10 @@ export class HomeComponent implements OnInit, OnDestroy {
   }
 
   openVideoFromTile(video: Video, variant: VideoModalVariant = 'regular'): void {
-    this.directLinkError = null;
+    this.showUnavailableVideoModal = false;
     const publicCode = video.publicCode?.trim();
     if (!publicCode) {
-      this.directLinkError = DIRECT_LINK_ERROR_MESSAGE;
+      this.showUnavailableVideoModal = true;
       return;
     }
     void this.router.navigate(['/amafilmy', publicCode], {
@@ -125,13 +130,43 @@ export class HomeComponent implements OnInit, OnDestroy {
     void this.router.navigate(['/'], { replaceUrl: true });
   }
 
-  returnToHomeFromError(): void {
-    this.directLinkError = null;
-    void this.router.navigate(['/'], { replaceUrl: true });
-  }
-
   onSectionLoadFailed(): void {
     this.showOutageNotice = true;
+  }
+
+  closeUnavailableVideoModal(): void {
+    this.showUnavailableVideoModal = false;
+  }
+
+  private handleUnavailableVideo(): void {
+    this.directLinkLoading = false;
+    this.selectedVideo = null;
+    this.modalVariant = 'regular';
+    void this.router.navigate(['/'], {
+      replaceUrl: true,
+      state: {
+        showUnavailableVideoModal: true
+      } satisfies UnavailableVideoNavigationState
+    });
+  }
+
+  private consumeUnavailableVideoModalFlag(): void {
+    const historyState = history.state as UnavailableVideoNavigationState | null;
+    if (historyState?.showUnavailableVideoModal !== true) {
+      return;
+    }
+    this.showUnavailableVideoModal = true;
+    this.clearUnavailableVideoModalHistoryFlag();
+  }
+
+  private clearUnavailableVideoModalHistoryFlag(): void {
+    const currentState = history.state as UnavailableVideoNavigationState | null;
+    if (!currentState?.showUnavailableVideoModal) {
+      return;
+    }
+    const nextState = { ...currentState };
+    delete nextState.showUnavailableVideoModal;
+    history.replaceState(nextState, '', window.location.href);
   }
 
   private maybeRecordVideoOpenStat(video: Video): void {
@@ -156,7 +191,6 @@ export class HomeComponent implements OnInit, OnDestroy {
 
   private clearVideoRouteState(): void {
     this.directLinkLoading = false;
-    this.directLinkError = null;
     this.selectedVideo = null;
     this.modalVariant = 'regular';
     this.videoStatRecordedForNavigationId = null;

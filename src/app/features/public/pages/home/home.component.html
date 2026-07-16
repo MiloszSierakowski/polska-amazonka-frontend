@@ -3,12 +3,6 @@
   <app-search-bar></app-search-bar>
 
   <p class="outage-notice direct-link-notice" *ngIf="directLinkLoading">Ładowanie filmu...</p>
-  <div class="direct-link-error-panel" *ngIf="directLinkError">
-    <p class="outage-notice direct-link-notice direct-link-error">{{ directLinkError }}</p>
-    <button type="button" class="direct-link-home-button" (click)="returnToHomeFromError()">
-      Wróć do strony głównej
-    </button>
-  </div>
 
   <app-promoted-videos-section
     (videoSelected)="openVideoFromTile($event, 'promoted')"
@@ -36,5 +30,22 @@
     [variant]="modalVariant"
     (closed)="closeModal()"
   ></app-video-modal>
+
+  <div
+    class="unavailable-video-modal-overlay"
+    *ngIf="showUnavailableVideoModal"
+    (click)="closeUnavailableVideoModal()"
+  >
+    <div class="unavailable-video-modal" (click)="$event.stopPropagation()">
+      <p class="unavailable-video-modal-message">{{ unavailableVideoMessage }}</p>
+      <button
+        type="button"
+        class="unavailable-video-modal-button"
+        (click)="closeUnavailableVideoModal()"
+      >
+        Zamknij
+      </button>
+    </div>
+  </div>
 
 </div>
