@@ -919,7 +919,7 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   private patchVideoFormFromVideo(form: FormGroup, video: AdminVideoMock): void {
-    const promotionEnabled = !!video.promotionStartAt && !!video.promotionEndAt;
+    const promotionEnabled = this.isPromotionVisible(video);
     form.reset({
       title: video.title,
       tiktokUrl: video.tiktokUrl,
@@ -1012,8 +1012,6 @@ export class AdminVideosSectionComponent implements OnInit {
     } else {
       startControl.clearValidators();
       endControl.clearValidators();
-      startControl.setValue('');
-      endControl.setValue('');
       startControl.disable({ emitEvent: false });
       endControl.disable({ emitEvent: false });
     }
