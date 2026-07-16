@@ -11,6 +11,9 @@
           <img class="video-list-thumb" [src]="previewImageSrc(video)" [alt]="video.title" />
           <div class="video-list-info">
             <span class="video-list-title">{{ video.title }}</span>
+            <span class="video-list-code" [class.video-list-code-missing]="!hasPublicCode(video)">
+              {{ publicCodeListLabel(video) }}
+            </span>
           </div>
         </div>
         <div class="video-list-action-group">
@@ -229,6 +232,17 @@
         <span>URL TikTok</span>
         <input type="url" formControlName="tiktokUrl" />
       </label>
+      <label>
+        <span>Kod publiczny filmu</span>
+        <input
+          type="text"
+          formControlName="publicCode"
+          [attr.maxlength]="publicCodeMaxLength"
+          autocomplete="off"
+          (blur)="onPublicCodeBlur(newVideoForm)"
+        />
+        <span class="form-error" *ngIf="publicCodeError(newVideoForm) as error">{{ error }}</span>
+      </label>
       <label class="video-form-toggle">
         <span class="video-form-toggle-label">Aktywny</span>
         <span class="video-form-switch">
@@ -356,6 +370,17 @@
       <label>
         <span>URL TikTok</span>
         <input type="url" formControlName="tiktokUrl" />
+      </label>
+      <label>
+        <span>Kod publiczny filmu</span>
+        <input
+          type="text"
+          formControlName="publicCode"
+          [attr.maxlength]="publicCodeMaxLength"
+          autocomplete="off"
+          (blur)="onPublicCodeBlur(videoForm)"
+        />
+        <span class="form-error" *ngIf="publicCodeError(videoForm) as error">{{ error }}</span>
       </label>
       <label class="video-form-toggle">
         <span class="video-form-toggle-label">Aktywny</span>

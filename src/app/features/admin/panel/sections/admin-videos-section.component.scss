@@ -111,6 +111,19 @@
   overflow: hidden;
 }
 
+.video-list-code {
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  color: #1d4ed8;
+}
+
+.video-list-code-missing {
+  color: #64748b;
+  font-weight: 600;
+  letter-spacing: normal;
+}
+
 .video-list-action-group {
   display: flex;
   flex-direction: row;

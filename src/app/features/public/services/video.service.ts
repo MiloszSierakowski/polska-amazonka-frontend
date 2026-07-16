@@ -12,6 +12,7 @@ interface VideoApiResponse {
   isActive: boolean | null;
   promotionStartAt: string | null;
   promotionEndAt: string | null;
+  publicCode?: string | null;
   products: ProductApiResponse[] | null;
   blockReasons?: string[] | null;
 }
@@ -46,6 +47,7 @@ export interface CreateVideoPayload {
   title: string;
   tiktokUrl: string;
   isActive: boolean;
+  publicCode: string;
   localMp4Url?: string | null;
   promotionStartAt?: string | null;
   promotionEndAt?: string | null;
@@ -56,6 +58,7 @@ export interface UpdateVideoPayload {
   title: string;
   tiktokUrl: string;
   isActive: boolean;
+  publicCode?: string | null;
   localMp4Url?: string | null;
   promotionStartAt?: string | null;
   promotionEndAt?: string | null;
@@ -128,6 +131,13 @@ export class VideoService {
   getPublicById(id: number): Observable<Video> {
     return this.http
       .get<VideoApiResponse>(`${this.backendUrl}/api/public/videos/${id}`)
+      .pipe(map((row) => this.mapRow(row)));
+  }
+
+  getPublicByCode(publicCode: string): Observable<Video> {
+    const encodedPublicCode = encodeURIComponent(publicCode);
+    return this.http
+      .get<VideoApiResponse>(`${this.backendUrl}/api/public/videos/by-code/${encodedPublicCode}`)
       .pipe(map((row) => this.mapRow(row)));
   }
 
@@ -264,6 +274,7 @@ export class VideoService {
       createdAt: '',
       promotionStartAt: row.promotionStartAt ?? null,
       promotionEndAt: row.promotionEndAt ?? null,
+      publicCode: row.publicCode ?? null,
       categoryIds: [],
       blockReasons: row.blockReasons ?? [],
       products: (row.products ?? []).map((product) => ({

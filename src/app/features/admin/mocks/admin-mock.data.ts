@@ -19,6 +19,7 @@ export interface AdminVideoMock {
   isActive: boolean;
   promotionStartAt: string | null;
   promotionEndAt: string | null;
+  publicCode?: string | null;
   categoryIds: number[];
   blockReasons: string[];
   products: AdminVideoProductMock[];

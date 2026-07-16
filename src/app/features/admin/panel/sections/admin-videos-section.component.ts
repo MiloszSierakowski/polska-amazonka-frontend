@@ -7,12 +7,18 @@ import { VideoService, ProductLinkVerifyResult } from '../../../public/services/
 import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
-import { resolveProductLinkSaveError } from '../../../../core/admin/api-error.util';
+import { parseApiError, resolveProductLinkSaveError } from '../../../../core/admin/api-error.util';
 import { ToastService } from '../../../../core/admin/toast.service';
 import { ProductPreview, ProductPreviewService } from '../../services/product-preview.service';
 import { ProductImageUploadService } from '../../services/product-image-upload.service';
 import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
+import {
+  VIDEO_PUBLIC_CODE_MAX_LENGTH,
+  isVideoPublicCodeBackendMessage,
+  normalizeVideoPublicCode,
+  videoPublicCodeFormatValidator
+} from '../../utils/video-public-code.util';
 
 type AdminVideosViewMode = 'all' | 'promoted';
 
@@ -53,6 +59,9 @@ export class AdminVideosSectionComponent implements OnInit {
   verifyResult: ProductLinkVerifyResult | null = null;
   verifyVideoId: number | null = null;
   verifyProductId: number | null = null;
+  editVideoHadPublicCode = false;
+
+  readonly publicCodeMaxLength = VIDEO_PUBLIC_CODE_MAX_LENGTH;
 
   private readonly previewTimers = new Map<string, ReturnType<typeof setTimeout>>();
   private videoModalNavigationId: number | null = null;
@@ -62,6 +71,7 @@ export class AdminVideosSectionComponent implements OnInit {
   videoForm = this.fb.group({
     title: ['', Validators.required],
     tiktokUrl: ['', Validators.required],
+    publicCode: [''],
     isActive: [true],
     promotionEnabled: [false],
     promotionStartAt: [{ value: '', disabled: true }],
@@ -85,6 +95,7 @@ export class AdminVideosSectionComponent implements OnInit {
   newVideoForm = this.fb.group({
     title: ['', Validators.required],
     tiktokUrl: ['', Validators.required],
+    publicCode: ['', [Validators.required, Validators.maxLength(VIDEO_PUBLIC_CODE_MAX_LENGTH), videoPublicCodeFormatValidator()]],
     isActive: [true],
     promotionEnabled: [false],
     promotionStartAt: [{ value: '', disabled: true }],
@@ -147,6 +158,44 @@ export class AdminVideosSectionComponent implements OnInit {
     return this.videoService.resolvePreviewImageUrl(video.previewImageUrl);
   }
 
+  publicCodeListLabel(video: AdminVideoMock): string {
+    return video.publicCode?.trim() ? video.publicCode : 'Brak kodu';
+  }
+
+  hasPublicCode(video: AdminVideoMock): boolean {
+    return !!video.publicCode?.trim();
+  }
+
+  publicCodeError(form: FormGroup): string | null {
+    const control = form.get('publicCode');
+    if (!control || (!control.touched && !control.dirty)) {
+      return null;
+    }
+    if (control.hasError('required')) {
+      return 'Kod publiczny filmu jest wymagany.';
+    }
+    if (control.hasError('publicCodeFormat')) {
+      return 'Kod ma nieprawidłowy format. Użyj liter, a następnie cyfr, np. A110.';
+    }
+    if (control.hasError('backend')) {
+      return String(control.getError('backend'));
+    }
+    return null;
+  }
+
+  onPublicCodeBlur(form: FormGroup): void {
+    const control = form.get('publicCode');
+    if (!control) {
+      return;
+    }
+    const normalized = normalizeVideoPublicCode(control.value as string | null | undefined);
+    if (normalized != null && normalized !== control.value) {
+      control.setValue(normalized, { emitEvent: false });
+    }
+    control.markAsTouched();
+    control.updateValueAndValidity();
+  }
+
   productPreviewImageSrc(imageUrl: string | null | undefined): string {
     return this.videoService.resolveProductImageUrl(imageUrl);
   }
@@ -189,6 +238,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.newVideoForm.reset({
       title: '',
       tiktokUrl: '',
+      publicCode: '',
       isActive: true,
       promotionEnabled: false,
       promotionStartAt: '',
@@ -208,6 +258,7 @@ export class AdminVideosSectionComponent implements OnInit {
   openEditVideoModal(video: AdminVideoMock): void {
     this.cancelProductForm();
     this.modalVideoId = video.id;
+    this.editVideoHadPublicCode = !!video.publicCode?.trim();
     this.patchVideoFormFromVideo(this.videoForm, video);
     this.isVideoModalOpen = true;
     this.videoModalNavigationId = this.modalNavigationService.open(() => this.closeVideoModal(true));
@@ -221,10 +272,12 @@ export class AdminVideosSectionComponent implements OnInit {
     }
     this.isVideoModalOpen = false;
     this.modalVideoId = null;
+    this.editVideoHadPublicCode = false;
     this.resetNewVideoForm(false);
     this.videoForm.reset({
       title: '',
       tiktokUrl: '',
+      publicCode: '',
       isActive: true,
       promotionEnabled: false,
       promotionStartAt: '',
@@ -272,26 +325,32 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   saveVideo(video: AdminVideoMock): void {
+    this.normalizePublicCodeControl(this.videoForm);
     if (this.videoForm.invalid || !this.validatePromotionForm(this.videoForm)) {
       this.videoForm.markAllAsTouched();
       return;
     }
     const value = this.videoForm.getRawValue();
     const promotionPayload = this.buildPromotionPayload(this.videoForm);
+    const publicCode = this.preparePublicCodeForSave(this.videoForm);
     this.videoService
       .update(video.id, {
         title: value.title!,
         tiktokUrl: value.tiktokUrl!,
         isActive: value.isActive ?? true,
+        publicCode,
         promotionStartAt: promotionPayload.promotionStartAt,
         promotionEndAt: promotionPayload.promotionEndAt
       })
-      .subscribe((updated) => {
-        const adminVideo = this.toAdminVideo(updated);
-        adminVideo.categoryIds = video.categoryIds;
-        this.videos = this.videos.map((item) => (item.id === video.id ? adminVideo : item));
-        this.toastService.success('Film został zapisany.');
-        this.closeVideoModal();
+      .subscribe({
+        next: (updated) => {
+          const adminVideo = this.toAdminVideo(updated);
+          adminVideo.categoryIds = video.categoryIds;
+          this.videos = this.videos.map((item) => (item.id === video.id ? adminVideo : item));
+          this.toastService.success('Film został zapisany.');
+          this.closeVideoModal();
+        },
+        error: (error: HttpErrorResponse) => this.handleVideoSaveError(error, this.videoForm)
       });
   }
 
@@ -692,6 +751,7 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   saveNewVideo(): void {
+    this.normalizePublicCodeControl(this.newVideoForm);
     if (this.newVideoForm.invalid || !this.validatePromotionForm(this.newVideoForm)) {
       this.newVideoForm.markAllAsTouched();
       this.toastService.warning('Uzupełnij wymagane pola nowego filmu.');
@@ -699,6 +759,12 @@ export class AdminVideosSectionComponent implements OnInit {
     }
     const value = this.newVideoForm.getRawValue();
     const promotionPayload = this.buildPromotionPayload(this.newVideoForm);
+    const publicCode = this.preparePublicCodeForSave(this.newVideoForm);
+    if (!publicCode) {
+      this.newVideoForm.get('publicCode')?.markAsTouched();
+      this.toastService.warning('Kod publiczny filmu jest wymagany.');
+      return;
+    }
     const products = this.newVideoProducts.controls.map((group) => {
       const product = group.getRawValue();
       return {
@@ -716,6 +782,7 @@ export class AdminVideosSectionComponent implements OnInit {
         title: value.title!,
         tiktokUrl: value.tiktokUrl!,
         isActive: value.isActive ?? true,
+        publicCode,
         promotionStartAt: promotionPayload.promotionStartAt,
         promotionEndAt: promotionPayload.promotionEndAt,
         products
@@ -726,7 +793,7 @@ export class AdminVideosSectionComponent implements OnInit {
           this.closeVideoModal();
           this.loadVideos();
         },
-        error: (error: HttpErrorResponse) => this.handleProductSaveError(error)
+        error: (error: HttpErrorResponse) => this.handleVideoSaveError(error, this.newVideoForm)
       });
   }
 
@@ -734,6 +801,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.newVideoForm.reset({
       title: '',
       tiktokUrl: '',
+      publicCode: '',
       isActive: true,
       promotionEnabled: false,
       promotionStartAt: '',
@@ -843,7 +911,9 @@ export class AdminVideosSectionComponent implements OnInit {
         this.patchVideoFormFromVideo(this.videoForm, this.toAdminVideo(video));
       }
       if (this.modalVideoId === videoId) {
-        this.patchVideoFormFromVideo(this.videoForm, this.toAdminVideo(video));
+        const adminVideo = this.toAdminVideo(video);
+        this.editVideoHadPublicCode = !!adminVideo.publicCode?.trim();
+        this.patchVideoFormFromVideo(this.videoForm, adminVideo);
       }
     });
   }
@@ -853,12 +923,75 @@ export class AdminVideosSectionComponent implements OnInit {
     form.reset({
       title: video.title,
       tiktokUrl: video.tiktokUrl,
+      publicCode: video.publicCode ?? '',
       isActive: video.isActive,
       promotionEnabled,
       promotionStartAt: this.toDateTimeLocalValue(video.promotionStartAt),
       promotionEndAt: this.toDateTimeLocalValue(video.promotionEndAt)
     });
     this.configurePromotionControls(form, promotionEnabled, false);
+    this.configurePublicCodeControl(form, this.editVideoHadPublicCode);
+  }
+
+  private configurePublicCodeControl(form: FormGroup, requiresCode: boolean): void {
+    const control = form.get('publicCode');
+    if (!control) {
+      return;
+    }
+    const validators = [Validators.maxLength(VIDEO_PUBLIC_CODE_MAX_LENGTH), videoPublicCodeFormatValidator()];
+    if (requiresCode) {
+      validators.unshift(Validators.required);
+    }
+    control.setValidators(validators);
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private normalizePublicCodeControl(form: FormGroup): void {
+    const control = form.get('publicCode');
+    if (!control) {
+      return;
+    }
+    const normalized = normalizeVideoPublicCode(control.value as string | null | undefined);
+    if (normalized != null && normalized !== control.value) {
+      control.setValue(normalized, { emitEvent: false });
+    }
+    control.updateValueAndValidity({ emitEvent: false });
+  }
+
+  private preparePublicCodeForSave(form: FormGroup): string | null {
+    this.normalizePublicCodeControl(form);
+    const control = form.get('publicCode');
+    const normalized = normalizeVideoPublicCode(control?.value as string | null | undefined);
+    if (!normalized) {
+      return null;
+    }
+    return normalized;
+  }
+
+  private handleVideoSaveError(error: HttpErrorResponse, form: FormGroup): void {
+    const message =
+      error.status === 400 ? resolveProductLinkSaveError(error) : parseApiError(error).message;
+    if (error.status === 400 || error.status === 409) {
+      this.applyPublicCodeBackendError(form, message);
+      this.toastService.warning(message);
+      return;
+    }
+    this.toastService.warning(message);
+  }
+
+  private applyPublicCodeBackendError(form: FormGroup, message: string): void {
+    if (!isVideoPublicCodeBackendMessage(message)) {
+      return;
+    }
+    const control = form.get('publicCode');
+    if (!control) {
+      return;
+    }
+    control.setErrors({
+      ...(this.withoutError(control.errors, 'publicCodeFormat') ?? {}),
+      backend: message
+    });
+    control.markAsTouched();
   }
 
   private configurePromotionControls(form: FormGroup, enabled: boolean, fillDefaultStart: boolean): void {
@@ -1005,6 +1138,7 @@ export class AdminVideosSectionComponent implements OnInit {
       isActive: video.isActive,
       promotionStartAt: video.promotionStartAt,
       promotionEndAt: video.promotionEndAt,
+      publicCode: video.publicCode ?? null,
       categoryIds: [...video.categoryIds],
       blockReasons: [...(video.blockReasons ?? [])],
       products: video.products.map((product) => ({

@@ -24,6 +24,14 @@ export const routes: Routes = [
 
         component: HomeComponent
 
+      },
+
+      {
+
+        path: 'amafilmy/:publicCode',
+
+        component: HomeComponent
+
       }
 
     ]

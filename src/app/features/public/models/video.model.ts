@@ -21,6 +21,7 @@ export interface Video {
   createdAt: string;
   promotionStartAt: string | null;
   promotionEndAt: string | null;
+  publicCode?: string | null;
   categoryIds: number[];
   products: Product[];
   blockReasons?: string[];

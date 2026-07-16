@@ -2,8 +2,16 @@
 
   <app-search-bar></app-search-bar>
 
+  <p class="outage-notice direct-link-notice" *ngIf="directLinkLoading">Ładowanie filmu...</p>
+  <div class="direct-link-error-panel" *ngIf="directLinkError">
+    <p class="outage-notice direct-link-notice direct-link-error">{{ directLinkError }}</p>
+    <button type="button" class="direct-link-home-button" (click)="returnToHomeFromError()">
+      Wróć do strony głównej
+    </button>
+  </div>
+
   <app-promoted-videos-section
-    (videoSelected)="openVideoModal($event, 'promoted')"
+    (videoSelected)="openVideoFromTile($event, 'promoted')"
     (loadFailed)="onSectionLoadFailed()"
   ></app-promoted-videos-section>
 
@@ -18,7 +26,7 @@
 
   <app-videos-grid
     [selectedCategoryId]="selectedCategoryId"
-    (videoSelected)="openVideoModal($event, 'regular')"
+    (videoSelected)="openVideoFromTile($event, 'regular')"
     (loadFailed)="onSectionLoadFailed()"
   ></app-videos-grid>
 
