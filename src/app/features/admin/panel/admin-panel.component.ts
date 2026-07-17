@@ -5,7 +5,6 @@ import { AuthService } from '../services/auth.service';
 import { AdminVideosSectionComponent } from './sections/admin-videos-section.component';
 import { AdminCategoriesSectionComponent } from './sections/admin-categories-section.component';
 import { AdminShopsSectionComponent } from './sections/admin-shops-section.component';
-import { AdminDiscountsSectionComponent } from './sections/admin-discounts-section.component';
 import { AdminUsersSectionComponent } from './sections/admin-users-section.component';
 import { AdminChangelogSectionComponent } from './sections/admin-changelog-section.component';
 import { AdminAnalyticsSectionComponent } from './sections/admin-analytics-section.component';
@@ -28,7 +27,6 @@ interface AccordionSection {
     AdminVideosSectionComponent,
     AdminCategoriesSectionComponent,
     AdminShopsSectionComponent,
-    AdminDiscountsSectionComponent,
     AdminUsersSectionComponent,
     AdminChangelogSectionComponent,
     AdminAnalyticsSectionComponent,
@@ -49,7 +47,6 @@ export class AdminPanelComponent {
     { id: 'promoted-videos', title: 'Promowane filmy', adminOnly: false },
     { id: 'categories', title: 'Kategorie', adminOnly: false },
     { id: 'shops', title: 'Sklepy', adminOnly: false },
-    { id: 'discounts', title: 'Kody afiliacyjne', adminOnly: false },
     { id: 'analytics', title: 'Statystyki', adminOnly: false },
     { id: 'broken-links', title: 'Linki wymagające sprawdzenia', adminOnly: false },
     { id: 'navigation-links', title: 'Linki', adminOnly: false },

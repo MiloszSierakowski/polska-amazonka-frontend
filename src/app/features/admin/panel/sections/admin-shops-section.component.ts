@@ -25,7 +25,7 @@ export class AdminShopsSectionComponent implements OnInit {
   private deleteModalNavigationId: number | null = null;
 
   private readonly shopDeleteBlockedMessage =
-    'Nie można usunąć sklepu. Najpierw usuń lub przypisz do innego sklepu powiązane z nim kody rabatowe/afiliacyjne.';
+    'Nie można usunąć sklepu. Najpierw usuń lub przypisz do innego sklepu powiązane z nim produkty.';
 
   shopAddForm = this.fb.group({
     name: ['', Validators.required],
