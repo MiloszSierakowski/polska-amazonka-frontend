@@ -134,7 +134,12 @@
                   </div>
                 </div>
                 <div class="product-action-group">
-                  <button type="button" class="product-action" (click)="openVerifyProductModal(video.id, product.id)">
+                  <button
+                    type="button"
+                    class="product-action"
+                    (click)="openVerifyProductModal(video.id, product.id)"
+                    [disabled]="verifyLoading"
+                  >
                     Zweryfikuj link
                   </button>
                   <button type="button" class="product-action" (click)="startEditProduct(product)">Edytuj</button>
@@ -486,30 +491,28 @@
 
     <p class="verify-link-loading" *ngIf="verifyLoading">Sprawdzanie linku...</p>
 
+    <div
+      class="verify-link-status verify-link-status-uncertain"
+      *ngIf="!verifyLoading && verifyErrorMessage"
+    >
+      Nie udało się zweryfikować linku
+    </div>
+    <p class="verify-link-hint" *ngIf="!verifyLoading && verifyErrorMessage">
+      {{ verifyErrorMessage }}
+    </p>
+
     <ng-container *ngIf="!verifyLoading && verifyResult as result">
       <div
         class="verify-link-status"
-        [class.verify-link-status-ok]="result.linkWorking"
-        [class.verify-link-status-bad]="!result.linkWorking && !result.verificationUncertain"
-        [class.verify-link-status-uncertain]="result.verificationUncertain"
+        [class.verify-link-status-ok]="verifyStatus(result) === 'WORKING'"
+        [class.verify-link-status-bad]="verifyStatus(result) === 'BROKEN'"
+        [class.verify-link-status-uncertain]="verifyStatus(result) !== 'WORKING' && verifyStatus(result) !== 'BROKEN'"
       >
-        {{
-          result.verificationUncertain
-            ? 'Automatyczna weryfikacja niedostępna'
-            : result.linkWorking
-              ? 'Link jest sprawny'
-              : 'Link jest niesprawny'
-        }}
+        {{ verifyStatusTitle(result) }}
       </div>
 
       <p class="verify-link-hint">
-        {{
-          result.verificationUncertain
-            ? 'Automatyczna weryfikacja niedostępna — link trafi do „Linki wymagające sprawdzenia”. Otwórz adres ręcznie w przeglądarce.'
-            : result.linkWorking
-              ? 'Link potwierdzony jako sprawny — zniknie z listy.'
-              : 'Link potwierdzony jako niesprawny — pojawi się w „Linki wymagające sprawdzenia”.'
-        }}
+        {{ verifyStatusHint(result) }}
       </p>
 
       <div class="verify-link-field">

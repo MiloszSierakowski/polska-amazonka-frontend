@@ -3,7 +3,12 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { AdminVideoMock, AdminVideoProductMock } from '../../mocks/admin-mock.data';
-import { VideoService, ProductLinkVerifyResult } from '../../../public/services/video.service';
+import {
+  ProductLinkVerificationStatus,
+  ProductLinkVerifyResult,
+  resolveProductLinkVerificationStatus,
+  VideoService
+} from '../../../public/services/video.service';
 import { Video } from '../../../public/models/video.model';
 import { CategoryService } from '../../../../services/category.service';
 import { Category } from '../../../public/models/category.model';
@@ -62,6 +67,7 @@ export class AdminVideosSectionComponent implements OnInit {
   verifyApplyingTitle = false;
   verifyApplyingImage = false;
   verifyResult: ProductLinkVerifyResult | null = null;
+  verifyErrorMessage: string | null = null;
   verifyVideoId: number | null = null;
   verifyProductId: number | null = null;
   editVideoHadPublicCode = false;
@@ -620,9 +626,13 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   openVerifyProductModal(videoId: number, productId: number): void {
+    if (this.verifyLoading) {
+      return;
+    }
     this.verifyVideoId = videoId;
     this.verifyProductId = productId;
     this.verifyResult = null;
+    this.verifyErrorMessage = null;
     this.verifyLoading = true;
     this.verifyModalOpen = true;
     this.verifyModalNavigationId = this.modalNavigationService.open(() => this.closeVerifyModal(true));
@@ -635,8 +645,8 @@ export class AdminVideosSectionComponent implements OnInit {
       },
       error: () => {
         this.verifyLoading = false;
-        this.toastService.warning('Nie udało się zweryfikować linku produktu.');
-        this.closeVerifyModal();
+        this.verifyErrorMessage = 'Nie udało się zweryfikować linku produktu. Spróbuj ponownie później.';
+        this.toastService.warning(this.verifyErrorMessage);
       }
     });
   }
@@ -652,6 +662,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.verifyApplyingTitle = false;
     this.verifyApplyingImage = false;
     this.verifyResult = null;
+    this.verifyErrorMessage = null;
     this.verifyVideoId = null;
     this.verifyProductId = null;
   }
@@ -1166,6 +1177,41 @@ export class AdminVideosSectionComponent implements OnInit {
         tags: [...product.tags]
       }))
     };
+  }
+
+  verifyStatus(result: ProductLinkVerifyResult): ProductLinkVerificationStatus {
+    return resolveProductLinkVerificationStatus(result);
+  }
+
+  verifyStatusTitle(result: ProductLinkVerifyResult): string {
+    switch (this.verifyStatus(result)) {
+      case 'WORKING':
+        return 'Link działa';
+      case 'BROKEN':
+        return 'Link jest niedostępny lub nieprawidłowy';
+      case 'UNCERTAIN':
+        return 'Wynik kontroli jest niejednoznaczny';
+      case 'BLOCKED':
+        return 'Sklep zablokował automatyczną kontrolę';
+      case 'TECHNICAL_ERROR':
+        return 'Automatyczna kontrola nie powiodła się';
+    }
+  }
+
+  verifyStatusHint(result: ProductLinkVerifyResult): string {
+    switch (this.verifyStatus(result)) {
+      case 'WORKING':
+        return 'Link został potwierdzony jako sprawny.';
+      case 'BROKEN':
+        return 'Link został potwierdzony jako niedostępny lub nieprawidłowy.';
+      case 'UNCERTAIN':
+        return 'Sprawdź link ręcznie w przeglądarce.';
+      case 'BLOCKED':
+        return 'Nie potwierdzono uszkodzenia linku. Sprawdź go ręcznie w przeglądarce.';
+      case 'TECHNICAL_ERROR':
+        return result.verificationMessage?.trim()
+          || 'Nie udało się wykonać automatycznej kontroli. Link wymaga ręcznej weryfikacji.';
+    }
   }
 
   existingProductTagSources(video: AdminVideoMock, currentProductId: number | null): ProductTagCopySource[] {

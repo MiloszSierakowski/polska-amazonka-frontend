@@ -77,6 +77,13 @@ export interface AddVideoProductPayload {
   };
 }
 
+export type ProductLinkVerificationStatus =
+  | 'WORKING'
+  | 'BROKEN'
+  | 'UNCERTAIN'
+  | 'BLOCKED'
+  | 'TECHNICAL_ERROR';
+
 export interface ProductLinkVerifyResult {
   videoId: number;
   productId: number;
@@ -84,10 +91,27 @@ export interface ProductLinkVerifyResult {
   isBroken: boolean;
   verificationUncertain?: boolean;
   needsReview?: boolean;
+  verificationStatus?: ProductLinkVerificationStatus | null;
+  verificationMessage?: string | null;
   currentTitle: string | null;
   currentImageUrl: string | null;
   storeTitle: string | null;
   storeImageUrl: string | null;
+}
+
+export function resolveProductLinkVerificationStatus(
+  result: ProductLinkVerifyResult
+): ProductLinkVerificationStatus {
+  if (result.verificationStatus) {
+    return result.verificationStatus;
+  }
+  if (result.linkWorking) {
+    return 'WORKING';
+  }
+  if (result.verificationUncertain || result.needsReview) {
+    return 'UNCERTAIN';
+  }
+  return result.isBroken ? 'BROKEN' : 'UNCERTAIN';
 }
 
 @Injectable({

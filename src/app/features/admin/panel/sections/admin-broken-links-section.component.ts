@@ -8,7 +8,12 @@ import {
 } from '../../models/broken-link.model';
 import { BrokenLinkService } from '../../services/broken-link.service';
 import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
-import { VideoService, ProductLinkVerifyResult } from '../../../public/services/video.service';
+import {
+  ProductLinkVerificationStatus,
+  ProductLinkVerifyResult,
+  resolveProductLinkVerificationStatus,
+  VideoService
+} from '../../../public/services/video.service';
 import { ToastService } from '../../../../core/admin/toast.service';
 
 @Component({
@@ -30,6 +35,7 @@ export class AdminBrokenLinksSectionComponent implements OnInit, OnChanges, OnDe
   verifyModalOpen = false;
   verifyLoading = false;
   verifyResult: ProductLinkVerifyResult | null = null;
+  verifyErrorMessage: string | null = null;
   verifyVideoId: number | null = null;
   verifyProductId: number | null = null;
 
@@ -152,30 +158,31 @@ export class AdminBrokenLinksSectionComponent implements OnInit, OnChanges, OnDe
   }
 
   openVerifyModal(item: BrokenLinkProduct): void {
+    if (this.verifyLoading) {
+      return;
+    }
     this.verifyVideoId = item.videoId;
     this.verifyProductId = item.productId;
     this.verifyResult = null;
+    this.verifyErrorMessage = null;
     this.verifyLoading = true;
     this.verifyModalOpen = true;
     this.videoService.verifyProductLink(item.videoId, item.productId).subscribe({
       next: (result) => {
         this.verifyLoading = false;
         this.verifyResult = result;
-        if (result.linkWorking) {
+        if (resolveProductLinkVerificationStatus(result) === 'WORKING') {
           this.removeProduct(item);
-        } else if (result.verificationUncertain) {
-          item.isBroken = false;
-          item.needsReview = true;
         } else {
-          item.isBroken = true;
-          item.needsReview = false;
+          item.isBroken = result.isBroken;
+          item.needsReview = result.needsReview ?? result.verificationUncertain ?? false;
         }
         this.brokenLinkRefreshService.requestRefresh();
       },
       error: () => {
         this.verifyLoading = false;
-        this.toastService.warning('Nie udało się zweryfikować linku produktu.');
-        this.closeVerifyModal();
+        this.verifyErrorMessage = 'Nie udało się zweryfikować linku produktu. Spróbuj ponownie później.';
+        this.toastService.warning(this.verifyErrorMessage);
       }
     });
   }
@@ -184,9 +191,45 @@ export class AdminBrokenLinksSectionComponent implements OnInit, OnChanges, OnDe
     this.verifyModalOpen = false;
     this.verifyLoading = false;
     this.verifyResult = null;
+    this.verifyErrorMessage = null;
     this.verifyVideoId = null;
     this.verifyProductId = null;
     this.loadItems();
+  }
+
+  verifyStatus(result: ProductLinkVerifyResult): ProductLinkVerificationStatus {
+    return resolveProductLinkVerificationStatus(result);
+  }
+
+  verifyStatusTitle(result: ProductLinkVerifyResult): string {
+    switch (this.verifyStatus(result)) {
+      case 'WORKING':
+        return 'Link działa';
+      case 'BROKEN':
+        return 'Link jest niedostępny lub nieprawidłowy';
+      case 'UNCERTAIN':
+        return 'Wynik kontroli jest niejednoznaczny';
+      case 'BLOCKED':
+        return 'Sklep zablokował automatyczną kontrolę';
+      case 'TECHNICAL_ERROR':
+        return 'Automatyczna kontrola nie powiodła się';
+    }
+  }
+
+  verifyStatusHint(result: ProductLinkVerifyResult): string {
+    switch (this.verifyStatus(result)) {
+      case 'WORKING':
+        return 'Link sprawny — zniknie z tej listy po zamknięciu okna.';
+      case 'BROKEN':
+        return 'Link pozostaje na liście do naprawy.';
+      case 'UNCERTAIN':
+        return 'Ustaw status ręcznie albo sprawdź link w przeglądarce.';
+      case 'BLOCKED':
+        return 'Nie potwierdzono uszkodzenia linku. Sprawdź go ręcznie w przeglądarce.';
+      case 'TECHNICAL_ERROR':
+        return result.verificationMessage?.trim()
+          || 'Nie udało się wykonać automatycznej kontroli. Link wymaga ręcznej weryfikacji.';
+    }
   }
 
   verifyStoreImageSrc(imageUrl: string | null | undefined): string {

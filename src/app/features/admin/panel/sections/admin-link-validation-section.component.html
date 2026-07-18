@@ -1,0 +1,212 @@
+<section class="link-validation-admin">
+  <div class="section-heading">
+    <div>
+      <h2>Weryfikacja linków</h2>
+      <p>Stan workera oraz historia ręcznych i automatycznych kontroli produktów.</p>
+    </div>
+    <button
+      type="button"
+      class="refresh-button"
+      (click)="refresh()"
+      [disabled]="statusLoading || runsLoading"
+    >
+      {{ statusLoading || runsLoading ? 'Odświeżanie…' : 'Odśwież' }}
+    </button>
+  </div>
+
+  <p class="state-message" *ngIf="statusLoading">Sprawdzanie dostępności workera…</p>
+  <p class="state-message state-error" *ngIf="!statusLoading && statusError">
+    Nie udało się pobrać stanu weryfikacji linków.
+  </p>
+
+  <section class="status-card" *ngIf="!statusLoading && !statusError && status as currentStatus">
+    <div
+      class="worker-state"
+      [class.worker-reachable]="currentStatus.workerStatus === 'REACHABLE'"
+      [class.worker-unreachable]="currentStatus.workerStatus === 'UNREACHABLE'"
+    >
+      <span class="worker-state-dot" aria-hidden="true"></span>
+      <div>
+        <strong>
+          {{ currentStatus.workerStatus === 'REACHABLE' ? 'Worker odpowiada' : 'Brak połączenia z workerem' }}
+        </strong>
+        <span>Czas odpowiedzi health: {{ currentStatus.workerHealthDurationMs }} ms</span>
+      </div>
+    </div>
+
+    <div class="status-grid">
+      <div class="status-metric">
+        <span>Trwające partie</span>
+        <strong>{{ currentStatus.runningCount }}</strong>
+      </div>
+      <div class="status-metric">
+        <span>Ostatnia kontrola</span>
+        <strong>{{ formatDate(currentStatus.lastRun?.startedAt) }}</strong>
+        <small *ngIf="currentStatus.lastRun">
+          {{ sourceLabel(currentStatus.lastRun.source) }} · {{ runStatusLabel(currentStatus.lastRun.status) }}
+        </small>
+      </div>
+      <div class="status-metric">
+        <span>Ostatnia ręczna</span>
+        <strong>{{ formatDate(currentStatus.lastManualRun?.startedAt) }}</strong>
+      </div>
+      <div class="status-metric">
+        <span>Ostatnia automatyczna</span>
+        <strong>{{ formatDate(currentStatus.lastScheduledRun?.startedAt) }}</strong>
+      </div>
+    </div>
+
+    <div class="last-completed" *ngIf="currentStatus.lastCompletedRun as completed">
+      <div>
+        <span>Ostatnia zakończona partia</span>
+        <strong>{{ formatDate(completed.finishedAt) }} · {{ runStatusLabel(completed.status) }}</strong>
+      </div>
+      <div class="compact-counts">
+        <span>Sprawdzono: {{ completed.checkedCount }}</span>
+        <span class="count-working">Działa: {{ completed.workingCount }}</span>
+        <span class="count-broken">Zepsute: {{ completed.brokenCount }}</span>
+        <span class="count-warning">Niepewne/blokady: {{ completed.uncertainCount + completed.blockedCount }}</span>
+        <span>Błędy: {{ completed.technicalErrorCount }}</span>
+      </div>
+    </div>
+
+    <p class="latest-error" *ngIf="currentStatus.latestError">
+      <strong>Ostatni błąd:</strong> {{ currentStatus.latestError }}
+    </p>
+  </section>
+
+  <section class="runs-section">
+    <h3>Ostatnie partie</h3>
+    <p class="state-message" *ngIf="runsLoading">Ładowanie ostatnich 20 partii…</p>
+    <p class="state-message state-error" *ngIf="!runsLoading && runsError">
+      Nie udało się pobrać historii partii.
+    </p>
+    <p class="state-message" *ngIf="!runsLoading && !runsError && !runs.length">
+      Brak zapisanej historii weryfikacji.
+    </p>
+
+    <div class="runs-table-wrap" *ngIf="!runsLoading && !runsError && runs.length">
+      <table class="runs-table">
+        <thead>
+          <tr>
+            <th>Rozpoczęcie</th>
+            <th>Źródło</th>
+            <th>Status</th>
+            <th>Sprawdzono</th>
+            <th>Działa</th>
+            <th>Zepsute</th>
+            <th>Niepewne</th>
+            <th>Zablokowane</th>
+            <th>Błędy</th>
+            <th>Użytkownik</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            *ngFor="let run of runs"
+            (click)="selectRun(run)"
+            [class.is-selected]="selectedRunId === run.id"
+            tabindex="0"
+            (keydown.enter)="selectRun(run)"
+          >
+            <td>{{ formatDate(run.startedAt) }}</td>
+            <td>{{ sourceLabel(run.source) }}</td>
+            <td>
+              <span
+                class="status-badge"
+                [class.status-running]="run.status === 'RUNNING'"
+                [class.status-completed]="run.status === 'COMPLETED'"
+                [class.status-warning]="run.status === 'COMPLETED_WITH_ERRORS'"
+                [class.status-failed]="run.status === 'FAILED'"
+              >{{ runStatusLabel(run.status) }}</span>
+            </td>
+            <td>{{ run.checkedCount }}</td>
+            <td class="count-working">{{ run.workingCount }}</td>
+            <td class="count-broken">{{ run.brokenCount }}</td>
+            <td class="count-warning">{{ run.uncertainCount }}</td>
+            <td class="count-warning">{{ run.blockedCount }}</td>
+            <td>{{ run.technicalErrorCount }}</td>
+            <td>{{ run.triggeredBy || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="details-section" *ngIf="selectedRunId != null">
+    <h3>Szczegóły partii #{{ selectedRunId }}</h3>
+    <p class="state-message" *ngIf="detailsLoading">Ładowanie szczegółów partii…</p>
+    <p class="state-message state-error" *ngIf="!detailsLoading && detailsErrorMessage">
+      {{ detailsErrorMessage }}
+    </p>
+
+    <ng-container *ngIf="!detailsLoading && !detailsErrorMessage && selectedDetails as details">
+      <div class="details-summary">
+        <div><span>Źródło</span><strong>{{ sourceLabel(details.run.source) }}</strong></div>
+        <div><span>Status</span><strong>{{ runStatusLabel(details.run.status) }}</strong></div>
+        <div><span>Rozpoczęcie</span><strong>{{ formatDate(details.run.startedAt) }}</strong></div>
+        <div><span>Zakończenie</span><strong>{{ formatDate(details.run.finishedAt) }}</strong></div>
+        <div><span>Użytkownik</span><strong>{{ details.run.triggeredBy || '—' }}</strong></div>
+        <div><span>Sprawdzono</span><strong>{{ details.run.checkedCount }} / {{ details.run.selectedCount }}</strong></div>
+      </div>
+
+      <div class="result-counts">
+        <span class="count-working">Działa: {{ details.run.workingCount }}</span>
+        <span class="count-broken">Zepsute: {{ details.run.brokenCount }}</span>
+        <span class="count-warning">Niepewne: {{ details.run.uncertainCount }}</span>
+        <span class="count-warning">Zablokowane: {{ details.run.blockedCount }}</span>
+        <span>Błędy techniczne: {{ details.run.technicalErrorCount }}</span>
+      </div>
+
+      <p class="latest-error" *ngIf="details.run.lastError">
+        <strong>Ostatni błąd partii:</strong> {{ details.run.lastError }}
+      </p>
+
+      <p class="state-message" *ngIf="!details.items.length">Ta partia nie zawiera zapisanych elementów.</p>
+
+      <div class="items-list" *ngIf="details.items.length">
+        <article class="validation-item" *ngFor="let item of details.items">
+          <div class="item-header">
+            <div>
+              <h4>{{ item.productNameSnapshot || 'Produkt bez nazwy' }}</h4>
+              <span>Produkt ID: {{ item.productId ?? '—' }} · Link ID: {{ item.linkId ?? '—' }}</span>
+            </div>
+            <span
+              class="status-badge"
+              [class.result-working]="item.verificationStatus === 'WORKING'"
+              [class.result-broken]="item.verificationStatus === 'BROKEN'"
+              [class.result-warning]="item.verificationStatus === 'UNCERTAIN' || item.verificationStatus === 'BLOCKED'"
+              [class.result-technical]="item.verificationStatus === 'TECHNICAL_ERROR'"
+            >{{ verificationStatusLabel(item.verificationStatus) }}</span>
+          </div>
+
+          <div class="item-facts">
+            <div><span>Sprawdzono</span><strong>{{ formatDate(item.checkedAt) }}</strong></div>
+            <div><span>HTTP</span><strong>{{ item.httpStatus ?? '—' }}</strong></div>
+            <div><span>Czas</span><strong>{{ item.durationMs }} ms</strong></div>
+            <div><span>isBroken</span><strong>{{ flagTransition(item.previousIsBroken, item.newIsBroken) }}</strong></div>
+            <div><span>needsReview</span><strong>{{ flagTransition(item.previousNeedsReview, item.newNeedsReview) }}</strong></div>
+          </div>
+
+          <div class="item-reason">
+            <span>Powód klasyfikacji</span>
+            <p>{{ item.reason || 'Brak dodatkowego powodu.' }}</p>
+          </div>
+
+          <div class="url-block">
+            <span>Adres początkowy</span>
+            <code>{{ item.originalUrl || '—' }}</code>
+          </div>
+          <div class="url-block" *ngIf="item.normalizedUrl && item.normalizedUrl !== item.originalUrl">
+            <span>Adres znormalizowany</span>
+            <code>{{ item.normalizedUrl }}</code>
+          </div>
+          <div class="url-block">
+            <span>Adres końcowy po przekierowaniu</span>
+            <code>{{ item.finalUrl || '—' }}</code>
+          </div>
+        </article>
+      </div>
+    </ng-container>
+  </section>
+</section>

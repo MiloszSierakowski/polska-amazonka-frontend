@@ -40,6 +40,10 @@
           *ngIf="section.id === 'broken-links'"
           [active]="isOpen('broken-links')"
         ></app-admin-broken-links-section>
+        <app-admin-link-validation-section
+          *ngIf="section.id === 'link-validation'"
+          [active]="isOpen('link-validation')"
+        ></app-admin-link-validation-section>
         <app-admin-navigation-links-section *ngIf="section.id === 'navigation-links'"></app-admin-navigation-links-section>
         <app-admin-users-section *ngIf="section.id === 'users'"></app-admin-users-section>
         <app-admin-changelog-section *ngIf="section.id === 'changelog'"></app-admin-changelog-section>

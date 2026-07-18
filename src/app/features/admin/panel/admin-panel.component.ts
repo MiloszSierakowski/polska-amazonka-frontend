@@ -10,6 +10,7 @@ import { AdminChangelogSectionComponent } from './sections/admin-changelog-secti
 import { AdminAnalyticsSectionComponent } from './sections/admin-analytics-section.component';
 import { AdminBrokenLinksSectionComponent } from './sections/admin-broken-links-section.component';
 import { AdminNavigationLinksSectionComponent } from './sections/admin-navigation-links-section.component';
+import { AdminLinkValidationSectionComponent } from './sections/admin-link-validation-section.component';
 import { AdminUserProfileModalComponent } from './admin-user-profile-modal.component';
 import { UserProfile } from '../models/admin-user.model';
 
@@ -31,6 +32,7 @@ interface AccordionSection {
     AdminChangelogSectionComponent,
     AdminAnalyticsSectionComponent,
     AdminBrokenLinksSectionComponent,
+    AdminLinkValidationSectionComponent,
     AdminNavigationLinksSectionComponent,
     AdminUserProfileModalComponent
   ],
@@ -49,6 +51,7 @@ export class AdminPanelComponent {
     { id: 'shops', title: 'Sklepy', adminOnly: false },
     { id: 'analytics', title: 'Statystyki', adminOnly: false },
     { id: 'broken-links', title: 'Linki wymagające sprawdzenia', adminOnly: false },
+    { id: 'link-validation', title: 'Weryfikacja linków', adminOnly: false },
     { id: 'navigation-links', title: 'Linki', adminOnly: false },
     { id: 'users', title: 'Użytkownicy', adminOnly: true },
     { id: 'changelog', title: 'Historia zmian', adminOnly: true }
