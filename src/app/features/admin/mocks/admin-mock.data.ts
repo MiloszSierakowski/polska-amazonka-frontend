@@ -9,6 +9,7 @@ export interface AdminVideoProductMock {
   imageUrl: string;
   shopUrl: string;
   promoCode?: string | null;
+  tags: string[];
 }
 
 export interface AdminVideoMock {
@@ -51,13 +52,15 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
         id: 1,
         name: 'Miska do robota kuchennego',
         imageUrl: 'https://img.kwcdn.com/product/fancy/60f70492-8d28-4688-9cac-567e5e5a6724.jpg',
-        shopUrl: 'https://pl.aliexpress.com/item/1005010213859411.html'
+        shopUrl: 'https://pl.aliexpress.com/item/1005010213859411.html',
+        tags: []
       },
       {
         id: 2,
         name: 'Organizer na bluzy',
         imageUrl: 'https://img.kwcdn.com/product/fancy/2a3e78bc-00df-4f13-8dc9-0054ff0b1524.jpg',
-        shopUrl: 'https://pl.aliexpress.com/item/1005010213859411.html'
+        shopUrl: 'https://pl.aliexpress.com/item/1005010213859411.html',
+        tags: []
       }
     ]
   },
@@ -76,7 +79,8 @@ export const MOCK_ADMIN_VIDEOS: AdminVideoMock[] = [
         id: 3,
         name: 'Pies krajalnica',
         imageUrl: 'https://img.kwcdn.com/product/fancy/97f50a72-626f-48d8-aac2-7c5ae631fc51.jpg',
-        shopUrl: 'https://allegro.pl/produkt/joie-doxie-dog-krajalnica'
+        shopUrl: 'https://allegro.pl/produkt/joie-doxie-dog-krajalnica',
+        tags: []
       }
     ]
   }

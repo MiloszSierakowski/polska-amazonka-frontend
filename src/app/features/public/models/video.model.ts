@@ -8,6 +8,7 @@ export interface Product {
   id: number;
   name: string;
   imageUrl: string;
+  tags: string[];
   productLink: ProductLink;
   promoCode?: string | null;
 }

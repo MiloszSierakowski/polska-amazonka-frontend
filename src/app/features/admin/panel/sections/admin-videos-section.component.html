@@ -49,7 +49,7 @@
             class="mobile-form compact"
             *ngIf="isAddingNewProduct"
             [formGroup]="productAddForm"
-            (ngSubmit)="saveProduct(video)"
+            (ngSubmit)="saveProduct(video, addProductTags)"
           >
             <h3>Nowy produkt</h3>
             <label>
@@ -75,6 +75,11 @@
               <span>Nazwa</span>
               <input type="text" formControlName="name" />
             </label>
+            <app-product-tag-input
+              #addProductTags
+              formControlName="tags"
+              [copySources]="existingProductTagSources(video, null)"
+            ></app-product-tag-input>
             <label>
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />
@@ -147,7 +152,7 @@
                 class="mobile-form compact product-inline-edit-form"
                 *ngIf="editingProductId === product.id"
                 [formGroup]="productEditForm"
-                (ngSubmit)="saveProduct(video)"
+                (ngSubmit)="saveProduct(video, editProductTags)"
               >
                 <h3>Edycja produktu</h3>
                 <label>
@@ -170,6 +175,11 @@
                   <span>Nazwa</span>
                   <input type="text" formControlName="name" />
                 </label>
+                <app-product-tag-input
+                  #editProductTags
+                  formControlName="tags"
+                  [copySources]="existingProductTagSources(video, product.id)"
+                ></app-product-tag-input>
                 <label>
                   <span>URL obrazka</span>
                   <input type="url" formControlName="imageUrl" />
@@ -324,6 +334,10 @@
               <span>Nazwa</span>
               <input type="text" formControlName="name" />
             </label>
+            <app-product-tag-input
+              formControlName="tags"
+              [copySources]="newProductTagSources(i)"
+            ></app-product-tag-input>
             <label>
               <span>URL obrazka</span>
               <input type="url" formControlName="imageUrl" />

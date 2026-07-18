@@ -24,6 +24,7 @@ interface ProductApiResponse {
   productLinkId: number | null;
   productLink: ProductLinkApiResponse | null;
   promoCode: string | null;
+  tags?: string[] | null;
 }
 
 interface ProductLinkApiResponse {
@@ -37,6 +38,7 @@ export interface CreateVideoProductPayload {
   name?: string | null;
   imageUrl?: string | null;
   promoCode?: string | null;
+  tags: string[];
   productLink: {
     url: string;
     type: 'product';
@@ -68,6 +70,7 @@ export interface AddVideoProductPayload {
   name?: string | null;
   imageUrl?: string | null;
   promoCode?: string | null;
+  tags: string[];
   productLink: {
     url: string;
     type: 'product';
@@ -282,6 +285,7 @@ export class VideoService {
         name: product.name,
         imageUrl: this.resolveProductImageUrl(product.imageUrl),
         promoCode: product.promoCode ?? null,
+        tags: Array.isArray(product.tags) ? [...product.tags] : [],
         productLink: {
           id: product.productLink?.id ?? product.productLinkId ?? 0,
           url: product.productLink?.url ?? '#',

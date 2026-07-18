@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -19,18 +19,23 @@ import {
   normalizeVideoPublicCode,
   videoPublicCodeFormatValidator
 } from '../../utils/video-public-code.util';
+import {
+  ProductTagCopySource,
+  ProductTagInputComponent
+} from '../../components/product-tag-input/product-tag-input.component';
 
 type AdminVideosViewMode = 'all' | 'promoted';
 
 @Component({
   selector: 'app-admin-videos-section',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, ProductTagInputComponent],
   templateUrl: './admin-videos-section.component.html',
   styleUrl: './admin-videos-section.component.scss'
 })
 export class AdminVideosSectionComponent implements OnInit {
   @Input() viewMode: AdminVideosViewMode = 'all';
+  @ViewChildren(ProductTagInputComponent) private productTagInputs!: QueryList<ProductTagInputComponent>;
 
   videos: AdminVideoMock[] = [];
   categories: Category[] = [];
@@ -82,14 +87,16 @@ export class AdminVideosSectionComponent implements OnInit {
     shopUrl: ['', Validators.required],
     name: [''],
     imageUrl: [''],
-    promoCode: ['']
+    promoCode: [''],
+    tags: this.fb.control<string[]>([], { nonNullable: true })
   });
 
   productEditForm = this.fb.group({
     name: ['', Validators.required],
     imageUrl: [''],
     shopUrl: ['', Validators.required],
-    promoCode: ['']
+    promoCode: [''],
+    tags: this.fb.control<string[]>([], { nonNullable: true })
   });
 
   newVideoForm = this.fb.group({
@@ -416,7 +423,8 @@ export class AdminVideosSectionComponent implements OnInit {
       name: product.name,
       imageUrl: product.imageUrl,
       shopUrl: product.shopUrl,
-      promoCode: product.promoCode ?? ''
+      promoCode: product.promoCode ?? '',
+      tags: [...product.tags]
     });
     this.editProductSelectedFileName = '';
   }
@@ -426,7 +434,7 @@ export class AdminVideosSectionComponent implements OnInit {
     this.isAddingNewProduct = true;
     this.addProductPreview = null;
     this.addProductPreviewLoading = false;
-    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '' });
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '', tags: [] });
     this.addProductSelectedFileName = '';
   }
 
@@ -440,8 +448,8 @@ export class AdminVideosSectionComponent implements OnInit {
     this.addProductSelectedFileName = '';
     this.editProductSelectedFileName = '';
     this.newProductSelectedFileNames = {};
-    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '' });
-    this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '', promoCode: '' });
+    this.productAddForm.reset({ shopUrl: '', name: '', imageUrl: '', promoCode: '', tags: [] });
+    this.productEditForm.reset({ name: '', imageUrl: '', shopUrl: '', promoCode: '', tags: [] });
   }
 
   onAddProductUrlInput(): void {
@@ -537,7 +545,10 @@ export class AdminVideosSectionComponent implements OnInit {
     return this.newProductPreview[index] ?? null;
   }
 
-  saveProduct(video: AdminVideoMock): void {
+  saveProduct(video: AdminVideoMock, tagInput: ProductTagInputComponent): void {
+    if (!tagInput.commitPendingTag()) {
+      return;
+    }
     if (this.editingProductId) {
       if (this.productEditForm.invalid) {
         this.productEditForm.markAllAsTouched();
@@ -551,6 +562,7 @@ export class AdminVideosSectionComponent implements OnInit {
           name: value.name || undefined,
           imageUrl: value.imageUrl || undefined,
           promoCode: this.normalizeOptionalText(value.promoCode),
+          tags: [...value.tags],
           productLink: {
             url: value.shopUrl!,
             type: 'product'
@@ -581,6 +593,7 @@ export class AdminVideosSectionComponent implements OnInit {
         name: value.name || undefined,
         imageUrl: value.imageUrl || undefined,
         promoCode: this.normalizeOptionalText(value.promoCode),
+        tags: [...value.tags],
         productLink: {
           url: value.shopUrl!,
           type: 'product'
@@ -726,7 +739,8 @@ export class AdminVideosSectionComponent implements OnInit {
         shopUrl: ['', Validators.required],
         name: [''],
         imageUrl: [''],
-        promoCode: ['']
+        promoCode: [''],
+        tags: this.fb.control<string[]>([], { nonNullable: true })
       })
     );
     this.newProductPreviewLoading[index] = false;
@@ -751,6 +765,9 @@ export class AdminVideosSectionComponent implements OnInit {
   }
 
   saveNewVideo(): void {
+    if (this.productTagInputs.toArray().some((tagInput) => !tagInput.commitPendingTag())) {
+      return;
+    }
     this.normalizePublicCodeControl(this.newVideoForm);
     if (this.newVideoForm.invalid || !this.validatePromotionForm(this.newVideoForm)) {
       this.newVideoForm.markAllAsTouched();
@@ -771,6 +788,7 @@ export class AdminVideosSectionComponent implements OnInit {
         name: product['name'] as string | undefined,
         imageUrl: product['imageUrl'] as string | undefined,
         promoCode: this.normalizeOptionalText(product['promoCode'] as string | null | undefined),
+        tags: [...((product['tags'] as string[] | null | undefined) ?? [])],
         productLink: {
           url: product['shopUrl'] as string,
           type: 'product' as const
@@ -1144,8 +1162,48 @@ export class AdminVideosSectionComponent implements OnInit {
         name: product.name,
         imageUrl: product.imageUrl,
         shopUrl: product.productLink.url,
-        promoCode: product.promoCode ?? null
+        promoCode: product.promoCode ?? null,
+        tags: [...product.tags]
       }))
     };
+  }
+
+  existingProductTagSources(video: AdminVideoMock, currentProductId: number | null): ProductTagCopySource[] {
+    return video.products
+      .filter((product) => product.id !== currentProductId && product.tags.length > 0)
+      .map((product) => ({
+        id: product.id,
+        label: this.productTagSourceLabel(product.shopUrl, product.name),
+        tags: [...product.tags]
+      }));
+  }
+
+  newProductTagSources(currentIndex: number): ProductTagCopySource[] {
+    return this.newVideoProducts.controls.flatMap((group, index) => {
+      if (index === currentIndex) {
+        return [];
+      }
+      const value = group.getRawValue();
+      const tags = (value['tags'] as string[] | null | undefined) ?? [];
+      if (!tags.length) {
+        return [];
+      }
+      return [{
+        id: index,
+        label: this.productTagSourceLabel(
+          (value['shopUrl'] as string | null | undefined) ?? '',
+          (value['name'] as string | null | undefined) ?? ''
+        ),
+        tags: [...tags]
+      }];
+    });
+  }
+
+  private productTagSourceLabel(shopUrl: string, name: string): string {
+    const normalizedName = name.trim() || 'Produkt bez nazwy';
+    const shortenedName = normalizedName.length > 40
+      ? `${normalizedName.slice(0, 37)}...`
+      : normalizedName;
+    return `${this.linkPlatformLabel(shopUrl)} — ${shortenedName}`;
   }
 }

@@ -1,0 +1,33 @@
+<div class="product-tag-field">
+  <label class="product-tag-label" [attr.for]="inputId">Frazy wyszukiwania — opcjonalnie</label>
+  <input
+    [id]="inputId"
+    type="text"
+    class="product-tag-input"
+    placeholder="Wpisz frazę i naciśnij Enter"
+    [value]="draft"
+    [disabled]="disabled || tags.length >= maxTags"
+    (input)="onDraftInput($event)"
+    (keydown)="onDraftKeydown($event)"
+    (blur)="markTouched()"
+  />
+
+  <div class="product-tag-list" *ngIf="tags.length">
+    <span class="product-tag-pill" [class.is-new]="isNewTag(tag)" *ngFor="let tag of tags; let index = index">
+      <span>{{ tag }}</span>
+      <button type="button" [disabled]="disabled" (click)="removeTag(index)" [attr.aria-label]="'Usuń tag ' + tag">×</button>
+    </span>
+  </div>
+
+  <label class="product-tag-copy" *ngIf="copySources.length">
+    <span>Kopiuj tagi z:</span>
+    <select [disabled]="disabled" (change)="copyFrom($event)">
+      <option value="">Wybierz produkt</option>
+      <option *ngFor="let source of copySources" [value]="source.id">{{ source.label }}</option>
+    </select>
+  </label>
+
+  <p class="product-tag-message" [class.is-error]="messageIsError" *ngIf="message">{{ message }}</p>
+  <p class="product-tag-unsaved" *ngIf="hasUnsavedChanges()">Masz niezapisane zmiany w tagach. Kliknij Zapisz.</p>
+  <p class="product-tag-hint">Tagi są globalne dla produktu i obowiązują we wszystkich filmach.</p>
+</div>

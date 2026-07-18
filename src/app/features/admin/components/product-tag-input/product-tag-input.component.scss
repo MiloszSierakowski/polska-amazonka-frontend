@@ -1,0 +1,106 @@
+.product-tag-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.product-tag-label,
+.product-tag-copy > span {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #334155;
+}
+
+.product-tag-input,
+.product-tag-copy select {
+  width: 100%;
+  min-height: 3rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 0.8rem;
+  padding: 0 0.9rem;
+  background: #fff;
+  color: #0f172a;
+  font-size: 1rem;
+}
+
+.product-tag-input:disabled,
+.product-tag-copy select:disabled {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.product-tag-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+}
+
+.product-tag-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  max-width: 100%;
+  padding: 0.3rem 0.45rem 0.3rem 0.65rem;
+  border-radius: 999px;
+  background: #ecfdf5;
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 700;
+
+  span {
+    overflow-wrap: anywhere;
+  }
+
+  button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 1.35rem;
+    height: 1.35rem;
+    padding: 0;
+    border: 0;
+    border-radius: 50%;
+    background: transparent;
+    color: inherit;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+
+  &.is-new {
+    background: #e8f4fc;
+    color: #1a7bb8;
+  }
+}
+
+.product-tag-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  margin-top: 0.15rem;
+}
+
+.product-tag-message,
+.product-tag-unsaved,
+.product-tag-hint {
+  margin: 0;
+  font-size: 0.76rem;
+  line-height: 1.4;
+}
+
+.product-tag-message {
+  font-weight: 700;
+  color: #475569;
+
+  &.is-error {
+    color: #b91c1c;
+  }
+}
+
+.product-tag-unsaved {
+  font-weight: 700;
+  color: #1a7bb8;
+}
+
+.product-tag-hint {
+  color: #64748b;
+}
