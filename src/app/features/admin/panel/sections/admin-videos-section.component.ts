@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, QueryList, ViewChildren } from '@angular/core';
+import { Component, Input, OnDestroy, OnInit, QueryList, ViewChildren } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { FormArray, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -18,6 +18,9 @@ import { ProductPreview, ProductPreviewService } from '../../services/product-pr
 import { ProductImageUploadService } from '../../services/product-image-upload.service';
 import { ModalNavigationService } from '../../../../core/services/modal-navigation.service';
 import { BrokenLinkRefreshService } from '../../services/broken-link-refresh.service';
+import { AdminProductService } from '../../services/admin-product.service';
+import { AdminProductSearchResult } from '../../models/admin-product-search.model';
+import { Subject, Subscription, catchError, debounce, finalize, of, switchMap, timer } from 'rxjs';
 import {
   VIDEO_PUBLIC_CODE_MAX_LENGTH,
   isVideoPublicCodeBackendMessage,
@@ -52,7 +55,7 @@ export function resolveProductLinkVisualStatus(
   templateUrl: './admin-videos-section.component.html',
   styleUrl: './admin-videos-section.component.scss'
 })
-export class AdminVideosSectionComponent implements OnInit {
+export class AdminVideosSectionComponent implements OnInit, OnDestroy {
   @Input() viewMode: AdminVideosViewMode = 'all';
   @ViewChildren(ProductTagInputComponent) private productTagInputs!: QueryList<ProductTagInputComponent>;
 
@@ -85,6 +88,17 @@ export class AdminVideosSectionComponent implements OnInit {
   verifyVideoId: number | null = null;
   verifyProductId: number | null = null;
   editVideoHadPublicCode = false;
+  existingProductModalOpen = false;
+  existingProductVideoId: number | null = null;
+  existingProductQuery = '';
+  existingProductResults: AdminProductSearchResult[] = [];
+  existingProductSearchLoading = false;
+  existingProductLoadMoreLoading = false;
+  existingProductSearchAttempted = false;
+  existingProductSearchError: string | null = null;
+  existingProductPage = 0;
+  existingProductHasMore = false;
+  attachingExistingProductIds = new Set<number>();
 
   readonly publicCodeMaxLength = VIDEO_PUBLIC_CODE_MAX_LENGTH;
 
@@ -92,6 +106,9 @@ export class AdminVideosSectionComponent implements OnInit {
   private videoModalNavigationId: number | null = null;
   private deleteModalNavigationId: number | null = null;
   private verifyModalNavigationId: number | null = null;
+  private existingProductModalNavigationId: number | null = null;
+  private readonly existingProductSearchRequests = new Subject<string>();
+  private existingProductSearchSubscription: Subscription | null = null;
 
   videoForm = this.fb.group({
     title: ['', Validators.required],
@@ -139,7 +156,8 @@ export class AdminVideosSectionComponent implements OnInit {
     private productPreviewService: ProductPreviewService,
     private productImageUploadService: ProductImageUploadService,
     private modalNavigationService: ModalNavigationService,
-    private brokenLinkRefreshService: BrokenLinkRefreshService
+    private brokenLinkRefreshService: BrokenLinkRefreshService,
+    private adminProductService: AdminProductService
   ) {}
 
   ngOnInit(): void {
@@ -147,6 +165,20 @@ export class AdminVideosSectionComponent implements OnInit {
     this.categoryService.getCategories().subscribe((categories) => {
       this.categories = categories;
     });
+    this.existingProductSearchSubscription = this.existingProductSearchRequests.pipe(
+      debounce((query) => timer(query.trim() ? 300 : 0)),
+      switchMap((query) => this.searchExistingProducts(query))
+    ).subscribe((results) => {
+      if (this.existingProductModalOpen) {
+        this.existingProductResults = results;
+        this.existingProductPage = 0;
+        this.existingProductHasMore = results.length === 25;
+      }
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.existingProductSearchSubscription?.unsubscribe();
   }
 
   get newVideoCategoryIds(): FormArray {
@@ -193,15 +225,15 @@ export class AdminVideosSectionComponent implements OnInit {
     return !!video.publicCode?.trim();
   }
 
-  productLinkStatus(product: AdminVideoProductMock): ProductLinkVisualStatus {
+  productLinkStatus(product: Pick<AdminVideoProductMock, 'shopUrl' | 'isBroken' | 'needsReview'>): ProductLinkVisualStatus {
     return resolveProductLinkVisualStatus(product);
   }
 
-  productLinkStatusClass(product: AdminVideoProductMock): string {
+  productLinkStatusClass(product: Pick<AdminVideoProductMock, 'shopUrl' | 'isBroken' | 'needsReview'>): string {
     return `product-card--link-${this.productLinkStatus(product)}`;
   }
 
-  productLinkStatusLabel(product: AdminVideoProductMock): string {
+  productLinkStatusLabel(product: Pick<AdminVideoProductMock, 'shopUrl' | 'isBroken' | 'needsReview'>): string {
     switch (this.productLinkStatus(product)) {
       case 'invalid':
         return 'Link nieprawidłowy';
@@ -1212,6 +1244,143 @@ export class AdminVideosSectionComponent implements OnInit {
         needsReview: product.needsReview ?? null
       }))
     };
+  }
+
+  openExistingProductModal(video: AdminVideoMock): void {
+    this.existingProductVideoId = video.id;
+    this.existingProductQuery = '';
+    this.existingProductResults = [];
+    this.existingProductSearchAttempted = true;
+    this.existingProductSearchError = null;
+    this.existingProductSearchLoading = true;
+    this.existingProductPage = 0;
+    this.existingProductHasMore = false;
+    this.attachingExistingProductIds.clear();
+    this.existingProductModalOpen = true;
+    this.existingProductModalNavigationId = this.modalNavigationService.open(
+      () => this.closeExistingProductModal(true)
+    );
+    this.existingProductSearchRequests.next('');
+  }
+
+  closeExistingProductModal(fromNavigation = false): void {
+    if (this.attachingExistingProductIds.size) {
+      return;
+    }
+    if (!fromNavigation) {
+      this.existingProductModalNavigationId = this.modalNavigationService.close(
+        this.existingProductModalNavigationId
+      );
+    } else {
+      this.existingProductModalNavigationId = null;
+    }
+    this.existingProductModalOpen = false;
+    this.existingProductVideoId = null;
+    this.existingProductResults = [];
+    this.existingProductSearchLoading = false;
+    this.existingProductLoadMoreLoading = false;
+    this.existingProductSearchError = null;
+  }
+
+  onExistingProductQueryInput(value: string): void {
+    this.existingProductQuery = value;
+    this.existingProductSearchAttempted = true;
+    this.existingProductSearchLoading = true;
+    this.existingProductSearchError = null;
+    this.existingProductPage = 0;
+    this.existingProductHasMore = false;
+    this.existingProductSearchRequests.next(value);
+  }
+
+  retryExistingProductSearch(): void {
+    this.existingProductSearchLoading = true;
+    this.existingProductSearchError = null;
+    this.existingProductSearchRequests.next(this.existingProductQuery);
+  }
+
+  existingProductStatusShape(product: AdminProductSearchResult): Pick<AdminVideoProductMock, 'shopUrl' | 'isBroken' | 'needsReview'> {
+    return {
+      shopUrl: product.productLink?.url ?? '',
+      isBroken: product.isBroken,
+      needsReview: product.needsReview
+    };
+  }
+
+  attachExistingProduct(product: AdminProductSearchResult): void {
+    const videoId = this.existingProductVideoId;
+    if (videoId == null || product.alreadyAssigned || this.attachingExistingProductIds.has(product.productId)) {
+      return;
+    }
+    this.attachingExistingProductIds.add(product.productId);
+    this.adminProductService.attach(videoId, product.productId).subscribe({
+      next: () => {
+        this.attachingExistingProductIds.delete(product.productId);
+        product.alreadyAssigned = true;
+        this.refreshVideo(videoId);
+        this.toastService.success('Produkt został przypisany do filmu.');
+      },
+      error: (error: HttpErrorResponse) => {
+        this.attachingExistingProductIds.delete(product.productId);
+        this.toastService.warning(parseApiError(error).message || 'Nie udało się przypisać produktu.');
+      }
+    });
+  }
+
+  isAttachingExistingProduct(productId: number): boolean {
+    return this.attachingExistingProductIds.has(productId);
+  }
+
+  loadMoreExistingProducts(): void {
+    const videoId = this.existingProductVideoId;
+    if (videoId == null || !this.existingProductHasMore || this.existingProductLoadMoreLoading) {
+      return;
+    }
+    const nextPage = this.existingProductPage + 1;
+    this.existingProductLoadMoreLoading = true;
+    this.adminProductService.search(this.existingProductQuery.trim(), videoId, nextPage).pipe(
+      finalize(() => {
+        this.existingProductLoadMoreLoading = false;
+      })
+    ).subscribe({
+      next: (results) => {
+        const existingIds = new Set(this.existingProductResults.map((product) => product.productId));
+        this.existingProductResults = [
+          ...this.existingProductResults,
+          ...results.filter((product) => !existingIds.has(product.productId))
+        ];
+        this.existingProductPage = nextPage;
+        this.existingProductHasMore = results.length === 25;
+      },
+      error: () => {
+        this.existingProductSearchError = 'Nie udało się pobrać kolejnych produktów. Spróbuj ponownie.';
+      }
+    });
+  }
+
+  existingProductHost(product: AdminProductSearchResult): string {
+    const url = product.productLink?.url;
+    return url ? this.linkPlatformLabel(url) : 'Brak adresu';
+  }
+
+  private searchExistingProducts(rawQuery: string) {
+    const videoId = this.existingProductVideoId;
+    const query = rawQuery.trim();
+    this.existingProductSearchError = null;
+    if (videoId == null) {
+      this.existingProductSearchLoading = false;
+      return of<AdminProductSearchResult[]>([]);
+    }
+    this.existingProductSearchAttempted = true;
+    this.existingProductSearchLoading = true;
+    return this.adminProductService.search(query, videoId, 0).pipe(
+      catchError(() => {
+        this.existingProductSearchError = 'Nie udało się pobrać produktów. Spróbuj ponownie.';
+        return of<AdminProductSearchResult[]>([]);
+      }),
+      finalize(() => {
+        this.existingProductSearchLoading = false;
+      })
+    );
   }
 
   verifyStatus(result: ProductLinkVerifyResult): ProductLinkVerificationStatus {

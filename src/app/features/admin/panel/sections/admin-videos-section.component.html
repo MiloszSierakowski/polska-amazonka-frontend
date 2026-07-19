@@ -43,7 +43,12 @@
           </div>
 
           <h3>Produkty przypisane do filmu</h3>
-          <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
+          <div class="product-add-actions">
+            <button type="button" class="add-product-btn" (click)="startAddProduct()">+ Dodaj produkt</button>
+            <button type="button" class="secondary-action product-add-existing-btn" (click)="openExistingProductModal(video)">
+              Dodaj z listy
+            </button>
+          </div>
 
           <form
             class="mobile-form compact"
@@ -462,6 +467,97 @@
         <button type="submit" class="video-form-btn video-form-btn-primary">Zapisz film</button>
       </div>
     </form>
+  </div>
+</div>
+
+<div class="video-modal-overlay" *ngIf="existingProductModalOpen">
+  <div
+    class="video-modal existing-product-modal"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="existing-product-title"
+    (click)="$event.stopPropagation()"
+  >
+    <div class="video-modal-header existing-product-modal-header">
+      <div>
+        <h3 id="existing-product-title">Dodaj produkt z listy</h3>
+        <p>Wyszukaj istniejący produkt i przypisz go do tego filmu.</p>
+      </div>
+      <button type="button" class="video-modal-close" (click)="closeExistingProductModal()" aria-label="Zamknij">×</button>
+    </div>
+
+    <label class="existing-product-search-field">
+      <span>Wyszukiwanie produktu</span>
+      <input
+        type="search"
+        [value]="existingProductQuery"
+        (input)="onExistingProductQueryInput($any($event.target).value)"
+        placeholder="Szukaj po nazwie lub tagu"
+        autocomplete="off"
+      />
+    </label>
+    <p class="existing-product-state" *ngIf="existingProductSearchLoading">Wyszukiwanie produktów…</p>
+    <div class="existing-product-error" *ngIf="!existingProductSearchLoading && existingProductSearchError">
+      <span>{{ existingProductSearchError }}</span>
+      <button type="button" class="product-action" (click)="retryExistingProductSearch()">Spróbuj ponownie</button>
+    </div>
+    <p
+      class="existing-product-state"
+      *ngIf="existingProductSearchAttempted && !existingProductSearchLoading && !existingProductSearchError && !existingProductResults.length"
+    >
+      Nie znaleziono produktów dla podanej frazy.
+    </p>
+
+    <div class="existing-product-results" *ngIf="!existingProductSearchLoading && existingProductResults.length">
+      <article
+        class="product-card existing-product-result"
+        *ngFor="let product of existingProductResults"
+        [ngClass]="productLinkStatusClass(existingProductStatusShape(product))"
+        [attr.title]="productLinkStatusLabel(existingProductStatusShape(product))"
+        [attr.aria-label]="productLinkStatusLabel(existingProductStatusShape(product))"
+      >
+        <div class="product-card-body">
+          <img
+            class="product-thumb"
+            [src]="productPreviewImageSrc(product.imageUrl)"
+            [alt]="product.name"
+          />
+          <div class="product-info">
+            <span class="product-name">{{ product.name }}</span>
+            <span class="product-link" [attr.title]="product.productLink?.url || ''">
+              {{ existingProductHost(product) }}
+            </span>
+            <span class="existing-product-status-label">
+              {{ productLinkStatusLabel(existingProductStatusShape(product)) }}
+            </span>
+            <div class="existing-product-tags" *ngIf="product.tags.length">
+              <span *ngFor="let tag of product.tags">{{ tag }}</span>
+            </div>
+          </div>
+        </div>
+        <button
+          type="button"
+          class="product-action existing-product-attach-btn"
+          (click)="attachExistingProduct(product)"
+          [disabled]="product.alreadyAssigned || isAttachingExistingProduct(product.productId)"
+        >
+          {{ product.alreadyAssigned ? 'Już przypisany' : (isAttachingExistingProduct(product.productId) ? 'Przypisywanie…' : 'Przypisz') }}
+        </button>
+      </article>
+      <button
+        type="button"
+        class="secondary-action existing-product-load-more"
+        *ngIf="existingProductHasMore"
+        (click)="loadMoreExistingProducts()"
+        [disabled]="existingProductLoadMoreLoading"
+      >
+        {{ existingProductLoadMoreLoading ? 'Ładowanie…' : 'Pokaż więcej' }}
+      </button>
+    </div>
+
+    <div class="video-modal-footer existing-product-modal-footer">
+      <button type="button" class="secondary-action" (click)="closeExistingProductModal()">Zamknij</button>
+    </div>
   </div>
 </div>
 
