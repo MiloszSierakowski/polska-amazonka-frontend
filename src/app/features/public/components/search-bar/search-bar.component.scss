@@ -142,12 +142,25 @@
 }
 
 .welcome-text {
-  font-size: $font-xl;
   margin-top: $space-md;
   text-align: center;
-  font-weight: 500;
   color: #222;
   padding: 0 $space-md;
+
+  h1 {
+    margin: 0;
+    font-size: $font-xl;
+    font-weight: 600;
+    line-height: 1.25;
+  }
+
+  p {
+    margin: $space-xs 0 0;
+    font-size: $font-md;
+    font-weight: 400;
+    line-height: 1.45;
+    color: #555;
+  }
 }
 
 .separator-line {
