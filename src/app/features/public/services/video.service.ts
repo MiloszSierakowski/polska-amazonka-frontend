@@ -25,6 +25,8 @@ interface ProductApiResponse {
   productLink: ProductLinkApiResponse | null;
   promoCode: string | null;
   tags?: string[] | null;
+  isBroken?: boolean | null;
+  needsReview?: boolean | null;
 }
 
 interface ProductLinkApiResponse {
@@ -310,6 +312,8 @@ export class VideoService {
         imageUrl: this.resolveProductImageUrl(product.imageUrl),
         promoCode: product.promoCode ?? null,
         tags: Array.isArray(product.tags) ? [...product.tags] : [],
+        isBroken: product.isBroken ?? null,
+        needsReview: product.needsReview ?? null,
         productLink: {
           id: product.productLink?.id ?? product.productLinkId ?? 0,
           url: product.productLink?.url ?? '#',

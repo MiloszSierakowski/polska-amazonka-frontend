@@ -10,6 +10,8 @@ export interface AdminVideoProductMock {
   shopUrl: string;
   promoCode?: string | null;
   tags: string[];
+  isBroken?: boolean | null;
+  needsReview?: boolean | null;
 }
 
 export interface AdminVideoMock {

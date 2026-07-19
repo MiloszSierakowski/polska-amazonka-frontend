@@ -30,6 +30,20 @@ import {
 } from '../../components/product-tag-input/product-tag-input.component';
 
 type AdminVideosViewMode = 'all' | 'promoted';
+export type ProductLinkVisualStatus = 'valid' | 'review' | 'invalid';
+
+export function resolveProductLinkVisualStatus(
+  product: Pick<AdminVideoProductMock, 'shopUrl' | 'isBroken' | 'needsReview'>
+): ProductLinkVisualStatus {
+  const shopUrl = product.shopUrl?.trim();
+  if (!shopUrl || shopUrl === '#' || product.isBroken === true) {
+    return 'invalid';
+  }
+  if (product.needsReview === true || product.isBroken !== false) {
+    return 'review';
+  }
+  return 'valid';
+}
 
 @Component({
   selector: 'app-admin-videos-section',
@@ -177,6 +191,25 @@ export class AdminVideosSectionComponent implements OnInit {
 
   hasPublicCode(video: AdminVideoMock): boolean {
     return !!video.publicCode?.trim();
+  }
+
+  productLinkStatus(product: AdminVideoProductMock): ProductLinkVisualStatus {
+    return resolveProductLinkVisualStatus(product);
+  }
+
+  productLinkStatusClass(product: AdminVideoProductMock): string {
+    return `product-card--link-${this.productLinkStatus(product)}`;
+  }
+
+  productLinkStatusLabel(product: AdminVideoProductMock): string {
+    switch (this.productLinkStatus(product)) {
+      case 'invalid':
+        return 'Link nieprawidłowy';
+      case 'review':
+        return 'Link wymaga sprawdzenia';
+      case 'valid':
+        return 'Link poprawny';
+    }
   }
 
   publicCodeError(form: FormGroup): string | null {
@@ -1174,7 +1207,9 @@ export class AdminVideosSectionComponent implements OnInit {
         imageUrl: product.imageUrl,
         shopUrl: product.productLink.url,
         promoCode: product.promoCode ?? null,
-        tags: [...product.tags]
+        tags: [...product.tags],
+        isBroken: product.isBroken ?? null,
+        needsReview: product.needsReview ?? null
       }))
     };
   }

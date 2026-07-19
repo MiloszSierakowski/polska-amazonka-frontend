@@ -9,6 +9,8 @@ export interface Product {
   name: string;
   imageUrl: string;
   tags: string[];
+  isBroken?: boolean | null;
+  needsReview?: boolean | null;
   productLink: ProductLink;
   promoCode?: string | null;
 }

@@ -36,6 +36,21 @@
   flex-direction: column;
 }
 
+.product-card.product-card--link-valid {
+  border-color: #86c99a;
+  box-shadow: inset 3px 0 0 #2f9e44;
+}
+
+.product-card.product-card--link-review {
+  border-color: #e5c45b;
+  box-shadow: inset 3px 0 0 #d39e00;
+}
+
+.product-card.product-card--link-invalid {
+  border-color: #e29a9a;
+  box-shadow: inset 3px 0 0 #c92a2a;
+}
+
 .product-inline-edit-form {
   margin-top: 0;
   border-top: 0;

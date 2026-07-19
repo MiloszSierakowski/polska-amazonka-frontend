@@ -110,7 +110,12 @@
 
           <ul class="product-list" *ngIf="video.products.length; else noProducts">
             <li class="product-list-item" *ngFor="let product of video.products">
-              <div class="product-card">
+              <div
+                class="product-card"
+                [ngClass]="productLinkStatusClass(product)"
+                [attr.title]="productLinkStatusLabel(product)"
+                [attr.aria-label]="productLinkStatusLabel(product)"
+              >
                 <div class="product-card-body">
                   <img
                     class="product-thumb"
