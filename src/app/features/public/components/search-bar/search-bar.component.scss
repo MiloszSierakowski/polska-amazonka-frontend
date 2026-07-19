@@ -136,6 +136,11 @@
   text-align: center;
 }
 
+.search-results-error {
+  @extend .search-results-empty;
+  color: #b91c1c;
+}
+
 .welcome-text {
   font-size: $font-xl;
   margin-top: $space-md;

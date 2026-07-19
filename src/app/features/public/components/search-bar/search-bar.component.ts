@@ -9,8 +9,10 @@ import { VideoService } from '../../services/video.service';
 import { ClickStatService } from '../../services/click-stat.service';
 import {
   Subscription,
+  catchError,
   debounceTime,
   distinctUntilChanged,
+  finalize,
   of,
   switchMap,
   tap
@@ -28,6 +30,7 @@ export class SearchBarComponent implements OnInit, OnDestroy {
 
   searchResults: PublicSearchProduct[] = [];
   isSearching = false;
+  searchError: string | null = null;
 
   get hasSearchText(): boolean {
     return this.searchControl.value.trim().length > 0;
@@ -50,6 +53,7 @@ export class SearchBarComponent implements OnInit, OnDestroy {
           if (!value.trim()) {
             this.searchResults = [];
             this.isSearching = false;
+            this.searchError = null;
           }
         }),
         switchMap((value) => {
@@ -58,18 +62,21 @@ export class SearchBarComponent implements OnInit, OnDestroy {
             return of([]);
           }
           this.isSearching = true;
-          return this.publicProductSearchService.search(term);
+          this.searchError = null;
+          return this.publicProductSearchService.search(term).pipe(
+            catchError(() => {
+              this.searchResults = [];
+              this.searchError = 'Nie udało się pobrać wyników wyszukiwania. Spróbuj ponownie.';
+              return of<PublicSearchProduct[]>([]);
+            }),
+            finalize(() => {
+              this.isSearching = false;
+            })
+          );
         })
       )
-      .subscribe({
-        next: (results) => {
-          this.searchResults = results;
-          this.isSearching = false;
-        },
-        error: () => {
-          this.searchResults = [];
-          this.isSearching = false;
-        }
+      .subscribe((results) => {
+        this.searchResults = results;
       });
   }
 
@@ -81,6 +88,7 @@ export class SearchBarComponent implements OnInit, OnDestroy {
     this.searchControl.setValue('');
     this.searchResults = [];
     this.isSearching = false;
+    this.searchError = null;
   }
 
   productRedirectUrl(productId: number): string {

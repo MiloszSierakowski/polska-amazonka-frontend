@@ -41,7 +41,14 @@
     </a>
   </div>
 
-  <p class="search-results-empty" *ngIf="!isSearching && searchControl.value.trim() && !searchResults.length">
+  <p class="search-results-error" *ngIf="!isSearching && searchError">
+    {{ searchError }}
+  </p>
+
+  <p
+    class="search-results-empty"
+    *ngIf="!isSearching && !searchError && searchControl.value.trim() && !searchResults.length"
+  >
     Brak produktów pasujących do wyszukiwania.
   </p>
 </div>
