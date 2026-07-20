@@ -1,9 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Inject, Injectable } from '@angular/core';
-import { Observable, finalize, of, tap } from 'rxjs';
+import { Observable, catchError, finalize, map, of, switchMap, tap } from 'rxjs';
 import { LoginResponse, UserProfile } from '../models/admin-user.model';
 
-const TOKEN_KEY = 'pa_admin_token';
 const ID_KEY = 'pa_admin_id';
 const LOGIN_KEY = 'pa_admin_login';
 const ROLE_KEY = 'pa_admin_role';
@@ -21,9 +20,14 @@ export class AuthService {
   ) {}
 
   login(login: string, password: string): Observable<LoginResponse> {
-    return this.http
-      .post<LoginResponse>(`${this.backendUrl}/api/auth/login`, { login, password })
-      .pipe(tap((response) => this.persistSession(response)));
+    return this.initializeCsrf().pipe(
+      switchMap(() => this.http.post<LoginResponse>(
+        `${this.backendUrl}/api/auth/login`,
+        { login, password }
+      )),
+      switchMap((response) => this.initializeCsrf().pipe(map(() => response))),
+      tap((response) => this.persistSession(response))
+    );
   }
 
   clearLocalSession(): void {
@@ -31,21 +35,34 @@ export class AuthService {
   }
 
   logout(): Observable<void> {
-    if (!this.isLoggedIn()) {
-      this.clearSession();
-      return of(void 0);
-    }
     return this.http.post<void>(`${this.backendUrl}/api/auth/logout`, {}).pipe(
       finalize(() => this.clearSession())
     );
   }
 
-  getToken(): string | null {
-    return sessionStorage.getItem(TOKEN_KEY);
+  isLoggedIn(): boolean {
+    return this.getProfileSnapshot() !== null;
   }
 
-  isLoggedIn(): boolean {
-    return !!this.getToken();
+  restoreSession(): Observable<boolean> {
+    return this.http.get<UserProfile>(`${this.backendUrl}/api/users/profile`).pipe(
+      tap((profile) => this.updateProfileState(profile)),
+      map(() => true),
+      catchError(() => {
+        this.clearSession();
+        return of(false);
+      })
+    );
+  }
+
+  isBackendRequest(url: string): boolean {
+    const normalizedBackendUrl = this.backendUrl.replace(/\/+$/, '');
+    return url.startsWith('/api/')
+      || (normalizedBackendUrl !== '' && url.startsWith(`${normalizedBackendUrl}/api/`));
+  }
+
+  initializeCsrf(): Observable<unknown> {
+    return this.http.get(`${this.backendUrl}/api/auth/csrf`, { withCredentials: true });
   }
 
   getUserId(): number | null {
@@ -101,9 +118,6 @@ export class AuthService {
     this.setOptionalStorage(FIRST_NAME_KEY, profile.firstName);
     this.setOptionalStorage(LAST_NAME_KEY, profile.lastName);
     this.setOptionalStorage(EMAIL_KEY, profile.email);
-    if (profile.token) {
-      sessionStorage.setItem(TOKEN_KEY, profile.token);
-    }
   }
 
   isAdmin(): boolean {
@@ -116,7 +130,6 @@ export class AuthService {
   }
 
   private clearSession(): void {
-    sessionStorage.removeItem(TOKEN_KEY);
     sessionStorage.removeItem(ID_KEY);
     sessionStorage.removeItem(LOGIN_KEY);
     sessionStorage.removeItem(ROLE_KEY);
@@ -126,7 +139,6 @@ export class AuthService {
   }
 
   private persistSession(response: LoginResponse): void {
-    sessionStorage.setItem(TOKEN_KEY, response.token);
     sessionStorage.setItem(ID_KEY, String(response.id));
     sessionStorage.setItem(LOGIN_KEY, response.login);
     sessionStorage.setItem(ROLE_KEY, response.role);

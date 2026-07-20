@@ -52,6 +52,9 @@ function shouldSkipHandledAdminError(error: HttpErrorResponse, method: string, u
   if (body.errorCode === 'SHOP_CATEGORY_LOCKED') {
     return true;
   }
+  if (body.errorCode === 'CSRF_TOKEN_INVALID') {
+    return true;
+  }
   if (method.toUpperCase() === 'DELETE' && /\/api\/shops\/\d+$/.test(url) && error.status === 400) {
     return true;
   }

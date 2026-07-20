@@ -1,7 +1,6 @@
 export type UserRole = 'ADMIN' | 'WORKER';
 
 export interface LoginResponse {
-  token: string;
   id: number;
   login: string;
   role: UserRole;
@@ -17,7 +16,6 @@ export interface UserProfile {
   lastName: string | null;
   email: string | null;
   role: UserRole;
-  token?: string | null;
 }
 
 export interface UpdateUserProfilePayload {
